@@ -36,10 +36,10 @@ Create `.env.local` from `.env.example`:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
-NEXT_PUBLIC_GA_MEASUREMENT_ID=your-ga4-measurement-id
+NEXT_PUBLIC_GTM_ID=your-gtm-container-id
 ```
 
-`NEXT_PUBLIC_GA_MEASUREMENT_ID` is optional. When set, Google Analytics 4 loads via `@next/third-parties`; when unset, analytics are skipped entirely.
+`NEXT_PUBLIC_GTM_ID` is optional. When set, Google Tag Manager loads via `@next/third-parties`; when unset, it is skipped entirely. Configure Google Analytics 4 (or any other tag) inside the GTM container itself.
 
 Run locally:
 
@@ -104,7 +104,7 @@ The app is ready for a standard Vercel Next.js deployment.
 3. Add environment variables from `.env.example`:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `NEXT_PUBLIC_GA_MEASUREMENT_ID` (optional, enables Google Analytics 4)
+   - `NEXT_PUBLIC_GTM_ID` (optional, enables Google Tag Manager)
 4. In Supabase Auth, add the deployed domain to allowed redirect URLs for OAuth and email login.
 5. Run `sql/schema.sql`, `sql/policies.sql`, and `sql/shared_timetables.sql` before connecting production data.
 6. Open `/api/health` on the deployed domain and confirm it returns `status: "ok"`.
