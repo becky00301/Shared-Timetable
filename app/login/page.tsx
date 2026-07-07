@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Chrome, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,20 +19,11 @@ export default function LoginPage() {
 
 function LoginForm() {
   const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const supabase = createSupabaseBrowserClient();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
-
-  async function loginWithGoogle() {
-    if (!supabase) {
-      toast.info("Add Supabase environment variables to enable OAuth.");
-      return;
-    }
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` }
-    });
-  }
 
   async function loginWithEmail(event: React.FormEvent) {
     event.preventDefault();
@@ -41,11 +32,19 @@ function LoginForm() {
       toast.info("Add Supabase environment variables to enable email login.");
       return;
     }
-    await supabase.auth.signInWithOtp({
+    setSending(true);
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` }
     });
-    toast.success("Magic link sent.");
+    setSending(false);
+    if (error) {
+      console.error(error);
+      toast.error("로그인 메일을 보내지 못했어요. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+    setSent(true);
+    toast.success("로그인 링크를 보냈어요. 메일함을 확인해주세요.");
   }
 
   return (
@@ -56,20 +55,32 @@ function LoginForm() {
         </Link>
         <h1 className="mt-6 text-3xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Use Google OAuth or email login through Supabase Auth.
+          이메일을 입력하면 로그인 링크를 보내드려요. 비밀번호는 필요 없습니다.
         </p>
         <div className="mt-6 flex flex-col gap-3">
-          <Button type="button" onClick={loginWithGoogle}>
-            <Chrome size={17} />
-            Continue with Google
-          </Button>
-          <form className="flex flex-col gap-3" onSubmit={loginWithEmail}>
-            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" />
-            <Button variant="outline" type="submit">
-              <Mail size={17} />
-              Send magic link
-            </Button>
-          </form>
+          {sent ? (
+            <div className="rounded-lg border border-border bg-white/[0.03] p-4 text-sm leading-6 text-white">
+              <p className="font-medium">{email}</p>
+              <p className="mt-1 text-muted">
+                위 주소로 로그인 링크를 보냈어요. 메일의 링크를 누르면 바로 로그인됩니다. 메일이 안 보이면
+                스팸함도 확인해주세요.
+              </p>
+            </div>
+          ) : (
+            <form className="flex flex-col gap-3" onSubmit={loginWithEmail}>
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+                autoFocus
+              />
+              <Button type="submit" disabled={sending}>
+                <Mail size={17} />
+                {sending ? "보내는 중..." : "로그인 링크 받기"}
+              </Button>
+            </form>
+          )}
         </div>
       </div>
     </main>
