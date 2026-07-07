@@ -81,7 +81,7 @@ drop policy if exists "members can read projects" on public.projects;
 create policy "members can read projects"
 on public.projects for select
 to authenticated
-using (public.is_project_member(id));
+using (owner_id = auth.uid() or public.is_project_member(id));
 
 drop policy if exists "authenticated can create projects" on public.projects;
 create policy "authenticated can create projects"
