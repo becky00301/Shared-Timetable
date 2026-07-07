@@ -17,6 +17,7 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
   const addDays = useProjectStore((state) => state.addDays);
   const [step, setStep] = useState<Step>("mode");
   const [saving, setSaving] = useState(false);
+  const [weekStart, setWeekStart] = useState<"mon" | "sun">("mon");
   const [calMonth, setCalMonth] = useState(() => startOfMonth(new Date()));
   const [rangeStart, setRangeStart] = useState<Date | null>(null);
   const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
@@ -44,10 +45,10 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
   async function createWeekly() {
     setSaving(true);
     try {
-      const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      const dates = Array.from({ length: 7 }, (_, index) => format(addDaysToDate(monday, index), "yyyy-MM-dd"));
+      const first = startOfWeek(new Date(), { weekStartsOn: weekStart === "mon" ? 1 : 0 });
+      const dates = Array.from({ length: 7 }, (_, index) => format(addDaysToDate(first, index), "yyyy-MM-dd"));
       await addDays(projectId, dates);
-      toast.success("이번 주 월~일 시간표를 만들었어요.");
+      toast.success(weekStart === "mon" ? "월~일 일주일 시간표를 만들었어요." : "일~토 일주일 시간표를 만들었어요.");
     } catch (error) {
       console.error(error);
       toast.error("날짜를 추가하지 못했어요. 다시 시도해주세요.");
@@ -92,102 +93,137 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
     }
   }
 
-  const inRange = (date: Date) =>
-    rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd;
+  const inRange = (date: Date) => rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd;
 
   return (
-    <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
-      {step === "mode" ? (
-        <div className="w-full max-w-2xl text-center">
-          <h2 className="text-2xl font-semibold text-white">어떤 시간표를 만들까요?</h2>
-          <p className="mt-2 text-sm text-muted">드래그로 만들고 링크 하나로 공유하는 시간표</p>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <button
-              type="button"
-              disabled={saving}
-              onClick={createWeekly}
-              className="rounded-xl border border-border bg-card p-8 text-left transition hover:border-primary hover:shadow-glow disabled:opacity-60"
-            >
-              <CalendarDays className="text-primary" size={28} />
-              <h3 className="mt-4 text-lg font-semibold text-white">일주일 시간표 만들기</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                날짜 입력 없이 이번 주 월~일 기본 틀로 즉시 시작
-              </p>
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => setStep("datepick")}
-              className="rounded-xl border border-border bg-card p-8 text-left transition hover:border-primary hover:shadow-glow disabled:opacity-60"
-            >
-              <CalendarRange className="text-primary" size={28} />
-              <h3 className="mt-4 text-lg font-semibold text-white">날짜 직접 선택</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                기간을 골라 여행·MT·행사 일정에 맞는 날짜만 추가
-              </p>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="w-full max-w-md">
-          <h2 className="text-center text-2xl font-semibold text-white">기간을 선택하세요</h2>
-          <p className="mt-2 text-center text-sm text-muted">시작일과 종료일을 차례로 클릭하세요.</p>
-          <div className="mt-6 rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <Button variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, -1))}>
-                ‹
-              </Button>
-              <span className="text-sm font-medium text-white">{format(calMonth, "yyyy년 M월")}</span>
-              <Button variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, 1))}>
-                ›
-              </Button>
-            </div>
-            <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs text-muted">
-              {WEEKDAY_LABELS.map((label) => (
-                <span key={label} className="py-1">
-                  {label}
-                </span>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {calendarCells.map((date, index) =>
-                date ? (
+    <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-8">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
+        <p className="text-sm text-muted">PlanTogether</p>
+        {step === "mode" ? (
+          <>
+            <h2 className="mt-6 text-3xl font-semibold text-white">어떤 시간표를 만들까요?</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              드래그로 만들고 링크 하나로 공유하는 시간표
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <div className="rounded-xl border border-border bg-white/[0.03] p-4">
+                <div className="flex items-start gap-3">
+                  <CalendarDays className="mt-0.5 shrink-0 text-primary" size={20} />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-white">일주일 시간표 만들기</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted">날짜 입력 없이 기본 틀로 즉시 시작</p>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
                   <button
-                    key={index}
                     type="button"
-                    onClick={() => pickDate(date)}
+                    onClick={() => setWeekStart("mon")}
                     className={cn(
-                      "rounded-lg py-2 text-sm text-white transition hover:bg-white/10",
-                      inRange(date) && "bg-primary/30",
-                      rangeStart && format(date, "yyyy-MM-dd") === format(rangeStart, "yyyy-MM-dd") && "bg-primary text-white",
-                      rangeEnd && format(date, "yyyy-MM-dd") === format(rangeEnd, "yyyy-MM-dd") && "bg-primary text-white"
+                      "rounded-md px-3 py-1.5 text-sm transition",
+                      weekStart === "mon" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
                     )}
                   >
-                    {date.getDate()}
+                    월요일 시작
                   </button>
-                ) : (
-                  <span key={index} />
-                )
-              )}
+                  <button
+                    type="button"
+                    onClick={() => setWeekStart("sun")}
+                    className={cn(
+                      "rounded-md px-3 py-1.5 text-sm transition",
+                      weekStart === "sun" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+                    )}
+                  >
+                    일요일 시작
+                  </button>
+                </div>
+                <Button className="mt-3 w-full" disabled={saving} onClick={createWeekly}>
+                  {saving ? "만드는 중..." : "이대로 시작하기"}
+                </Button>
+              </div>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setStep("datepick")}
+                className="rounded-xl border border-border bg-white/[0.03] p-4 text-left transition hover:border-primary disabled:opacity-60"
+              >
+                <div className="flex items-start gap-3">
+                  <CalendarRange className="mt-0.5 shrink-0 text-primary" size={20} />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-white">날짜 직접 선택</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      기간을 골라 여행·MT·행사 일정에 맞는 날짜만 추가
+                    </p>
+                  </div>
+                </div>
+              </button>
             </div>
-          </div>
-          <p className="mt-4 text-center text-sm text-muted">
-            {rangeStart && rangeEnd
-              ? `${format(rangeStart, "M월 d일")} ~ ${format(rangeEnd, "M월 d일")} (${Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000) + 1}일)`
-              : rangeStart
-                ? `${format(rangeStart, "M월 d일")} ~ 종료일을 클릭하세요`
-                : "시작일을 클릭하세요"}
-          </p>
-          <div className="mt-4 flex justify-center gap-2">
-            <Button variant="outline" onClick={() => setStep("mode")} disabled={saving}>
-              뒤로
-            </Button>
-            <Button onClick={createRange} disabled={!rangeStart || !rangeEnd || saving}>
-              {saving ? "만드는 중..." : "시간표 만들기"}
-            </Button>
-          </div>
-        </div>
-      )}
+          </>
+        ) : (
+          <>
+            <h2 className="mt-6 text-3xl font-semibold text-white">기간을 선택하세요</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">시작일과 종료일을 차례로 클릭하세요.</p>
+            <div className="mt-6 rounded-xl border border-border bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, -1))}>
+                  ‹
+                </Button>
+                <span className="text-sm font-medium text-white">{format(calMonth, "yyyy년 M월")}</span>
+                <Button variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, 1))}>
+                  ›
+                </Button>
+              </div>
+              <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs text-muted">
+                {WEEKDAY_LABELS.map((label) => (
+                  <span key={label} className="py-1">
+                    {label}
+                  </span>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {calendarCells.map((date, index) =>
+                  date ? (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => pickDate(date)}
+                      className={cn(
+                        "rounded-lg py-2 text-sm text-white transition hover:bg-white/10",
+                        inRange(date) && "bg-primary/30",
+                        rangeStart &&
+                          format(date, "yyyy-MM-dd") === format(rangeStart, "yyyy-MM-dd") &&
+                          "bg-primary text-white",
+                        rangeEnd &&
+                          format(date, "yyyy-MM-dd") === format(rangeEnd, "yyyy-MM-dd") &&
+                          "bg-primary text-white"
+                      )}
+                    >
+                      {date.getDate()}
+                    </button>
+                  ) : (
+                    <span key={index} />
+                  )
+                )}
+              </div>
+            </div>
+            <p className="mt-4 text-center text-sm text-muted">
+              {rangeStart && rangeEnd
+                ? `${format(rangeStart, "M월 d일")} ~ ${format(rangeEnd, "M월 d일")} (${Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000) + 1}일)`
+                : rangeStart
+                  ? `${format(rangeStart, "M월 d일")} ~ 종료일을 클릭하세요`
+                  : "시작일을 클릭하세요"}
+            </p>
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setStep("mode")} disabled={saving}>
+                뒤로
+              </Button>
+              <Button className="flex-1" onClick={createRange} disabled={!rangeStart || !rangeEnd || saving}>
+                {saving ? "만드는 중..." : "시간표 만들기"}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

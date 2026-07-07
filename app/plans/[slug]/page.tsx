@@ -10,11 +10,15 @@ import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
 import { MobileTimeline } from "@/components/mobile/MobileTimeline";
+import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
 import { ScheduleItemModal } from "@/components/timetable/ScheduleItemModal";
 import { TimetableGrid } from "@/components/timetable/TimetableGrid";
+import { TimetableHeader } from "@/components/timetable/TimetableHeader";
 import { useProjectRealtime } from "@/lib/supabase/realtime";
 import { canEdit as roleCanEdit } from "@/lib/permissions/roles";
+import { orderDays } from "@/lib/utils/days";
 import { useProjectStore } from "@/stores/project-store";
+import { useUiStore } from "@/stores/ui-store";
 
 export default function ProjectPage() {
   const params = useParams<{ slug: string }>();
@@ -24,6 +28,8 @@ export default function ProjectPage() {
   const schedules = useProjectStore((state) => state.schedules);
   const currentUserId = useProjectStore((state) => state.currentUserId);
   const loadProject = useProjectStore((state) => state.loadProject);
+  const viewMode = useUiStore((state) => state.viewMode);
+  const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -62,9 +68,10 @@ export default function ProjectPage() {
     );
   }
 
-  const days = allDays
-    .filter((day) => day.project_id === project.id)
-    .sort((a, b) => a.sort_order - b.sort_order);
+  const days = orderDays(
+    allDays.filter((day) => day.project_id === project.id),
+    weekStartsOnSunday
+  );
   const members = allMembers.filter((member) => member.project_id === project.id);
   const currentRole = members.find((member) => member.user_id === currentUserId)?.role ?? "viewer";
   const canEdit = roleCanEdit(currentRole);
@@ -89,14 +96,21 @@ export default function ProjectPage() {
           <ProjectSetup projectId={project.id} canEdit={canEdit} />
         ) : (
           <>
-            <MobileTimeline
-              days={days}
-              schedules={schedules.filter((item) => item.project_id === project.id)}
-              canEdit={canEdit}
-            />
-            <div className="hidden min-h-0 flex-1 lg:flex">
-              <TimetableGrid projectId={project.id} days={days} members={members} canEdit={canEdit} />
-            </div>
+            <TimetableHeader />
+            {viewMode === "month" ? (
+              <MonthCalendarView projectId={project.id} days={days} canEdit={canEdit} />
+            ) : (
+              <>
+                <MobileTimeline
+                  days={days}
+                  schedules={schedules.filter((item) => item.project_id === project.id)}
+                  canEdit={canEdit}
+                />
+                <div className="hidden min-h-0 flex-1 lg:flex">
+                  <TimetableGrid projectId={project.id} days={days} members={members} canEdit={canEdit} />
+                </div>
+              </>
+            )}
           </>
         )}
       </section>
