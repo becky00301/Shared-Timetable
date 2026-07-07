@@ -41,12 +41,15 @@ export function TimetableGrid({
       if (activeMode === "availability") {
         addAvailability({
           project_id: projectId,
-          user_id: "u-jiho",
           day_id: dayId,
           start_time: minutesToTime(startMinutes),
           end_time: minutesToTime(endMinutes)
-        });
-        toast.success("Availability added.");
+        })
+          .then(() => toast.success("Availability added."))
+          .catch((error) => {
+            console.error(error);
+            toast.error("Could not save availability.");
+          });
       } else {
         openScheduleModal({
           day_id: dayId,
@@ -73,6 +76,9 @@ export function TimetableGrid({
       day_id: nextDay.id,
       start_time: minutesToTime(start),
       end_time: minutesToTime(Math.min(DAY_END_MINUTES, start + duration))
+    }).catch((error) => {
+      console.error(error);
+      toast.error("Could not move the schedule.");
     });
   }
 
@@ -88,6 +94,9 @@ export function TimetableGrid({
       ...item,
       start_time: minutesToTime(nextStart),
       end_time: minutesToTime(nextEnd)
+    }).catch((error) => {
+      console.error(error);
+      toast.error("Could not resize the schedule.");
     });
   }
 

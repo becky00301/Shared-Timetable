@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
@@ -12,7 +14,18 @@ export default function DashboardPage() {
   const projects = useProjectStore((state) => state.projects);
   const days = useProjectStore((state) => state.days);
   const schedules = useProjectStore((state) => state.schedules);
+  const loading = useProjectStore((state) => state.loading);
+  const loadDashboard = useProjectStore((state) => state.loadDashboard);
   const setCreateProjectOpen = useUiStore((state) => state.setCreateProjectOpen);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    loadDashboard().catch((error) => {
+      console.error(error);
+      setLoadError(true);
+      toast.error("Could not load your projects.");
+    });
+  }, [loadDashboard]);
 
   return (
     <AppShell>
@@ -27,7 +40,15 @@ export default function DashboardPage() {
             Create project
           </Button>
         </div>
-        {projects.length ? (
+        {loading && !projects.length ? (
+          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+            불러오는 중...
+          </div>
+        ) : loadError ? (
+          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+            프로젝트를 불러오지 못했어요. 새로고침해 보세요.
+          </div>
+        ) : projects.length ? (
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => (
               <ProjectCard

@@ -93,8 +93,12 @@ export function ScheduleDetailPanel({
           size="icon"
           disabled={!canEdit}
           onClick={() => {
-            deleteSchedule(item.id);
-            toast.success("Schedule deleted.");
+            deleteSchedule(item.id)
+              .then(() => toast.success("Schedule deleted."))
+              .catch((error) => {
+                console.error(error);
+                toast.error("Could not delete the schedule.");
+              });
           }}
         >
           <Trash2 size={16} />

@@ -49,7 +49,7 @@ export function ScheduleItemModal({
 
   const modeTitle = useMemo(() => (selectedItem ? "Edit schedule" : "Create schedule"), [selectedItem]);
 
-  function submit(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!canEdit) {
       toast.error("Viewer role cannot edit schedules.");
@@ -63,19 +63,24 @@ export function ScheduleItemModal({
       toast.error("End time must be after start time.");
       return;
     }
-    upsertSchedule({
-      id: selectedItem?.id,
-      project_id: projectId,
-      day_id: dayId,
-      title: title.trim(),
-      location: location.trim(),
-      description: description.trim(),
-      start_time: startTime,
-      end_time: endTime,
-      color
-    });
-    close();
-    toast.success(selectedItem ? "Schedule updated." : "Schedule created.");
+    try {
+      await upsertSchedule({
+        id: selectedItem?.id,
+        project_id: projectId,
+        day_id: dayId,
+        title: title.trim(),
+        location: location.trim(),
+        description: description.trim(),
+        start_time: startTime,
+        end_time: endTime,
+        color
+      });
+      close();
+      toast.success(selectedItem ? "Schedule updated." : "Schedule created.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not save the schedule.");
+    }
   }
 
   return (

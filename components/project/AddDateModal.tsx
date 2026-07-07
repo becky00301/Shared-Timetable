@@ -14,16 +14,20 @@ export function AddDateModal({ projectId }: { projectId: string }) {
   const setOpen = useUiStore((state) => state.setAddDateOpen);
   const addDay = useProjectStore((state) => state.addDay);
 
-  function submit(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!date) {
       toast.error("Choose a date.");
       return;
     }
-    addDay(projectId, date);
-    setDate("");
-    setOpen(false);
-    toast.success("Date added.");
+    try {
+      await addDay(projectId, date);
+      setDate("");
+      setOpen(false);
+      toast.success("Date added.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not add the date.");
+    }
   }
 
   return (

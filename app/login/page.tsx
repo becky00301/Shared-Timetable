@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { Chrome, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,18 @@ import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const supabase = createSupabaseBrowserClient();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/dashboard";
 
   async function loginWithGoogle() {
     if (!supabase) {
@@ -19,7 +30,7 @@ export default function LoginPage() {
     }
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` }
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` }
     });
   }
 
@@ -32,7 +43,7 @@ export default function LoginPage() {
     }
     await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` }
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` }
     });
     toast.success("Magic link sent.");
   }

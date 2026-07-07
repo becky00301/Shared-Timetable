@@ -2,6 +2,7 @@
 
 import { CalendarPlus, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ExportToolbar } from "@/components/export/ExportToolbar";
 import { ParticipantList } from "@/components/project/ParticipantList";
@@ -93,7 +94,12 @@ export function ProjectSidebar({
               <button
                 className="editor-only rounded-md p-1 text-muted transition hover:bg-red-500/10 hover:text-red-300 disabled:opacity-40"
                 disabled={!canEdit}
-                onClick={() => removeDay(day.id)}
+                onClick={() =>
+                  removeDay(day.id).catch((error) => {
+                    console.error(error);
+                    toast.error("Could not remove the date.");
+                  })
+                }
                 aria-label="Remove date"
               >
                 <Trash2 size={15} />

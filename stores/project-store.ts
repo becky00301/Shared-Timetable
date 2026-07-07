@@ -2,34 +2,34 @@
 
 import { create } from "zustand";
 import { nanoid } from "nanoid";
-import {
-  seedAttachments,
-  seedAvailability,
-  seedDays,
-  seedMembers,
-  seedProjects,
-  seedSchedules
-} from "@/lib/db/seed";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Project, ProjectDay, ProjectMember } from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
 type ProjectStore = {
+  currentUserId: string | null;
+  loading: boolean;
   projects: Project[];
   days: ProjectDay[];
   members: ProjectMember[];
   schedules: ScheduleItem[];
   availability: AvailabilitySlot[];
   attachments: Attachment[];
-  createProject: (title: string, description?: string) => Project;
-  addDay: (projectId: string, date: string) => void;
-  removeDay: (dayId: string) => void;
-  upsertSchedule: (item: Partial<ScheduleItem> & Pick<ScheduleItem, "project_id" | "day_id" | "title" | "start_time" | "end_time">) => ScheduleItem;
-  deleteSchedule: (itemId: string) => void;
-  addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at">) => void;
+  loadCurrentUser: () => Promise<string | null>;
+  loadDashboard: () => Promise<void>;
+  loadProject: (slug: string) => Promise<Project | null>;
+  createProject: (title: string, description?: string) => Promise<Project>;
+  addDay: (projectId: string, date: string) => Promise<void>;
+  removeDay: (dayId: string) => Promise<void>;
+  upsertSchedule: (
+    item: Partial<ScheduleItem> & Pick<ScheduleItem, "project_id" | "day_id" | "title" | "start_time" | "end_time">
+  ) => Promise<ScheduleItem>;
+  deleteSchedule: (itemId: string) => Promise<void>;
+  addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
+  joinByInviteToken: (token: string) => Promise<string>;
   getProjectBySlug: (slug: string) => Project | undefined;
 };
 
-const now = () => new Date().toISOString();
 const slugify = (input: string) =>
   input
     .toLowerCase()
@@ -37,112 +37,231 @@ const slugify = (input: string) =>
     .replace(/(^-|-$)+/g, "")
     .slice(0, 64);
 
+function requireClient() {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  return supabase;
+}
+
 export const useProjectStore = create<ProjectStore>((set, get) => ({
-  projects: seedProjects,
-  days: seedDays,
-  members: seedMembers,
-  schedules: seedSchedules,
-  availability: seedAvailability,
-  attachments: seedAttachments,
-  createProject: (title, description) => {
-    const project: Project = {
-      id: `p-${nanoid(8)}`,
-      owner_id: "u-jiho",
-      title,
-      description,
-      slug: `${slugify(title)}-${nanoid(4)}`,
-      invite_token: `invite-${nanoid(16)}`,
-      created_at: now(),
-      updated_at: now()
-    };
-    const member: ProjectMember = {
-      id: `m-${nanoid(8)}`,
-      project_id: project.id,
-      user_id: "u-jiho",
-      role: "owner",
-      created_at: now(),
-      user: seedUsersFallback()
-    };
-    set((state) => ({
-      projects: [project, ...state.projects],
-      members: [member, ...state.members]
-    }));
-    return project;
+  currentUserId: null,
+  loading: false,
+  projects: [],
+  days: [],
+  members: [],
+  schedules: [],
+  availability: [],
+  attachments: [],
+
+  loadCurrentUser: async () => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return null;
+    const { data } = await supabase.auth.getUser();
+    const id = data.user?.id ?? null;
+    set({ currentUserId: id });
+    return id;
   },
-  addDay: (projectId, date) =>
-    set((state) => {
-      if (state.days.some((day) => day.project_id === projectId && day.date === date)) {
-        return state;
-      }
-      const sortOrder = state.days.filter((day) => day.project_id === projectId).length;
-      return {
-        days: [
-          ...state.days,
-          {
-            id: `d-${nanoid(8)}`,
-            project_id: projectId,
-            date,
-            sort_order: sortOrder,
-            created_at: now()
-          }
+
+  loadDashboard: async () => {
+    const supabase = requireClient();
+    set({ loading: true });
+    try {
+      await get().loadCurrentUser();
+      const [projectsRes, daysRes, schedulesRes] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at", { ascending: false }),
+        supabase.from("project_days").select("*"),
+        supabase.from("schedule_items").select("*")
+      ]);
+      if (projectsRes.error) throw projectsRes.error;
+      if (daysRes.error) throw daysRes.error;
+      if (schedulesRes.error) throw schedulesRes.error;
+
+      set({
+        projects: (projectsRes.data ?? []) as Project[],
+        days: (daysRes.data ?? []) as ProjectDay[],
+        schedules: (schedulesRes.data ?? []) as ScheduleItem[]
+      });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  loadProject: async (slug) => {
+    const supabase = requireClient();
+    set({ loading: true });
+    try {
+      await get().loadCurrentUser();
+      const { data: project, error: projectError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (projectError) throw projectError;
+      if (!project) return null;
+
+      const [daysRes, membersRes, schedulesRes, availabilityRes, attachmentsRes] = await Promise.all([
+        supabase.from("project_days").select("*").eq("project_id", project.id),
+        supabase.from("project_members").select("*, user:users(*)").eq("project_id", project.id),
+        supabase.from("schedule_items").select("*").eq("project_id", project.id),
+        supabase.from("availability").select("*").eq("project_id", project.id),
+        supabase.from("attachments").select("*").eq("project_id", project.id)
+      ]);
+      if (daysRes.error) throw daysRes.error;
+      if (membersRes.error) throw membersRes.error;
+      if (schedulesRes.error) throw schedulesRes.error;
+      if (availabilityRes.error) throw availabilityRes.error;
+      if (attachmentsRes.error) throw attachmentsRes.error;
+
+      set((state) => ({
+        projects: [project as Project, ...state.projects.filter((p) => p.id !== project.id)],
+        days: [...state.days.filter((d) => d.project_id !== project.id), ...((daysRes.data ?? []) as ProjectDay[])],
+        members: [
+          ...state.members.filter((m) => m.project_id !== project.id),
+          ...((membersRes.data ?? []) as ProjectMember[])
+        ],
+        schedules: [
+          ...state.schedules.filter((s) => s.project_id !== project.id),
+          ...((schedulesRes.data ?? []) as ScheduleItem[])
+        ],
+        availability: [
+          ...state.availability.filter((a) => a.project_id !== project.id),
+          ...((availabilityRes.data ?? []) as AvailabilitySlot[])
+        ],
+        attachments: [
+          ...state.attachments.filter((a) => a.project_id !== project.id),
+          ...((attachmentsRes.data ?? []) as Attachment[])
         ]
-      };
-    }),
-  removeDay: (dayId) =>
+      }));
+
+      return project as Project;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  createProject: async (title, description) => {
+    const supabase = requireClient();
+    const userId = get().currentUserId ?? (await get().loadCurrentUser());
+    if (!userId) throw new Error("Not authenticated.");
+
+    const slug = `${slugify(title)}-${nanoid(4)}`;
+    const { data: project, error } = await supabase
+      .from("projects")
+      .insert({ title, description: description || null, slug, owner_id: userId })
+      .select("*")
+      .single();
+    if (error) throw error;
+
+    const { error: memberError } = await supabase
+      .from("project_members")
+      .insert({ project_id: project.id, user_id: userId, role: "owner" });
+    if (memberError) throw memberError;
+
+    set((state) => ({ projects: [project as Project, ...state.projects] }));
+    return project as Project;
+  },
+
+  addDay: async (projectId, date) => {
+    const supabase = requireClient();
+    const sortOrder = get().days.filter((day) => day.project_id === projectId).length;
+    const { data, error } = await supabase
+      .from("project_days")
+      .insert({ project_id: projectId, date, sort_order: sortOrder })
+      .select("*")
+      .single();
+    if (error) {
+      if (error.code === "23505") throw new Error("This date has already been added.");
+      throw error;
+    }
+    set((state) => ({ days: [...state.days, data as ProjectDay] }));
+  },
+
+  removeDay: async (dayId) => {
+    const supabase = requireClient();
+    const { error } = await supabase.from("project_days").delete().eq("id", dayId);
+    if (error) throw error;
     set((state) => ({
       days: state.days.filter((day) => day.id !== dayId),
       schedules: state.schedules.filter((item) => item.day_id !== dayId),
       availability: state.availability.filter((slot) => slot.day_id !== dayId)
-    })),
-  upsertSchedule: (item) => {
-    const next: ScheduleItem = {
-      id: item.id ?? `s-${nanoid(8)}`,
+    }));
+  },
+
+  upsertSchedule: async (item) => {
+    const supabase = requireClient();
+    const payload = {
       project_id: item.project_id,
       day_id: item.day_id,
-      creator_id: item.creator_id ?? "u-jiho",
       title: item.title,
-      description: item.description ?? null,
-      location: item.location ?? null,
+      description: item.description || null,
+      location: item.location || null,
       start_time: item.start_time,
       end_time: item.end_time,
-      color: item.color ?? "#1972F7",
-      created_at: item.created_at ?? now(),
-      updated_at: now()
+      color: item.color ?? "#1972F7"
     };
 
-    set((state) => ({
-      schedules: state.schedules.some((schedule) => schedule.id === next.id)
-        ? state.schedules.map((schedule) => (schedule.id === next.id ? next : schedule))
-        : [...state.schedules, next]
-    }));
+    if (item.id) {
+      const { data, error } = await supabase
+        .from("schedule_items")
+        .update(payload)
+        .eq("id", item.id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      set((state) => ({
+        schedules: state.schedules.map((schedule) => (schedule.id === data.id ? (data as ScheduleItem) : schedule))
+      }));
+      return data as ScheduleItem;
+    }
 
-    return next;
+    const userId = get().currentUserId ?? (await get().loadCurrentUser());
+    if (!userId) throw new Error("Not authenticated.");
+    const { data, error } = await supabase
+      .from("schedule_items")
+      .insert({ ...payload, creator_id: userId })
+      .select("*")
+      .single();
+    if (error) throw error;
+    set((state) => ({ schedules: [...state.schedules, data as ScheduleItem] }));
+    return data as ScheduleItem;
   },
-  deleteSchedule: (itemId) =>
+
+  deleteSchedule: async (itemId) => {
+    const supabase = requireClient();
+    const { error } = await supabase.from("schedule_items").delete().eq("id", itemId);
+    if (error) throw error;
     set((state) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),
       attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)
-    })),
-  addAvailability: (slot) =>
-    set((state) => ({
-      availability: [
-        ...state.availability,
-        {
-          ...slot,
-          id: `a-${nanoid(8)}`,
-          created_at: now()
-        }
-      ]
-    })),
+    }));
+  },
+
+  addAvailability: async (slot) => {
+    const supabase = requireClient();
+    const userId = get().currentUserId ?? (await get().loadCurrentUser());
+    if (!userId) throw new Error("Not authenticated.");
+    const { data, error } = await supabase
+      .from("availability")
+      .insert({ ...slot, user_id: userId })
+      .select("*")
+      .single();
+    if (error) throw error;
+    set((state) => ({ availability: [...state.availability, data as AvailabilitySlot] }));
+  },
+
+  joinByInviteToken: async (token) => {
+    const supabase = requireClient();
+    const { data: projectId, error } = await supabase.rpc("join_project_by_invite", { token });
+    if (error) throw error;
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .single();
+    if (projectError) throw projectError;
+    set((state) => ({ projects: [project as Project, ...state.projects.filter((p) => p.id !== project.id)] }));
+    return (project as Project).slug;
+  },
+
   getProjectBySlug: (slug) => get().projects.find((project) => project.slug === slug)
 }));
-
-function seedUsersFallback() {
-  return {
-    id: "u-jiho",
-    email: "jiho@example.com",
-    name: "Jiho Kwon",
-    avatar: null,
-    created_at: now()
-  };
-}

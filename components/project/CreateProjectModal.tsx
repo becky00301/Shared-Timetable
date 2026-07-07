@@ -17,18 +17,23 @@ export function CreateProjectModal() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  function submit(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!title.trim()) {
       toast.error("Project title is required.");
       return;
     }
-    const project = createProject(title.trim(), description.trim());
-    setOpen(false);
-    setTitle("");
-    setDescription("");
-    toast.success("Project created.");
-    router.push(`/plans/${project.slug}`);
+    try {
+      const project = await createProject(title.trim(), description.trim());
+      setOpen(false);
+      setTitle("");
+      setDescription("");
+      toast.success("Project created.");
+      router.push(`/plans/${project.slug}`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not create the project.");
+    }
   }
 
   return (

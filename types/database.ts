@@ -19,6 +19,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Relationships: [];
       };
       projects: {
         Row: {
@@ -37,11 +38,12 @@ export type Database = {
           title: string;
           description?: string | null;
           slug: string;
-          invite_token: string;
+          invite_token?: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["projects"]["Insert"]>;
+        Relationships: [];
       };
       project_members: {
         Row: {
@@ -59,6 +61,15 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_members"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "project_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       project_days: {
         Row: {
@@ -76,6 +87,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_days"]["Insert"]>;
+        Relationships: [];
       };
       schedule_items: {
         Row: {
@@ -107,6 +119,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["schedule_items"]["Insert"]>;
+        Relationships: [];
       };
       availability: {
         Row: {
@@ -128,6 +141,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["availability"]["Insert"]>;
+        Relationships: [];
       };
       attachments: {
         Row: {
@@ -149,10 +163,16 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["attachments"]["Insert"]>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      join_project_by_invite: {
+        Args: { token: string };
+        Returns: string;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

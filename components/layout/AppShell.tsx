@@ -1,8 +1,33 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [signedIn, setSignedIn] = useState(false);
+  const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user)));
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(Boolean(session?.user));
+    });
+    return () => subscription.subscription.unsubscribe();
+  }, [supabase]);
+
+  async function signOut() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
     <div className="min-h-screen bg-background text-white">
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
@@ -17,13 +42,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link href="/dashboard" className="transition hover:text-white">
               Dashboard
             </Link>
-            <Link href="/login" className="transition hover:text-white">
-              Login
-            </Link>
+            {!signedIn ? (
+              <Link href="/login" className="transition hover:text-white">
+                Login
+              </Link>
+            ) : null}
           </nav>
-          <Button asChild size="sm">
-            <Link href="/dashboard">Open app</Link>
-          </Button>
+          {signedIn ? (
+            <Button size="sm" variant="outline" onClick={signOut}>
+              Sign out
+            </Button>
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/dashboard">Open app</Link>
+            </Button>
+          )}
         </div>
       </header>
       {children}
