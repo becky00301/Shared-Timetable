@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AddDateModal } from "@/components/project/AddDateModal";
+import { ProjectSetup } from "@/components/project/ProjectSetup";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
@@ -84,14 +85,20 @@ export default function ProjectPage() {
             <p className="text-xs text-muted">{currentRole}</p>
           </div>
         </div>
-        <MobileTimeline
-          days={days}
-          schedules={schedules.filter((item) => item.project_id === project.id)}
-          canEdit={canEdit}
-        />
-        <div className="hidden min-h-0 flex-1 lg:flex">
-          <TimetableGrid projectId={project.id} days={days} members={members} canEdit={canEdit} />
-        </div>
+        {days.length === 0 ? (
+          <ProjectSetup projectId={project.id} canEdit={canEdit} />
+        ) : (
+          <>
+            <MobileTimeline
+              days={days}
+              schedules={schedules.filter((item) => item.project_id === project.id)}
+              canEdit={canEdit}
+            />
+            <div className="hidden min-h-0 flex-1 lg:flex">
+              <TimetableGrid projectId={project.id} days={days} members={members} canEdit={canEdit} />
+            </div>
+          </>
+        )}
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
       <AddDateModal projectId={project.id} />

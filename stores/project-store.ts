@@ -20,6 +20,7 @@ type ProjectStore = {
   loadProject: (slug: string) => Promise<Project | null>;
   createProject: (title: string, description?: string) => Promise<Project>;
   addDay: (projectId: string, date: string) => Promise<void>;
+  addDays: (projectId: string, dates: string[]) => Promise<void>;
   removeDay: (dayId: string) => Promise<void>;
   upsertSchedule: (
     item: Partial<ScheduleItem> & Pick<ScheduleItem, "project_id" | "day_id" | "title" | "start_time" | "end_time">
@@ -174,6 +175,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       throw error;
     }
     set((state) => ({ days: [...state.days, data as ProjectDay] }));
+  },
+
+  addDays: async (projectId, dates) => {
+    const supabase = requireClient();
+    const existing = new Set(
+      get()
+        .days.filter((day) => day.project_id === projectId)
+        .map((day) => day.date)
+    );
+    const fresh = [...new Set(dates)].filter((date) => !existing.has(date));
+    if (!fresh.length) return;
+
+    const baseOrder = get().days.filter((day) => day.project_id === projectId).length;
+    const { data, error } = await supabase
+      .from("project_days")
+      .insert(fresh.map((date, index) => ({ project_id: projectId, date, sort_order: baseOrder + index })))
+      .select("*");
+    if (error) throw error;
+    set((state) => ({ days: [...state.days, ...((data ?? []) as ProjectDay[])] }));
   },
 
   removeDay: async (dayId) => {
