@@ -88,7 +88,7 @@ export function TimetableGrid({
     upsertSchedule({
       project_id: projectId,
       day_id: draft.dayId,
-      title,
+      title: title || "새 일정",
       start_time: minutesToTime(draft.startMinutes),
       end_time: minutesToTime(draft.endMinutes)
     })

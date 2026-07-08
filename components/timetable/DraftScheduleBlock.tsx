@@ -21,9 +21,10 @@ export function DraftScheduleBlock({
   const top = minutesToTop(timeToMinutes(startTime));
   const height = Math.max(34, durationToHeight(startTime, endTime));
 
+  // Blur or Enter always saves; an empty name falls back to a default in the
+  // parent, so a stray click can never silently discard the schedule.
   function finish() {
-    if (title.trim()) onCommit(title.trim());
-    else onCancel();
+    onCommit(title.trim());
   }
 
   return (
@@ -50,7 +51,7 @@ export function DraftScheduleBlock({
             }
           }}
           onBlur={finish}
-          placeholder="일정 이름 입력"
+          placeholder="일정 이름 (비우면 '새 일정')"
           className="w-full bg-transparent text-sm font-semibold text-white placeholder:text-white/60 focus:outline-none"
         />
       ) : (
