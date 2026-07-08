@@ -43,6 +43,11 @@ export function TimetableGrid({
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
+    // While the rename input is open, this pointerdown fires before the
+    // input's blur. Starting a new drag here would replace the draft state
+    // the blur handler is about to commit, so let the click only close the
+    // naming input.
+    if (draft) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const anchor = timeToMinutes(pointerYToTime(event.clientY - rect.top));
 
