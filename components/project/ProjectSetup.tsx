@@ -1,15 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { addDays as addDaysToDate, addMonths, endOfMonth, format, getDay, startOfMonth, startOfWeek } from "date-fns";
+import { useState } from "react";
+import { addDays as addDaysToDate, format, startOfWeek } from "date-fns";
 import { CalendarDays, CalendarRange } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { RangeCalendar } from "@/components/project/RangeCalendar";
 import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
-
-const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
-const MAX_RANGE_DAYS = 31;
 
 type Step = "mode" | "datepick";
 
@@ -18,19 +16,8 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
   const [step, setStep] = useState<Step>("mode");
   const [saving, setSaving] = useState(false);
   const [weekStart, setWeekStart] = useState<"mon" | "sun">("mon");
-  const [calMonth, setCalMonth] = useState(() => startOfMonth(new Date()));
   const [rangeStart, setRangeStart] = useState<Date | null>(null);
   const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
-
-  const calendarCells = useMemo(() => {
-    const first = startOfMonth(calMonth);
-    const last = endOfMonth(calMonth);
-    const cells: (Date | null)[] = Array.from({ length: getDay(first) }, () => null);
-    for (let day = 1; day <= last.getDate(); day += 1) {
-      cells.push(new Date(calMonth.getFullYear(), calMonth.getMonth(), day));
-    }
-    return cells;
-  }, [calMonth]);
 
   if (!canEdit) {
     return (
@@ -57,24 +44,6 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
     }
   }
 
-  function pickDate(date: Date) {
-    if (!rangeStart || rangeEnd) {
-      setRangeStart(date);
-      setRangeEnd(null);
-      return;
-    }
-    if (date < rangeStart) {
-      setRangeStart(date);
-      return;
-    }
-    const dayCount = Math.round((date.getTime() - rangeStart.getTime()) / 86400000) + 1;
-    if (dayCount > MAX_RANGE_DAYS) {
-      toast.error(`최대 ${MAX_RANGE_DAYS}일까지 선택할 수 있어요.`);
-      return;
-    }
-    setRangeEnd(date);
-  }
-
   async function createRange() {
     if (!rangeStart || !rangeEnd) return;
     setSaving(true);
@@ -92,8 +61,6 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
       setSaving(false);
     }
   }
-
-  const inRange = (date: Date) => rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd;
 
   return (
     <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-8">
@@ -163,56 +130,16 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
           <>
             <h2 className="mt-6 text-3xl font-semibold text-white">기간을 선택하세요</h2>
             <p className="mt-2 text-sm leading-6 text-muted">시작일과 종료일을 차례로 클릭하세요.</p>
-            <div className="mt-6 rounded-xl border border-border bg-white/[0.03] p-4">
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, -1))}>
-                  ‹
-                </Button>
-                <span className="text-sm font-medium text-white">{format(calMonth, "yyyy년 M월")}</span>
-                <Button variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, 1))}>
-                  ›
-                </Button>
-              </div>
-              <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs text-muted">
-                {WEEKDAY_LABELS.map((label) => (
-                  <span key={label} className="py-1">
-                    {label}
-                  </span>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1">
-                {calendarCells.map((date, index) =>
-                  date ? (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => pickDate(date)}
-                      className={cn(
-                        "rounded-lg py-2 text-sm text-white transition hover:bg-white/10",
-                        inRange(date) && "bg-primary/30",
-                        rangeStart &&
-                          format(date, "yyyy-MM-dd") === format(rangeStart, "yyyy-MM-dd") &&
-                          "bg-primary text-white",
-                        rangeEnd &&
-                          format(date, "yyyy-MM-dd") === format(rangeEnd, "yyyy-MM-dd") &&
-                          "bg-primary text-white"
-                      )}
-                    >
-                      {date.getDate()}
-                    </button>
-                  ) : (
-                    <span key={index} />
-                  )
-                )}
-              </div>
+            <div className="mt-6">
+              <RangeCalendar
+                rangeStart={rangeStart}
+                rangeEnd={rangeEnd}
+                onChange={(start, end) => {
+                  setRangeStart(start);
+                  setRangeEnd(end);
+                }}
+              />
             </div>
-            <p className="mt-4 text-center text-sm text-muted">
-              {rangeStart && rangeEnd
-                ? `${format(rangeStart, "M월 d일")} ~ ${format(rangeEnd, "M월 d일")} (${Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000) + 1}일)`
-                : rangeStart
-                  ? `${format(rangeStart, "M월 d일")} ~ 종료일을 클릭하세요`
-                  : "시작일을 클릭하세요"}
-            </p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setStep("mode")} disabled={saving}>
                 뒤로
