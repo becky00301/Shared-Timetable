@@ -70,7 +70,7 @@ export function ProjectSidebar({
         <span className="text-xs text-muted">{members.length} people</span>
       </div>
       <div className="mt-3">
-        <ParticipantList members={members} />
+        <ParticipantList members={members} canManage={currentRole === "owner"} />
       </div>
 
       <div className="mt-6 flex items-center justify-between">

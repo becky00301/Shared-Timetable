@@ -28,6 +28,7 @@ type ProjectStore = {
   deleteSchedule: (itemId: string) => Promise<void>;
   addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
   joinByInviteToken: (token: string) => Promise<string>;
+  updateMemberRole: (memberId: string, role: "editor" | "viewer") => Promise<void>;
   getProjectBySlug: (slug: string) => Project | undefined;
 };
 
@@ -281,6 +282,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (projectError) throw projectError;
     set((state) => ({ projects: [project as Project, ...state.projects.filter((p) => p.id !== project.id)] }));
     return (project as Project).slug;
+  },
+
+  updateMemberRole: async (memberId, role) => {
+    const supabase = requireClient();
+    const { data, error } = await supabase
+      .from("project_members")
+      .update({ role })
+      .eq("id", memberId)
+      .select("*, user:users(*)")
+      .single();
+    if (error) throw error;
+    set((state) => ({
+      members: state.members.map((member) => (member.id === memberId ? (data as ProjectMember) : member))
+    }));
   },
 
   getProjectBySlug: (slug) => get().projects.find((project) => project.slug === slug)
