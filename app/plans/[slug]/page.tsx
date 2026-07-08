@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AddDateModal } from "@/components/project/AddDateModal";
@@ -86,9 +87,16 @@ export default function ProjectPage() {
         canEdit={canEdit}
       />
       <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-16 items-center justify-between border-b border-border bg-[#121212] px-4 lg:hidden">
-          <div>
-            <h1 className="font-semibold text-white">{project.title}</h1>
+        <div className="flex h-16 items-center gap-3 border-b border-border bg-[#121212] px-4 lg:hidden">
+          <Link
+            href="/dashboard"
+            aria-label="대시보드로 이동"
+            className="rounded-md p-1.5 text-muted transition hover:bg-white/8 hover:text-white"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="truncate font-semibold text-white">{project.title}</h1>
             <p className="text-xs text-muted">{currentRole}</p>
           </div>
         </div>

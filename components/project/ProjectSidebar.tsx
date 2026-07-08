@@ -1,6 +1,7 @@
 "use client";
 
-import { CalendarPlus, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, CalendarPlus, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,13 @@ export function ProjectSidebar({
 
   return (
     <aside className="hidden w-80 shrink-0 flex-col border-r border-border bg-[#121212] p-5 lg:flex">
+      <Link
+        href="/dashboard"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-white"
+      >
+        <ArrowLeft size={15} />
+        대시보드
+      </Link>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wide text-muted">Selected-date document</p>
