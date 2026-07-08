@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
+import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
 import { cn } from "@/lib/utils/cn";
 import type { ProjectDay } from "@/types/project";
@@ -15,6 +16,9 @@ export function DateColumn({
   activeMode,
   selectedScheduleId,
   canEdit,
+  draft,
+  onDraftCommit,
+  onDraftCancel,
   onSelectSchedule,
   onResize,
   onPointerStart
@@ -26,6 +30,9 @@ export function DateColumn({
   activeMode: "schedule" | "availability";
   selectedScheduleId: string | null;
   canEdit: boolean;
+  draft: { start_time: string; end_time: string; naming: boolean } | null;
+  onDraftCommit: (title: string) => void;
+  onDraftCancel: () => void;
   onSelectSchedule: (id: string) => void;
   onResize: (item: ScheduleItem, edge: "top" | "bottom", deltaY: number) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
@@ -57,6 +64,15 @@ export function DateColumn({
             onResize={(edge, deltaY) => onResize(item, edge, deltaY)}
           />
         ))}
+        {draft ? (
+          <DraftScheduleBlock
+            startTime={draft.start_time}
+            endTime={draft.end_time}
+            naming={draft.naming}
+            onCommit={onDraftCommit}
+            onCancel={onDraftCancel}
+          />
+        ) : null}
       </div>
     </div>
   );

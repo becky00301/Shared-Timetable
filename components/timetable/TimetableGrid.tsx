@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
@@ -27,39 +28,76 @@ export function TimetableGrid({
   const addAvailability = useProjectStore((state) => state.addAvailability);
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
-  const openScheduleModal = useUiStore((state) => state.openScheduleModal);
   const activeMode = useUiStore((state) => state.activeMode);
+  const [draft, setDraft] = useState<{
+    dayId: string;
+    startMinutes: number;
+    endMinutes: number;
+    naming: boolean;
+  } | null>(null);
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const start = pointerYToTime(event.clientY - rect.top);
-    const onUp = (upEvent: PointerEvent) => {
-      const end = pointerYToTime(upEvent.clientY - rect.top);
-      const startMinutes = Math.min(timeToMinutes(start), timeToMinutes(end));
-      const endMinutes = Math.max(timeToMinutes(start), timeToMinutes(end) + 30);
-      if (activeMode === "availability") {
+    const anchor = timeToMinutes(pointerYToTime(event.clientY - rect.top));
+
+    if (activeMode === "availability") {
+      const onUp = (upEvent: PointerEvent) => {
+        const end = timeToMinutes(pointerYToTime(upEvent.clientY - rect.top));
         addAvailability({
           project_id: projectId,
           day_id: dayId,
-          start_time: minutesToTime(startMinutes),
-          end_time: minutesToTime(endMinutes)
+          start_time: minutesToTime(Math.min(anchor, end)),
+          end_time: minutesToTime(Math.max(anchor + 30, end))
         })
           .then(() => toast.success("Availability added."))
           .catch((error) => {
             console.error(error);
             toast.error("Could not save availability.");
           });
-      } else {
-        openScheduleModal({
-          day_id: dayId,
-          start_time: minutesToTime(startMinutes),
-          end_time: minutesToTime(endMinutes)
-        });
-      }
+        window.removeEventListener("pointerup", onUp);
+      };
+      window.addEventListener("pointerup", onUp);
+      return;
+    }
+
+    setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + 30, naming: false });
+    const onMove = (moveEvent: PointerEvent) => {
+      const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top));
+      setDraft((prev) =>
+        prev
+          ? {
+              ...prev,
+              startMinutes: Math.min(anchor, current),
+              endMinutes: Math.min(DAY_END_MINUTES, Math.max(anchor + 30, current))
+            }
+          : prev
+      );
+    };
+    const onUp = () => {
+      setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
+      window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
+    window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+  }
+
+  function commitDraft(title: string) {
+    if (!draft) return;
+    upsertSchedule({
+      project_id: projectId,
+      day_id: draft.dayId,
+      title,
+      start_time: minutesToTime(draft.startMinutes),
+      end_time: minutesToTime(draft.endMinutes)
+    })
+      .then((item) => setSelectedSchedule(item.id))
+      .catch((error) => {
+        console.error(error);
+        toast.error("일정을 저장하지 못했어요.");
+      });
+    setDraft(null);
   }
 
   function onDragEnd(event: DragEndEvent) {
@@ -128,6 +166,17 @@ export function TimetableGrid({
               selectedScheduleId={selectedScheduleId}
               schedules={schedules.filter((item) => item.day_id === day.id)}
               availability={availability.filter((slot) => slot.day_id === day.id)}
+              draft={
+                draft && draft.dayId === day.id
+                  ? {
+                      start_time: minutesToTime(draft.startMinutes),
+                      end_time: minutesToTime(draft.endMinutes),
+                      naming: draft.naming
+                    }
+                  : null
+              }
+              onDraftCommit={commitDraft}
+              onDraftCancel={() => setDraft(null)}
               onSelectSchedule={setSelectedSchedule}
               onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
               onPointerStart={onPointerStart}
