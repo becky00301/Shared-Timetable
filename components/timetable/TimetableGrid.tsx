@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
@@ -34,7 +34,12 @@ export function TimetableGrid({
     startMinutes: number;
     endMinutes: number;
     naming: boolean;
+    itemId?: string;
   } | null>(null);
+  const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
+  // null = rename input still open; "" = closed without a rename;
+  // non-empty = title typed before the insert round-trip finished.
+  const pendingTitleRef = useRef<string | null>(null);
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
@@ -61,23 +66,55 @@ export function TimetableGrid({
       return;
     }
 
+    dragRef.current = { dayId, start: anchor, end: anchor + 30 };
     setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + 30, naming: false });
     const onMove = (moveEvent: PointerEvent) => {
       const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top));
-      setDraft((prev) =>
-        prev
-          ? {
-              ...prev,
-              startMinutes: Math.min(anchor, current),
-              endMinutes: Math.min(DAY_END_MINUTES, Math.max(anchor + 30, current))
-            }
-          : prev
-      );
+      const start = Math.min(anchor, current);
+      const end = Math.min(DAY_END_MINUTES, Math.max(anchor + 30, current));
+      if (dragRef.current) {
+        dragRef.current.start = start;
+        dragRef.current.end = end;
+      }
+      setDraft((prev) => (prev ? { ...prev, startMinutes: start, endMinutes: end } : prev));
     };
     const onUp = () => {
-      setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (!drag) return;
+
+      // The schedule is persisted the moment the drag ends; the inline input
+      // only renames the row that already exists.
+      setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
+      pendingTitleRef.current = null;
+      upsertSchedule({
+        project_id: projectId,
+        day_id: drag.dayId,
+        title: "새 일정",
+        start_time: minutesToTime(drag.start),
+        end_time: minutesToTime(drag.end)
+      })
+        .then((item) => {
+          setSelectedSchedule(item.id);
+          const pending = pendingTitleRef.current;
+          if (pending === null) {
+            setDraft((prev) => (prev && prev.dayId === drag.dayId ? { ...prev, itemId: item.id } : prev));
+            return;
+          }
+          if (pending && pending !== item.title) {
+            upsertSchedule({ ...item, title: pending }).catch((error) => {
+              console.error(error);
+              toast.error("이름을 저장하지 못했어요.");
+            });
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error("일정을 저장하지 못했어요.");
+          setDraft(null);
+        });
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -85,18 +122,17 @@ export function TimetableGrid({
 
   function commitDraft(title: string) {
     if (!draft) return;
-    upsertSchedule({
-      project_id: projectId,
-      day_id: draft.dayId,
-      title: title || "새 일정",
-      start_time: minutesToTime(draft.startMinutes),
-      end_time: minutesToTime(draft.endMinutes)
-    })
-      .then((item) => setSelectedSchedule(item.id))
-      .catch((error) => {
-        console.error(error);
-        toast.error("일정을 저장하지 못했어요.");
-      });
+    if (draft.itemId) {
+      const item = schedules.find((schedule) => schedule.id === draft.itemId);
+      if (item && title && title !== item.title) {
+        upsertSchedule({ ...item, title }).catch((error) => {
+          console.error(error);
+          toast.error("이름을 저장하지 못했어요.");
+        });
+      }
+    } else {
+      pendingTitleRef.current = title;
+    }
     setDraft(null);
   }
 
@@ -164,7 +200,9 @@ export function TimetableGrid({
               activeMode={activeMode}
               memberCount={members.length}
               selectedScheduleId={selectedScheduleId}
-              schedules={schedules.filter((item) => item.day_id === day.id)}
+              schedules={schedules.filter(
+                (item) => item.day_id === day.id && item.id !== (draft?.naming ? draft.itemId : undefined)
+              )}
               availability={availability.filter((slot) => slot.day_id === day.id)}
               draft={
                 draft && draft.dayId === day.id
@@ -176,7 +214,10 @@ export function TimetableGrid({
                   : null
               }
               onDraftCommit={commitDraft}
-              onDraftCancel={() => setDraft(null)}
+              onDraftCancel={() => {
+                pendingTitleRef.current = "";
+                setDraft(null);
+              }}
               onSelectSchedule={setSelectedSchedule}
               onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
               onPointerStart={onPointerStart}
