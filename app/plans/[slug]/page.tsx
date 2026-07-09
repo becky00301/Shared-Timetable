@@ -10,7 +10,6 @@ import { ProjectSetup } from "@/components/project/ProjectSetup";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
-import { MobileTimeline } from "@/components/mobile/MobileTimeline";
 import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
 import { ScheduleItemModal } from "@/components/timetable/ScheduleItemModal";
 import { TimetableGrid } from "@/components/timetable/TimetableGrid";
@@ -26,7 +25,6 @@ export default function ProjectPage() {
   const project = useProjectStore((state) => state.getProjectBySlug(params.slug));
   const allDays = useProjectStore((state) => state.days);
   const allMembers = useProjectStore((state) => state.members);
-  const schedules = useProjectStore((state) => state.schedules);
   const currentUserId = useProjectStore((state) => state.currentUserId);
   const loadProject = useProjectStore((state) => state.loadProject);
   const viewMode = useUiStore((state) => state.viewMode);
@@ -69,9 +67,11 @@ export default function ProjectPage() {
     );
   }
 
+  const isWeekly = project.kind === "weekly";
   const days = orderDays(
     allDays.filter((day) => day.project_id === project.id),
-    weekStartsOnSunday
+    weekStartsOnSunday,
+    isWeekly
   );
   const members = allMembers.filter((member) => member.project_id === project.id);
   const currentRole = members.find((member) => member.user_id === currentUserId)?.role ?? "viewer";
@@ -104,20 +104,19 @@ export default function ProjectPage() {
           <ProjectSetup projectId={project.id} canEdit={canEdit} />
         ) : (
           <>
-            <TimetableHeader />
+            <TimetableHeader isWeekly={isWeekly} />
             {viewMode === "month" ? (
               <MonthCalendarView projectId={project.id} days={days} canEdit={canEdit} />
             ) : (
-              <>
-                <MobileTimeline
+              <div className="flex min-h-0 flex-1">
+                <TimetableGrid
+                  projectId={project.id}
                   days={days}
-                  schedules={schedules.filter((item) => item.project_id === project.id)}
+                  members={members}
                   canEdit={canEdit}
+                  weekdayOnly={isWeekly}
                 />
-                <div className="hidden min-h-0 flex-1 lg:flex">
-                  <TimetableGrid projectId={project.id} days={days} members={members} canEdit={canEdit} />
-                </div>
-              </>
+              </div>
             )}
           </>
         )}

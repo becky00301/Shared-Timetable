@@ -16,6 +16,7 @@ export function DateColumn({
   activeMode,
   selectedScheduleId,
   canEdit,
+  weekdayOnly,
   draft,
   onDraftCommit,
   onDraftCancel,
@@ -30,6 +31,7 @@ export function DateColumn({
   activeMode: "schedule" | "availability";
   selectedScheduleId: string | null;
   canEdit: boolean;
+  weekdayOnly?: boolean;
   draft: { start_time: string; end_time: string; naming: boolean } | null;
   onDraftCommit: (title: string) => void;
   onDraftCancel: () => void;
@@ -37,12 +39,20 @@ export function DateColumn({
   onResize: (item: ScheduleItem, edge: "top" | "bottom", deltaY: number) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
 }) {
+  const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekdayKo = WEEKDAY_KO[new Date(day.date).getDay()];
   return (
-    <div className="min-w-52 flex-1 border-r border-border last:border-r-0">
+    <div className="min-w-0 flex-1 border-r border-border last:border-r-0">
       <div className="sticky top-0 z-10 flex h-12 items-center justify-center border-b border-border bg-[#141414]">
         <div className="text-center">
-          <p className="text-sm font-semibold text-white">{format(new Date(day.date), "MMM d")}</p>
-          <p className="text-[11px] uppercase text-muted">{format(new Date(day.date), "EEE")}</p>
+          {weekdayOnly ? (
+            <p className="text-sm font-semibold text-white">{weekdayKo}</p>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-white">{format(new Date(day.date), "MMM d")}</p>
+              <p className="text-[11px] uppercase text-muted">{format(new Date(day.date), "EEE")}</p>
+            </>
+          )}
         </div>
       </div>
       <div

@@ -15,12 +15,14 @@ export function TimetableGrid({
   projectId,
   days,
   members,
-  canEdit
+  canEdit,
+  weekdayOnly
 }: {
   projectId: string;
   days: ProjectDay[];
   members: ProjectMember[];
   canEdit: boolean;
+  weekdayOnly?: boolean;
 }) {
   const schedules = useProjectStore((state) => state.schedules).filter((item) => item.project_id === projectId);
   const availability = useProjectStore((state) => state.availability).filter((slot) => slot.project_id === projectId);
@@ -37,6 +39,7 @@ export function TimetableGrid({
     itemId?: string;
   } | null>(null);
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
+  const colsRef = useRef<HTMLDivElement>(null);
   // null = rename input still open; "" = closed without a rename;
   // non-empty = title typed before the insert round-trip finished.
   const pendingTitleRef = useRef<string | null>(null);
@@ -148,7 +151,8 @@ export function TimetableGrid({
     const start = Math.max(0, Math.min(DAY_END_MINUTES - 30, timeToMinutes(item.start_time) + deltaMinutes));
     const duration = timeToMinutes(item.end_time) - timeToMinutes(item.start_time);
     const currentDayIndex = days.findIndex((day) => day.id === item.day_id);
-    const columnShift = Math.round(event.delta.x / 208);
+    const columnWidth = colsRef.current ? colsRef.current.offsetWidth / days.length : 208;
+    const columnShift = Math.round(event.delta.x / Math.max(1, columnWidth));
     const nextDay = days[Math.max(0, Math.min(days.length - 1, currentDayIndex + columnShift))] ?? days[currentDayIndex];
     upsertSchedule({
       ...item,
@@ -194,9 +198,9 @@ export function TimetableGrid({
 
   return (
     <DndContext id={`timetable-${projectId}`} onDragEnd={onDragEnd} modifiers={[restrictToWindowEdges]}>
-      <div id="timetable-export" className="flex min-h-0 flex-1 overflow-auto bg-[#101010]">
+      <div id="timetable-export" className="flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#101010]">
         <TimeColumn />
-        <div className="flex min-w-[720px] flex-1">
+        <div ref={colsRef} className="flex flex-1">
           {days.map((day) => (
             <DateColumn
               key={day.id}
@@ -204,6 +208,7 @@ export function TimetableGrid({
               canEdit={canEdit}
               activeMode={activeMode}
               memberCount={members.length}
+              weekdayOnly={weekdayOnly}
               selectedScheduleId={selectedScheduleId}
               schedules={schedules.filter(
                 (item) => item.day_id === day.id && item.id !== (draft?.naming ? draft.itemId : undefined)

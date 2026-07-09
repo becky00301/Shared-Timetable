@@ -28,6 +28,7 @@ export type Database = {
           title: string;
           description: string | null;
           slug: string;
+          kind: "weekly" | "daterange";
           invite_token: string;
           created_at: string;
           updated_at: string;
@@ -38,6 +39,7 @@ export type Database = {
           title: string;
           description?: string | null;
           slug: string;
+          kind?: "weekly" | "daterange";
           invite_token?: string;
           created_at?: string;
           updated_at?: string;

@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { Project, ProjectDay, ProjectMember } from "@/types/project";
+import type { Project, ProjectDay, ProjectKind, ProjectMember } from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
 type ProjectStore = {
@@ -18,7 +18,8 @@ type ProjectStore = {
   loadCurrentUser: () => Promise<string | null>;
   loadDashboard: () => Promise<void>;
   loadProject: (slug: string) => Promise<Project | null>;
-  createProject: (title: string, description?: string) => Promise<Project>;
+  createProject: (title: string, description?: string, kind?: ProjectKind) => Promise<Project>;
+  updateProject: (projectId: string, patch: { title?: string; description?: string }) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
   removeDay: (dayId: string) => Promise<void>;
@@ -141,7 +142,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }
   },
 
-  createProject: async (title, description) => {
+  createProject: async (title, description, kind = "daterange") => {
     const supabase = requireClient();
     const userId = get().currentUserId ?? (await get().loadCurrentUser());
     if (!userId) throw new Error("Not authenticated.");
@@ -149,7 +150,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const slug = `${slugify(title)}-${nanoid(4)}`;
     const { data: project, error } = await supabase
       .from("projects")
-      .insert({ title, description: description || null, slug, owner_id: userId })
+      .insert({ title, description: description || null, slug, kind, owner_id: userId })
       .select("*")
       .single();
     if (error) throw error;
@@ -161,6 +162,23 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
     set((state) => ({ projects: [project as Project, ...state.projects] }));
     return project as Project;
+  },
+
+  updateProject: async (projectId, patch) => {
+    const supabase = requireClient();
+    const payload: { title?: string; description?: string | null } = {};
+    if (patch.title !== undefined) payload.title = patch.title;
+    if (patch.description !== undefined) payload.description = patch.description || null;
+    const { data, error } = await supabase
+      .from("projects")
+      .update(payload)
+      .eq("id", projectId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    set((state) => ({
+      projects: state.projects.map((project) => (project.id === projectId ? (data as Project) : project))
+    }));
   },
 
   addDay: async (projectId, date) => {

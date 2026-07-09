@@ -1,13 +1,16 @@
 import { getDay } from "date-fns";
 import type { ProjectDay } from "@/types/project";
 
-// A weekly frame (≤7 days, all weekdays distinct) is reordered to start on the
-// chosen weekday, matching the standalone tool's 월/일 toggle. Arbitrary date
-// ranges keep their chronological sort_order, where weekday ordering would
-// scramble the timeline.
-export function orderDays(days: ProjectDay[], weekStartsOnSunday: boolean): ProjectDay[] {
+// Weekly timetables are reordered to start on the chosen weekday (월/일 toggle).
+// Date-range timetables always keep their chronological sort_order, where
+// weekday ordering would scramble a multi-week trip.
+export function orderDays(
+  days: ProjectDay[],
+  weekStartsOnSunday: boolean,
+  isWeekly: boolean
+): ProjectDay[] {
   const sorted = [...days].sort((a, b) => a.sort_order - b.sort_order || a.date.localeCompare(b.date));
-  if (sorted.length === 0 || sorted.length > 7) return sorted;
+  if (!isWeekly || sorted.length === 0 || sorted.length > 7) return sorted;
 
   const weekdays = sorted.map((day) => getDay(new Date(day.date)));
   if (new Set(weekdays).size !== sorted.length) return sorted;

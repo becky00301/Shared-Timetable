@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CalendarPlus, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ExportToolbar } from "@/components/export/ExportToolbar";
 import { ParticipantList } from "@/components/project/ParticipantList";
 import { RoleBadge } from "@/components/project/RoleBadge";
@@ -29,6 +31,24 @@ export function ProjectSidebar({
   const activeMode = useUiStore((state) => state.activeMode);
   const setMode = useUiStore((state) => state.setMode);
   const removeDay = useProjectStore((state) => state.removeDay);
+  const updateProject = useProjectStore((state) => state.updateProject);
+  const canRename = currentRole === "owner" || currentRole === "editor";
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(project.title);
+
+  function saveTitle() {
+    setEditingTitle(false);
+    const next = titleDraft.trim();
+    if (!next || next === project.title) {
+      setTitleDraft(project.title);
+      return;
+    }
+    updateProject(project.id, { title: next }).catch((error) => {
+      console.error(error);
+      toast.error("이름을 변경하지 못했어요.");
+      setTitleDraft(project.title);
+    });
+  }
 
   return (
     <aside className="hidden w-80 shrink-0 flex-col border-r border-border bg-[#121212] p-5 lg:flex">
@@ -42,7 +62,38 @@ export function ProjectSidebar({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wide text-muted">Selected-date document</p>
-          <h1 className="mt-2 truncate text-2xl font-semibold text-white">{project.title}</h1>
+          {editingTitle ? (
+            <Input
+              autoFocus
+              className="mt-2"
+              value={titleDraft}
+              onChange={(event) => setTitleDraft(event.target.value)}
+              onBlur={saveTitle}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+                if (event.key === "Escape") {
+                  setTitleDraft(project.title);
+                  setEditingTitle(false);
+                }
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              disabled={!canRename}
+              onClick={() => {
+                setTitleDraft(project.title);
+                setEditingTitle(true);
+              }}
+              className="group mt-2 flex items-center gap-1.5 text-left disabled:cursor-default"
+              title={canRename ? "클릭해서 이름 수정" : undefined}
+            >
+              <span className="truncate text-2xl font-semibold text-white">{project.title}</span>
+              {canRename ? (
+                <Pencil size={14} className="shrink-0 text-muted opacity-0 transition group-hover:opacity-100" />
+              ) : null}
+            </button>
+          )}
           <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{project.description}</p>
         </div>
         <RoleBadge role={currentRole} />

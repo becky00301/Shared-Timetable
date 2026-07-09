@@ -61,7 +61,7 @@ export function CreateProjectModal() {
     }
     setSaving(true);
     try {
-      const project = await createProject(title.trim(), description.trim());
+      const project = await createProject(title.trim(), description.trim(), mode === "weekly" ? "weekly" : "daterange");
       await addDays(project.id, buildDates());
       setOpen(false);
       toast.success("시간표를 만들었어요.");

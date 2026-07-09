@@ -8,12 +8,15 @@ export type UserProfile = {
   created_at: string;
 };
 
+export type ProjectKind = "weekly" | "daterange";
+
 export type Project = {
   id: string;
   owner_id: string;
   title: string;
   description?: string | null;
   slug: string;
+  kind: ProjectKind;
   invite_token: string;
   created_at: string;
   updated_at: string;

@@ -1,12 +1,16 @@
 "use client";
 
-import { ExternalLink, MapPin, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatTimeRange } from "@/lib/utils/time";
+import { Input, Textarea } from "@/components/ui/input";
+import { timeToMinutes } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
+
+const COLORS = ["#1972F7", "#8B5CF6", "#F59E0B", "#22C55E", "#EF4444"];
 
 export function ScheduleDetailPanel({
   days,
@@ -16,92 +20,196 @@ export function ScheduleDetailPanel({
   canEdit: boolean;
 }) {
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
-  const openScheduleModal = useUiStore((state) => state.openScheduleModal);
+  const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const deleteSchedule = useProjectStore((state) => state.deleteSchedule);
+  const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const schedules = useProjectStore((state) => state.schedules);
-  const attachments = useProjectStore((state) => state.attachments);
   const item = schedules.find((schedule) => schedule.id === selectedScheduleId);
+
+  const [title, setTitle] = useState("");
+  const [dayId, setDayId] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    if (!item) return;
+    setTitle(item.title);
+    setDayId(item.day_id);
+    setStartTime(item.start_time.slice(0, 5));
+    setEndTime(item.end_time.slice(0, 5));
+    setLocation(item.location ?? "");
+    setDescription(item.description ?? "");
+  }, [item]);
 
   if (!item) {
     return (
       <aside className="hidden w-80 shrink-0 border-l border-border bg-[#121212] p-5 xl:block">
-        <h2 className="text-sm font-semibold text-white">Schedule detail</h2>
+        <h2 className="text-sm font-semibold text-white">일정 상세</h2>
         <div className="mt-6 rounded-xl border border-dashed border-border bg-white/[0.02] p-5 text-sm leading-6 text-muted">
-          Drag the timetable to create the first schedule item.
+          일정을 클릭하면 여기에서 바로 수정할 수 있어요.
         </div>
       </aside>
     );
   }
 
-  const day = days.find((candidate) => candidate.id === item.day_id);
-  const itemAttachments = attachments.filter((attachment) => attachment.schedule_item_id === item.id);
+  function save(patch: Partial<typeof item> & Record<string, unknown>) {
+    if (!item || !canEdit) return;
+    upsertSchedule({ ...item, ...patch }).catch((error) => {
+      console.error(error);
+      toast.error("변경사항을 저장하지 못했어요.");
+    });
+  }
+
+  function saveTitle() {
+    const next = title.trim() || "새 일정";
+    if (next !== item!.title) save({ title: next });
+  }
+
+  function saveTimes(nextStart: string, nextEnd: string) {
+    if (timeToMinutes(nextEnd) <= timeToMinutes(nextStart)) {
+      toast.error("종료 시간은 시작 시간보다 뒤여야 해요.");
+      return;
+    }
+    save({ start_time: nextStart, end_time: nextEnd });
+  }
 
   return (
-    <aside className="hidden w-80 shrink-0 border-l border-border bg-[#121212] p-5 xl:block">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted">{day?.date}</p>
-          <h2 className="mt-2 text-xl font-semibold text-white">{item.title}</h2>
-        </div>
-        <span className="mt-1 size-3 rounded-full" style={{ backgroundColor: item.color }} />
+    <aside
+      className="fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-auto border-t border-border bg-[#121212] p-5 xl:static xl:z-auto xl:max-h-none xl:w-80 xl:shrink-0 xl:border-l xl:border-t-0"
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-white">일정 상세</h2>
+        <button
+          type="button"
+          onClick={() => setSelectedSchedule(null)}
+          className="rounded-md p-1 text-muted transition hover:bg-white/8 hover:text-white"
+          aria-label="닫기"
+        >
+          <X size={16} />
+        </button>
       </div>
-      <div className="mt-5 flex flex-col gap-4 text-sm">
-        <div className="rounded-lg border border-border bg-white/[0.03] p-3">
-          <p className="text-muted">Time</p>
-          <p className="mt-1 font-medium text-white">{formatTimeRange(item.start_time, item.end_time)}</p>
+
+      <div className="mt-4 flex flex-col gap-4 text-sm">
+        <label className="flex flex-col gap-1.5 text-muted">
+          이름
+          <Input
+            value={title}
+            disabled={!canEdit}
+            onChange={(event) => setTitle(event.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5 text-muted">
+          날짜
+          <select
+            className="h-10 rounded-lg border border-border bg-[#101010] px-3 text-sm text-white outline-none disabled:opacity-60"
+            value={dayId}
+            disabled={!canEdit}
+            onChange={(event) => {
+              setDayId(event.target.value);
+              save({ day_id: event.target.value });
+            }}
+          >
+            {days.map((day) => (
+              <option key={day.id} value={day.id}>
+                {day.date}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5 text-muted">
+            시작
+            <Input
+              type="time"
+              value={startTime}
+              disabled={!canEdit}
+              onChange={(event) => {
+                setStartTime(event.target.value);
+                saveTimes(event.target.value, endTime);
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-muted">
+            종료
+            <Input
+              type="time"
+              value={endTime}
+              disabled={!canEdit}
+              onChange={(event) => {
+                setEndTime(event.target.value);
+                saveTimes(startTime, event.target.value);
+              }}
+            />
+          </label>
         </div>
-        {item.location ? (
-          <div className="rounded-lg border border-border bg-white/[0.03] p-3">
-            <p className="text-muted">Location</p>
-            <p className="mt-1 flex items-center gap-2 font-medium text-white">
-              <MapPin size={15} />
-              {item.location}
-            </p>
-          </div>
-        ) : null}
-        <div className="rounded-lg border border-border bg-white/[0.03] p-3">
-          <p className="text-muted">Description</p>
-          <p className="mt-1 leading-6 text-white/90">{item.description || "No notes yet."}</p>
-        </div>
-        <div>
-          <p className="mb-2 text-muted">Attachments</p>
-          <div className="flex flex-col gap-2">
-            {itemAttachments.length ? (
-              itemAttachments.map((attachment) => (
-                <a
-                  key={attachment.id}
-                  href={attachment.url}
-                  target="_blank"
-                  className="flex items-center justify-between rounded-lg border border-border bg-white/[0.03] px-3 py-2 text-sm text-white transition hover:border-primary/40"
-                >
-                  {attachment.title ?? attachment.type}
-                  <ExternalLink size={14} />
-                </a>
-              ))
-            ) : (
-              <p className="rounded-lg border border-dashed border-border p-3 text-muted">No attachments.</p>
-            )}
+
+        <label className="flex flex-col gap-1.5 text-muted">
+          장소
+          <Input
+            value={location}
+            disabled={!canEdit}
+            placeholder="선택 입력"
+            onChange={(event) => setLocation(event.target.value)}
+            onBlur={() => save({ location: location.trim() })}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5 text-muted">
+          메모
+          <Textarea
+            value={description}
+            disabled={!canEdit}
+            placeholder="선택 입력"
+            onChange={(event) => setDescription(event.target.value)}
+            onBlur={() => save({ description: description.trim() })}
+          />
+        </label>
+
+        <div className="flex flex-col gap-1.5 text-muted">
+          색상
+          <div className="flex gap-2">
+            {COLORS.map((color) => (
+              <button
+                key={color}
+                type="button"
+                disabled={!canEdit}
+                onClick={() => save({ color })}
+                className="size-8 rounded-full border border-white/20 transition"
+                style={{ backgroundColor: color, outline: item.color === color ? "2px solid white" : "none" }}
+                aria-label={`색상 ${color}`}
+              />
+            ))}
           </div>
         </div>
       </div>
-      <div className="mt-6 flex gap-2">
-        <Button variant="secondary" className="flex-1" disabled={!canEdit} onClick={() => openScheduleModal(null, item)}>
-          Edit
-        </Button>
+
+      <div className="mt-6">
         <Button
           variant="danger"
-          size="icon"
+          className="w-full"
           disabled={!canEdit}
           onClick={() => {
             deleteSchedule(item.id)
-              .then(() => toast.success("Schedule deleted."))
+              .then(() => {
+                setSelectedSchedule(null);
+                toast.success("일정을 삭제했어요.");
+              })
               .catch((error) => {
                 console.error(error);
-                toast.error("Could not delete the schedule.");
+                toast.error("일정을 삭제하지 못했어요.");
               });
           }}
         >
           <Trash2 size={16} />
+          삭제
         </Button>
       </div>
     </aside>

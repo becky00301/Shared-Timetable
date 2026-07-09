@@ -14,10 +14,16 @@ create table if not exists public.projects (
   title text not null,
   description text,
   slug text unique not null,
+  kind text not null default 'daterange' check (kind in ('weekly', 'daterange')),
   invite_token text unique not null default encode(gen_random_bytes(16), 'hex'),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- For projects created before the kind column existed.
+alter table public.projects
+  add column if not exists kind text not null default 'daterange'
+  check (kind in ('weekly', 'daterange'));
 
 create table if not exists public.project_members (
   id uuid primary key default gen_random_uuid(),
