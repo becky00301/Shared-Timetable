@@ -17,6 +17,7 @@ export function DateColumn({
   selectedScheduleId,
   canEdit,
   weekdayOnly,
+  width,
   draft,
   onDraftCommit,
   onDraftCancel,
@@ -32,6 +33,7 @@ export function DateColumn({
   selectedScheduleId: string | null;
   canEdit: boolean;
   weekdayOnly?: boolean;
+  width?: number;
   draft: { start_time: string; end_time: string; naming: boolean } | null;
   onDraftCommit: (title: string) => void;
   onDraftCancel: () => void;
@@ -42,7 +44,10 @@ export function DateColumn({
   const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
   const weekdayKo = WEEKDAY_KO[new Date(day.date).getDay()];
   return (
-    <div className="min-w-0 flex-1 border-r border-border last:border-r-0">
+    <div
+      className={cn("border-r border-border last:border-r-0", width ? "shrink-0" : "min-w-0 flex-1")}
+      style={width ? { width } : undefined}
+    >
       <div className="sticky top-0 z-10 flex h-12 items-center justify-center border-b border-border bg-[#141414]">
         <div className="text-center">
           {weekdayOnly ? (

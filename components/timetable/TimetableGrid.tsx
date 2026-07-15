@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
@@ -40,6 +40,23 @@ export function TimetableGrid({
   } | null>(null);
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+
+  // Show up to 7 columns at a time; extra days scroll horizontally.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setViewportWidth(el.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const TIME_COL_WIDTH = 64; // matches TimeColumn w-16
+  const manyDays = days.length > 7;
+  const colWidth = manyDays && viewportWidth ? Math.floor((viewportWidth - TIME_COL_WIDTH) / 7) : undefined;
   // null = rename input still open; "" = closed without a rename;
   // non-empty = title typed before the insert round-trip finished.
   const pendingTitleRef = useRef<string | null>(null);
@@ -151,7 +168,8 @@ export function TimetableGrid({
     const start = Math.max(0, Math.min(DAY_END_MINUTES - 30, timeToMinutes(item.start_time) + deltaMinutes));
     const duration = timeToMinutes(item.end_time) - timeToMinutes(item.start_time);
     const currentDayIndex = days.findIndex((day) => day.id === item.day_id);
-    const columnWidth = colsRef.current ? colsRef.current.offsetWidth / days.length : 208;
+    const measuredWidth = colsRef.current ? colsRef.current.offsetWidth / days.length : 208;
+    const columnWidth = colWidth ?? measuredWidth;
     const columnShift = Math.round(event.delta.x / Math.max(1, columnWidth));
     const nextDay = days[Math.max(0, Math.min(days.length - 1, currentDayIndex + columnShift))] ?? days[currentDayIndex];
     upsertSchedule({
@@ -198,9 +216,13 @@ export function TimetableGrid({
 
   return (
     <DndContext id={`timetable-${projectId}`} onDragEnd={onDragEnd} modifiers={[restrictToWindowEdges]}>
-      <div id="timetable-export" className="flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#101010]">
+      <div
+        ref={scrollRef}
+        id="timetable-export"
+        className="flex min-h-0 flex-1 items-start overflow-auto bg-[#101010]"
+      >
         <TimeColumn />
-        <div ref={colsRef} className="flex flex-1">
+        <div ref={colsRef} className={manyDays ? "flex" : "flex flex-1"}>
           {days.map((day) => (
             <DateColumn
               key={day.id}
@@ -209,6 +231,7 @@ export function TimetableGrid({
               activeMode={activeMode}
               memberCount={members.length}
               weekdayOnly={weekdayOnly}
+              width={colWidth}
               selectedScheduleId={selectedScheduleId}
               schedules={schedules.filter(
                 (item) => item.day_id === day.id && item.id !== (draft?.naming ? draft.itemId : undefined)
