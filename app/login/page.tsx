@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,13 @@ function LoginForm() {
   const supabase = createSupabaseBrowserClient();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
+  const authError = searchParams.get("error");
+
+  useEffect(() => {
+    if (authError) {
+      toast.error(`로그인에 실패했어요: ${authError}`);
+    }
+  }, [authError]);
 
   async function loginWithEmail(event: React.FormEvent) {
     event.preventDefault();
