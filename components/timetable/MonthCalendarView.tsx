@@ -52,12 +52,12 @@ export function MonthCalendarView({
   const today = format(new Date(), "yyyy-MM-dd");
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-[#101010] p-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-background p-4">
       <div className="mb-3 flex items-center justify-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => setMonth((current) => addMonths(current, -1))}>
           ‹
         </Button>
-        <span className="min-w-28 text-center text-sm font-medium text-white">
+        <span className="min-w-28 text-center text-sm font-medium text-foreground">
           {format(month, "yyyy년 M월")}
         </span>
         <Button variant="ghost" size="sm" onClick={() => setMonth((current) => addMonths(current, 1))}>
@@ -103,7 +103,7 @@ export function MonthCalendarView({
               <span
                 className={cn(
                   "inline-flex size-6 items-center justify-center rounded-full text-xs",
-                  iso === today ? "bg-primary font-semibold text-white" : "text-white"
+                  iso === today ? "bg-primary font-semibold text-white" : "text-foreground"
                 )}
               >
                 {date.getDate()}
@@ -118,7 +118,7 @@ export function MonthCalendarView({
                       setSelectedSchedule(item.id);
                       openScheduleModal(null, item);
                     }}
-                    className="truncate rounded px-1.5 py-0.5 text-left text-xs text-white transition hover:opacity-80"
+                    className="truncate rounded px-1.5 py-0.5 text-left text-xs text-foreground transition hover:opacity-80"
                     style={{ backgroundColor: `${item.color ?? "#1972F7"}55` }}
                   >
                     {item.start_time.slice(0, 5)} {item.title}

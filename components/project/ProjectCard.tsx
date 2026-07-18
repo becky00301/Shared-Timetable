@@ -39,7 +39,7 @@ export function ProjectCard({
 
   return (
     <div
-      className="group relative flex min-h-48 flex-col justify-between rounded-xl border border-border bg-card p-5 transition hover:border-primary/50 hover:bg-[#1d1d1d]"
+      className="group relative flex min-h-48 flex-col justify-between rounded-xl border border-border bg-card p-5 transition hover:border-primary/50 hover:bg-black/[0.04]"
       onContextMenu={(event) => {
         event.preventDefault();
         setDraft(project.title);
@@ -67,16 +67,16 @@ export function ProjectCard({
         <Link href={`/plans/${project.slug}`} className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold text-white">{project.title}</h3>
+              <h3 className="text-lg font-semibold text-foreground">{project.title}</h3>
               <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{project.description}</p>
             </div>
-            <div className="rounded-lg border border-border bg-white/5 p-2 text-muted group-hover:text-white">
+            <div className="rounded-lg border border-border bg-black/5 p-2 text-muted group-hover:text-foreground">
               <CalendarDays size={18} />
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {days.slice(0, 4).map((day) => (
-              <span key={day.id} className="rounded-md bg-white/6 px-2 py-1 text-xs text-muted">
+              <span key={day.id} className="rounded-md bg-black/6 px-2 py-1 text-xs text-muted">
                 {day.date}
               </span>
             ))}

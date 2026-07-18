@@ -45,9 +45,9 @@ export function ScheduleDetailPanel({
 
   if (!item) {
     return (
-      <aside className="hidden w-80 shrink-0 border-l border-border bg-[#121212] p-5 xl:block">
-        <h2 className="text-sm font-semibold text-white">일정 상세</h2>
-        <div className="mt-6 rounded-xl border border-dashed border-border bg-white/[0.02] p-5 text-sm leading-6 text-muted">
+      <aside className="hidden w-80 shrink-0 border-l border-border bg-surface p-5 xl:block">
+        <h2 className="text-sm font-semibold text-foreground">일정 상세</h2>
+        <div className="mt-6 rounded-xl border border-dashed border-border bg-black/[0.02] p-5 text-sm leading-6 text-muted">
           일정을 클릭하면 여기에서 바로 수정할 수 있어요.
         </div>
       </aside>
@@ -77,14 +77,14 @@ export function ScheduleDetailPanel({
 
   return (
     <aside
-      className="fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-auto border-t border-border bg-[#121212] p-5 xl:static xl:z-auto xl:max-h-none xl:w-80 xl:shrink-0 xl:border-l xl:border-t-0"
+      className="fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-auto border-t border-border bg-surface p-5 xl:static xl:z-auto xl:max-h-none xl:w-80 xl:shrink-0 xl:border-l xl:border-t-0"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">일정 상세</h2>
+        <h2 className="text-sm font-semibold text-foreground">일정 상세</h2>
         <button
           type="button"
           onClick={() => setSelectedSchedule(null)}
-          className="rounded-md p-1 text-muted transition hover:bg-white/8 hover:text-white"
+          className="rounded-md p-1 text-muted transition hover:bg-black/8 hover:text-foreground"
           aria-label="닫기"
         >
           <X size={16} />
@@ -108,7 +108,7 @@ export function ScheduleDetailPanel({
         <label className="flex flex-col gap-1.5 text-muted">
           날짜
           <select
-            className="h-10 rounded-lg border border-border bg-[#101010] px-3 text-sm text-white outline-none disabled:opacity-60"
+            className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
             value={dayId}
             disabled={!canEdit}
             onChange={(event) => {
@@ -182,7 +182,7 @@ export function ScheduleDetailPanel({
                 type="button"
                 disabled={!canEdit}
                 onClick={() => save({ color })}
-                className="size-8 rounded-full border border-white/20 transition"
+                className="size-8 rounded-full border border-black/20 transition"
                 style={{ backgroundColor: color, outline: item.color === color ? "2px solid white" : "none" }}
                 aria-label={`색상 ${color}`}
               />

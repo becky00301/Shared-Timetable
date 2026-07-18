@@ -45,7 +45,7 @@ export function ScheduleBlock({
     <div
       ref={setNodeRef}
       className={cn(
-        "absolute left-2 right-2 z-10 cursor-pointer overflow-hidden rounded-lg border border-white/20 p-2 text-left shadow-lg transition",
+        "absolute left-2 right-2 z-10 cursor-pointer overflow-hidden rounded-lg border border-black/20 p-2 text-left shadow-lg transition",
         isSelected && "ring-2 ring-white/70",
         isDragging && "opacity-70"
       )}

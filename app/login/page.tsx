@@ -50,16 +50,16 @@ function LoginForm() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-5">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
-        <Link href="/" className="text-sm text-muted transition hover:text-white">
+        <Link href="/" className="text-sm text-muted transition hover:text-foreground">
           PlanTogether
         </Link>
-        <h1 className="mt-6 text-3xl font-semibold text-white">Sign in</h1>
+        <h1 className="mt-6 text-3xl font-semibold text-foreground">Sign in</h1>
         <p className="mt-2 text-sm leading-6 text-muted">
           이메일을 입력하면 로그인 링크를 보내드려요. 비밀번호는 필요 없습니다.
         </p>
         <div className="mt-6 flex flex-col gap-3">
           {sent ? (
-            <div className="rounded-lg border border-border bg-white/[0.03] p-4 text-sm leading-6 text-white">
+            <div className="rounded-lg border border-border bg-black/[0.03] p-4 text-sm leading-6 text-foreground">
               <p className="font-medium">{email}</p>
               <p className="mt-1 text-muted">
                 위 주소로 로그인 링크를 보냈어요. 메일의 링크를 누르면 바로 로그인됩니다. 메일이 안 보이면

@@ -49,7 +49,7 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-5 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-background px-5 text-foreground">
         <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center">
           <h1 className="text-2xl font-semibold">{notFound ? "Project not found" : "Loading..."}</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
@@ -78,7 +78,7 @@ export default function ProjectPage() {
   const canEdit = roleCanEdit(currentRole);
 
   return (
-    <main className="flex h-screen overflow-hidden bg-background text-white">
+    <main className="flex h-screen overflow-hidden bg-background text-foreground">
       <ProjectSidebar
         project={project}
         days={days}
@@ -87,16 +87,16 @@ export default function ProjectPage() {
         canEdit={canEdit}
       />
       <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-16 items-center gap-3 border-b border-border bg-[#121212] px-4 lg:hidden">
+        <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
           <Link
             href="/dashboard"
             aria-label="대시보드로 이동"
-            className="rounded-md p-1.5 text-muted transition hover:bg-white/8 hover:text-white"
+            className="rounded-md p-1.5 text-muted transition hover:bg-black/8 hover:text-foreground"
           >
             <ArrowLeft size={18} />
           </Link>
           <div className="min-w-0">
-            <h1 className="truncate font-semibold text-white">{project.title}</h1>
+            <h1 className="truncate font-semibold text-foreground">{project.title}</h1>
             <p className="text-xs text-muted">{currentRole}</p>
           </div>
         </div>

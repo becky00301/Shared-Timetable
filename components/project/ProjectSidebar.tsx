@@ -51,10 +51,10 @@ export function ProjectSidebar({
   }
 
   return (
-    <aside className="hidden w-80 shrink-0 flex-col border-r border-border bg-[#121212] p-5 lg:flex">
+    <aside className="hidden w-80 shrink-0 flex-col border-r border-border bg-surface p-5 lg:flex">
       <Link
         href="/dashboard"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-white"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-foreground"
       >
         <ArrowLeft size={15} />
         대시보드
@@ -88,7 +88,7 @@ export function ProjectSidebar({
               className="group mt-2 flex items-center gap-1.5 text-left disabled:cursor-default"
               title={canRename ? "클릭해서 이름 수정" : undefined}
             >
-              <span className="truncate text-2xl font-semibold text-white">{project.title}</span>
+              <span className="truncate text-2xl font-semibold text-foreground">{project.title}</span>
               {canRename ? (
                 <Pencil size={14} className="shrink-0 text-muted opacity-0 transition group-hover:opacity-100" />
               ) : null}
@@ -103,7 +103,7 @@ export function ProjectSidebar({
         <div className="grid grid-cols-2 gap-1">
           <button
             className={`rounded-lg px-3 py-2 text-sm transition ${
-              activeMode === "schedule" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+              activeMode === "schedule" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
             }`}
             onClick={() => setMode("schedule")}
           >
@@ -111,7 +111,7 @@ export function ProjectSidebar({
           </button>
           <button
             className={`rounded-lg px-3 py-2 text-sm transition ${
-              activeMode === "availability" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+              activeMode === "availability" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
             }`}
             onClick={() => setMode("availability")}
           >
@@ -125,7 +125,7 @@ export function ProjectSidebar({
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">Participants</h2>
+        <h2 className="text-sm font-semibold text-foreground">Participants</h2>
         <span className="text-xs text-muted">{members.length} people</span>
       </div>
       <div className="mt-3">
@@ -133,7 +133,7 @@ export function ProjectSidebar({
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">Selected dates</h2>
+        <h2 className="text-sm font-semibold text-foreground">Selected dates</h2>
         <Button size="sm" variant="outline" disabled={!canEdit} onClick={() => setAddDateOpen(true)}>
           <CalendarPlus size={15} />
           Add
@@ -147,7 +147,7 @@ export function ProjectSidebar({
               className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2"
             >
               <div>
-                <p className="text-sm font-medium text-white">{format(new Date(day.date), "MMM d, yyyy")}</p>
+                <p className="text-sm font-medium text-foreground">{format(new Date(day.date), "MMM d, yyyy")}</p>
                 <p className="text-xs text-muted">{format(new Date(day.date), "EEEE")}</p>
               </div>
               <button

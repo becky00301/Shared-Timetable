@@ -48,13 +48,13 @@ export function DateColumn({
       className={cn("border-r border-border last:border-r-0", width ? "shrink-0" : "min-w-0 flex-1")}
       style={width ? { width } : undefined}
     >
-      <div className="sticky top-0 z-10 flex h-12 items-center justify-center border-b border-border bg-[#141414]">
+      <div className="sticky top-0 z-10 flex h-12 items-center justify-center border-b border-border bg-surface">
         <div className="text-center">
           {weekdayOnly ? (
-            <p className="text-sm font-semibold text-white">{weekdayKo}</p>
+            <p className="text-sm font-semibold text-foreground">{weekdayKo}</p>
           ) : (
             <>
-              <p className="text-sm font-semibold text-white">{format(new Date(day.date), "MMM d")}</p>
+              <p className="text-sm font-semibold text-foreground">{format(new Date(day.date), "MMM d")}</p>
               <p className="text-[11px] uppercase text-muted">{format(new Date(day.date), "EEE")}</p>
             </>
           )}

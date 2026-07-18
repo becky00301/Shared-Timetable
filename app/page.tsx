@@ -35,13 +35,13 @@ export default async function HomePage() {
   const loggedIn = Boolean(user);
 
   return (
-    <main className="min-h-screen bg-background text-white">
+    <main className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-6">
         <span className="text-lg font-semibold">📅 PlanTogether</span>
         <nav className="flex items-center gap-2">
           <Link
             href="/shared-timetable.html"
-            className="rounded-lg px-3 py-2 text-sm text-muted transition hover:text-white"
+            className="rounded-lg px-3 py-2 text-sm text-muted transition hover:text-foreground"
           >
             로그인 없이 써보기
           </Link>
@@ -72,7 +72,7 @@ export default async function HomePage() {
           </Link>
           <Link
             href="/shared-timetable.html"
-            className="w-full rounded-lg border border-border px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/6 sm:w-auto"
+            className="w-full rounded-lg border border-border px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-black/6 sm:w-auto"
           >
             로그인 없이 바로 써보기
           </Link>
@@ -84,7 +84,7 @@ export default async function HomePage() {
           {FEATURES.map((feature) => (
             <div key={feature.title} className="rounded-xl border border-border bg-card p-6">
               <feature.icon className="text-primary" size={22} />
-              <h3 className="mt-4 text-lg font-semibold text-white">{feature.title}</h3>
+              <h3 className="mt-4 text-lg font-semibold text-foreground">{feature.title}</h3>
               <p className="mt-2 text-sm leading-6 text-muted">{feature.body}</p>
             </div>
           ))}
@@ -95,10 +95,10 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">
           <span>© PlanTogether</span>
           <div className="flex gap-4">
-            <Link href="/shared-timetable.html" className="transition hover:text-white">
+            <Link href="/shared-timetable.html" className="transition hover:text-foreground">
               공유 시간표 도구
             </Link>
-            <Link href={loggedIn ? "/dashboard" : "/login"} className="transition hover:text-white">
+            <Link href={loggedIn ? "/dashboard" : "/login"} className="transition hover:text-foreground">
               {loggedIn ? "대시보드" : "로그인"}
             </Link>
           </div>

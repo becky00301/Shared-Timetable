@@ -68,16 +68,16 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
         <p className="text-sm text-muted">PlanTogether</p>
         {step === "mode" ? (
           <>
-            <h2 className="mt-6 text-3xl font-semibold text-white">어떤 시간표를 만들까요?</h2>
+            <h2 className="mt-6 text-3xl font-semibold text-foreground">어떤 시간표를 만들까요?</h2>
             <p className="mt-2 text-sm leading-6 text-muted">
               드래그로 만들고 링크 하나로 공유하는 시간표
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <div className="rounded-xl border border-border bg-white/[0.03] p-4">
+              <div className="rounded-xl border border-border bg-black/[0.03] p-4">
                 <div className="flex items-start gap-3">
                   <CalendarDays className="mt-0.5 shrink-0 text-primary" size={20} />
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white">일주일 시간표 만들기</h3>
+                    <h3 className="font-semibold text-foreground">일주일 시간표 만들기</h3>
                     <p className="mt-1 text-sm leading-6 text-muted">날짜 입력 없이 기본 틀로 즉시 시작</p>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
                     onClick={() => setWeekStart("mon")}
                     className={cn(
                       "rounded-md px-3 py-1.5 text-sm transition",
-                      weekStart === "mon" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+                      weekStart === "mon" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
                     )}
                   >
                     월요일 시작
@@ -97,7 +97,7 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
                     onClick={() => setWeekStart("sun")}
                     className={cn(
                       "rounded-md px-3 py-1.5 text-sm transition",
-                      weekStart === "sun" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+                      weekStart === "sun" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
                     )}
                   >
                     일요일 시작
@@ -112,12 +112,12 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
                 type="button"
                 disabled={saving}
                 onClick={() => setStep("datepick")}
-                className="rounded-xl border border-border bg-white/[0.03] p-4 text-left transition hover:border-primary disabled:opacity-60"
+                className="rounded-xl border border-border bg-black/[0.03] p-4 text-left transition hover:border-primary disabled:opacity-60"
               >
                 <div className="flex items-start gap-3">
                   <CalendarRange className="mt-0.5 shrink-0 text-primary" size={20} />
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white">날짜 직접 선택</h3>
+                    <h3 className="font-semibold text-foreground">날짜 직접 선택</h3>
                     <p className="mt-1 text-sm leading-6 text-muted">
                       기간을 골라 여행·MT·행사 일정에 맞는 날짜만 추가
                     </p>
@@ -128,7 +128,7 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
           </>
         ) : (
           <>
-            <h2 className="mt-6 text-3xl font-semibold text-white">기간을 선택하세요</h2>
+            <h2 className="mt-6 text-3xl font-semibold text-foreground">기간을 선택하세요</h2>
             <p className="mt-2 text-sm leading-6 text-muted">시작일과 종료일을 차례로 클릭하세요.</p>
             <div className="mt-6">
               <RangeCalendar

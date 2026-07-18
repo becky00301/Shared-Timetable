@@ -53,7 +53,7 @@ export function MobileTimeline({
                 <span className="block text-sm text-muted">
                   {item.start_time} - {item.end_time}
                 </span>
-                <span className="mt-1 block font-semibold text-white">{item.title}</span>
+                <span className="mt-1 block font-semibold text-foreground">{item.title}</span>
                 {item.location ? <span className="mt-1 block text-sm text-muted">{item.location}</span> : null}
               </span>
             </button>

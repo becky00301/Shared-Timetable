@@ -11,14 +11,14 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
   const setWeekStartsOnSunday = useUiStore((state) => state.setWeekStartsOnSunday);
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-border bg-[#121212] px-4 py-2">
+    <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2">
       <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
         <button
           type="button"
           onClick={() => setViewMode("grid")}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition",
-            viewMode === "grid" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+            viewMode === "grid" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
           )}
         >
           <Clock size={14} />
@@ -29,7 +29,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
           onClick={() => setViewMode("month")}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition",
-            viewMode === "month" ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+            viewMode === "month" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
           )}
         >
           <CalendarDays size={14} />
@@ -46,7 +46,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
               onClick={() => setWeekStartsOnSunday(false)}
               className={cn(
                 "rounded-md px-2.5 py-1 text-sm transition",
-                !weekStartsOnSunday ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+                !weekStartsOnSunday ? "bg-primary text-white" : "text-muted hover:bg-black/6"
               )}
             >
               월
@@ -56,7 +56,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
               onClick={() => setWeekStartsOnSunday(true)}
               className={cn(
                 "rounded-md px-2.5 py-1 text-sm transition",
-                weekStartsOnSunday ? "bg-primary text-white" : "text-muted hover:bg-white/6"
+                weekStartsOnSunday ? "bg-primary text-white" : "text-muted hover:bg-black/6"
               )}
             >
               일

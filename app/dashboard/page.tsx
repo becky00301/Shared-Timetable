@@ -32,7 +32,7 @@ export default function DashboardPage() {
       <main className="mx-auto max-w-7xl px-5 py-10">
         <div className="flex flex-col justify-between gap-4 border-b border-border pb-8 md:flex-row md:items-end">
           <div>
-            <h1 className="text-4xl font-semibold text-white">Dashboard</h1>
+            <h1 className="text-4xl font-semibold text-foreground">Dashboard</h1>
             <p className="mt-2 text-muted">Your collaborative timetable documents.</p>
           </div>
           <Button onClick={() => setCreateProjectOpen(true)}>

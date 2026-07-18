@@ -87,7 +87,7 @@ export function ScheduleItemModal({
     <Dialog open={open} onOpenChange={(next) => (!next ? close() : undefined)}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-white">{modeTitle}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-foreground">{modeTitle}</DialogTitle>
           <DialogDescription className="text-sm text-muted">
             Drag selections open here with editable date and time fields.
           </DialogDescription>
@@ -96,7 +96,7 @@ export function ScheduleItemModal({
           <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <select
-              className="h-10 rounded-lg border border-border bg-[#101010] px-3 text-sm text-white outline-none"
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none"
               value={dayId}
               onChange={(event) => setDayId(event.target.value)}
             >
@@ -120,7 +120,7 @@ export function ScheduleItemModal({
               <button
                 key={option}
                 type="button"
-                className="size-8 rounded-full border border-white/20 ring-offset-2 ring-offset-card transition"
+                className="size-8 rounded-full border border-black/20 ring-offset-2 ring-offset-card transition"
                 style={{ backgroundColor: option, outline: color === option ? "2px solid white" : "none" }}
                 onClick={() => setColor(option)}
                 aria-label={`Use ${option}`}

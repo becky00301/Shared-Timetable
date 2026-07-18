@@ -25,7 +25,7 @@ export function DialogContent({
         )}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 text-muted transition hover:bg-white/8 hover:text-white">
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 text-muted transition hover:bg-black/8 hover:text-foreground">
           <X size={18} />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>

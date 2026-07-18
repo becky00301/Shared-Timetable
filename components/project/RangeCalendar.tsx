@@ -54,12 +54,12 @@ export function RangeCalendar({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-white/[0.03] p-4">
+      <div className="rounded-xl border border-border bg-black/[0.03] p-4">
         <div className="flex items-center justify-between">
           <Button type="button" variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, -1))}>
             ‹
           </Button>
-          <span className="text-sm font-medium text-white">{format(calMonth, "yyyy년 M월")}</span>
+          <span className="text-sm font-medium text-foreground">{format(calMonth, "yyyy년 M월")}</span>
           <Button type="button" variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, 1))}>
             ›
           </Button>
@@ -79,7 +79,7 @@ export function RangeCalendar({
                 type="button"
                 onClick={() => pickDate(date)}
                 className={cn(
-                  "rounded-lg py-2 text-sm text-white transition hover:bg-white/10",
+                  "rounded-lg py-2 text-sm text-foreground transition hover:bg-black/10",
                   inRange(date) && "bg-primary/30",
                   (isEdge(date, rangeStart) || isEdge(date, rangeEnd)) && "bg-primary text-white"
                 )}

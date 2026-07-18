@@ -205,7 +205,7 @@ export function TimetableGrid({
     return (
       <div className="flex min-h-[540px] flex-1 items-center justify-center p-6">
         <div className="max-w-sm rounded-xl border border-dashed border-border bg-card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white">원하는 날짜를 추가해서 시간표를 시작하세요.</h2>
+          <h2 className="text-lg font-semibold text-foreground">원하는 날짜를 추가해서 시간표를 시작하세요.</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             This document is built from selected dates, not a full monthly calendar.
           </p>
@@ -219,7 +219,7 @@ export function TimetableGrid({
       <div
         ref={scrollRef}
         id="timetable-export"
-        className="flex min-h-0 flex-1 items-start overflow-auto bg-[#101010]"
+        className="flex min-h-0 flex-1 items-start overflow-auto bg-background"
       >
         <TimeColumn />
         <div ref={colsRef} className={manyDays ? "flex" : "flex flex-1"}>

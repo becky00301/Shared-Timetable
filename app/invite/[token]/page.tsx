@@ -53,12 +53,12 @@ export default function InvitePage() {
         <p className="text-sm uppercase tracking-wide text-muted">PlanTogether invite</p>
         {status === "checking" || status === "joining" ? (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-white">Joining project...</h1>
+            <h1 className="mt-4 text-3xl font-semibold text-foreground">Joining project...</h1>
             <p className="mt-3 text-sm leading-6 text-muted">Hang on while we add you as a viewer.</p>
           </>
         ) : status === "needs-login" ? (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-white">Sign in to join</h1>
+            <h1 className="mt-4 text-3xl font-semibold text-foreground">Sign in to join</h1>
             <p className="mt-3 text-sm leading-6 text-muted">
               You need a PlanTogether account before joining this project.
             </p>
@@ -68,7 +68,7 @@ export default function InvitePage() {
           </>
         ) : (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-white">Invite not found</h1>
+            <h1 className="mt-4 text-3xl font-semibold text-foreground">Invite not found</h1>
             <p className="mt-3 text-sm leading-6 text-muted">
               This invite link is invalid, expired, or you don&apos;t have access.
             </p>

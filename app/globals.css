@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --background: #0f0f0f;
-  --card: #171717;
-  --primary: #1972f7;
-  --text: #ffffff;
-  --muted: #a1a1aa;
-  --border: #2a2a2a;
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #f7f6f3;
+  --card: #f7f7f5;
+  --primary: #2383e2;
+  --text: #37352f;
+  --muted: #787774;
+  --border: #e6e5e1;
 }
 
 * {
@@ -37,13 +38,13 @@ select {
 }
 
 ::selection {
-  background: rgba(25, 114, 247, 0.35);
+  background: rgba(35, 131, 226, 0.22);
 }
 
 .timetable-grid {
   background-image:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(to bottom, rgba(55, 53, 47, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(55, 53, 47, 0.06) 1px, transparent 1px);
   background-size:
     100% 72px,
     100% 36px;

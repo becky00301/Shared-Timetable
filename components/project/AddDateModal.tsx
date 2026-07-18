@@ -47,7 +47,7 @@ export function AddDateModal({ projectId }: { projectId: string }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-white">날짜 추가</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-foreground">날짜 추가</DialogTitle>
           <DialogDescription className="text-sm text-muted">
             추가할 기간을 선택하세요. 이미 있는 날짜는 자동으로 건너뜁니다.
           </DialogDescription>

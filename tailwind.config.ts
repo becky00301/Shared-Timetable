@@ -11,17 +11,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0F0F0F",
-        card: "#171717",
-        primary: "#1972F7",
-        border: "#2A2A2A",
-        muted: "#A1A1AA"
+        background: "#ffffff",
+        surface: "#f7f6f3",
+        card: "#f7f7f5",
+        foreground: "#37352f",
+        primary: "#2383e2",
+        border: "#e6e5e1",
+        muted: "#787774"
       },
       borderRadius: {
         xl: "0.75rem"
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(25, 114, 247, 0.28), 0 24px 80px rgba(0, 0, 0, 0.36)"
+        glow: "0 1px 2px rgba(15, 15, 15, 0.06), 0 10px 30px rgba(15, 15, 15, 0.08)"
       }
     }
   },

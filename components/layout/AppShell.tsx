@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -39,11 +39,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             PlanTogether
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
-            <Link href="/dashboard" className="transition hover:text-white">
+            <Link href="/dashboard" className="transition hover:text-foreground">
               Dashboard
             </Link>
             {!signedIn ? (
-              <Link href="/login" className="transition hover:text-white">
+              <Link href="/login" className="transition hover:text-foreground">
                 Login
               </Link>
             ) : null}
