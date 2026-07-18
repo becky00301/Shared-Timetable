@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { Mail } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,40 +17,57 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
-  const authError = searchParams.get("error");
+  const supabase = createSupabaseBrowserClient();
 
-  useEffect(() => {
-    if (authError) {
-      toast.error(`로그인에 실패했어요: ${authError}`);
-    }
-  }, [authError]);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  async function loginWithEmail(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!email) return;
     if (!supabase) {
-      toast.info("Add Supabase environment variables to enable email login.");
+      toast.info("Supabase 환경변수를 설정해주세요.");
       return;
     }
-    setSending(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` }
-    });
-    setSending(false);
-    if (error) {
-      console.error(error);
-      toast.error("로그인 메일을 보내지 못했어요. 잠시 후 다시 시도해주세요.");
+    if (!email || !password) return;
+    if (password.length < 6) {
+      toast.error("비밀번호는 6자 이상이어야 해요.");
       return;
     }
-    setSent(true);
-    toast.success("로그인 링크를 보냈어요. 메일함을 확인해주세요.");
+    setLoading(true);
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        if (!data.session) {
+          toast.info("가입이 완료됐어요. 이제 로그인해주세요.");
+          setMode("signin");
+          return;
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+      router.push(next);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (/invalid login credentials/i.test(message)) {
+        toast.error("이메일 또는 비밀번호가 올바르지 않아요.");
+      } else if (/already registered/i.test(message)) {
+        toast.error("이미 가입된 이메일이에요. 로그인해주세요.");
+        setMode("signin");
+      } else {
+        console.error(error);
+        toast.error(message || "문제가 생겼어요. 다시 시도해주세요.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -60,35 +76,46 @@ function LoginForm() {
         <Link href="/" className="text-sm text-muted transition hover:text-foreground">
           PlanTogether
         </Link>
-        <h1 className="mt-6 text-3xl font-semibold text-foreground">Sign in</h1>
+        <h1 className="mt-6 text-3xl font-semibold text-foreground">
+          {mode === "signin" ? "로그인" : "회원가입"}
+        </h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          이메일을 입력하면 로그인 링크를 보내드려요. 비밀번호는 필요 없습니다.
+          {mode === "signin"
+            ? "이메일과 비밀번호로 로그인하세요."
+            : "이메일과 비밀번호로 계정을 만들어요."}
         </p>
-        <div className="mt-6 flex flex-col gap-3">
-          {sent ? (
-            <div className="rounded-lg border border-border bg-black/[0.03] p-4 text-sm leading-6 text-foreground">
-              <p className="font-medium">{email}</p>
-              <p className="mt-1 text-muted">
-                위 주소로 로그인 링크를 보냈어요. 메일의 링크를 누르면 바로 로그인됩니다. 메일이 안 보이면
-                스팸함도 확인해주세요.
-              </p>
-            </div>
-          ) : (
-            <form className="flex flex-col gap-3" onSubmit={loginWithEmail}>
-              <Input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                autoFocus
-              />
-              <Button type="submit" disabled={sending}>
-                <Mail size={17} />
-                {sending ? "보내는 중..." : "로그인 링크 받기"}
-              </Button>
-            </form>
-          )}
-        </div>
+
+        <form className="mt-6 flex flex-col gap-3" onSubmit={submit}>
+          <Input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            autoFocus
+          />
+          <Input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="비밀번호 (6자 이상)"
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
+          />
+          <Button type="submit" disabled={loading}>
+            {loading ? "처리 중..." : mode === "signin" ? "로그인" : "가입하기"}
+          </Button>
+        </form>
+
+        <p className="mt-4 text-center text-sm text-muted">
+          {mode === "signin" ? "계정이 없으신가요? " : "이미 계정이 있으신가요? "}
+          <button
+            type="button"
+            className="font-medium text-primary transition hover:underline"
+            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          >
+            {mode === "signin" ? "회원가입" : "로그인"}
+          </button>
+        </p>
       </div>
     </main>
   );
