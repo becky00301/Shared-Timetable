@@ -9,14 +9,15 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [signedIn, setSignedIn] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
+  const signedIn = Boolean(email);
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user)));
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSignedIn(Boolean(session?.user));
+      setEmail(session?.user?.email ?? null);
     });
     return () => subscription.subscription.unsubscribe();
   }, [supabase]);
@@ -49,9 +50,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : null}
           </nav>
           {signedIn ? (
-            <Button size="sm" variant="outline" onClick={signOut}>
-              로그아웃
-            </Button>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
+                  {email?.slice(0, 1)}
+                </span>
+                <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={email ?? undefined}>
+                  {email}
+                </span>
+              </span>
+              <Button size="sm" variant="outline" onClick={signOut}>
+                로그아웃
+              </Button>
+            </div>
           ) : (
             <Button asChild size="sm">
               <Link href="/dashboard">앱 열기</Link>
