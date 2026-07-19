@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { format } from "date-fns";
 import { CalendarDays, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,16 @@ export function ProjectCard({
   const updateProject = useProjectStore((state) => state.updateProject);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(project.title);
+
+  const sortedDates = days.map((day) => day.date).sort();
+  const first = sortedDates[0];
+  const last = sortedDates[sortedDates.length - 1];
+  const fmt = (iso: string) => format(new Date(iso), "yyyy.M.d");
+  const dateRange = !first
+    ? null
+    : first === last
+      ? `${fmt(first)} (${sortedDates.length}일)`
+      : `${fmt(first)} ~ ${fmt(last)} (${sortedDates.length}일)`;
 
   function saveTitle() {
     setEditing(false);
@@ -74,17 +85,19 @@ export function ProjectCard({
               <CalendarDays size={18} />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {days.slice(0, 4).map((day) => (
-              <span key={day.id} className="rounded-md bg-black/6 px-2 py-1 text-xs text-muted">
-                {day.date}
+          <div>
+            {dateRange ? (
+              <span className="inline-flex rounded-md bg-black/6 px-2 py-1 text-xs text-muted">
+                {dateRange}
               </span>
-            ))}
+            ) : (
+              <span className="text-xs text-muted">아직 날짜가 없어요</span>
+            )}
           </div>
         </Link>
       )}
       <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted">
-        <span>{schedules.length} schedule blocks</span>
+        <span>일정 {schedules.length}개</span>
         <span className="inline-flex items-center gap-1">
           <Users size={14} />
           우클릭으로 이름 수정
