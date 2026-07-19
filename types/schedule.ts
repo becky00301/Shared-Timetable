@@ -9,6 +9,7 @@ export type ScheduleItem = {
   start_time: string;
   end_time: string;
   color: string;
+  google_event_id?: string | null;
   created_at: string;
   updated_at: string;
 };

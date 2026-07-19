@@ -6,6 +6,7 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ExportToolbar } from "@/components/export/ExportToolbar";
+import { GoogleCalendarSync } from "@/components/project/GoogleCalendarSync";
 import { ParticipantList } from "@/components/project/ParticipantList";
 import { RoleBadge } from "@/components/project/RoleBadge";
 import { SelectedDatesCalendar } from "@/components/project/SelectedDatesCalendar";
@@ -119,6 +120,10 @@ export function ProjectSidebar({
 
       <div className="mt-5">
         <ExportToolbar project={project} targetId="timetable-export" />
+      </div>
+
+      <div className="mt-3">
+        <GoogleCalendarSync projectId={project.id} />
       </div>
 
       <div className="mt-6 flex items-center justify-between">

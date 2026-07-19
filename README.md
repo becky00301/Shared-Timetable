@@ -88,9 +88,33 @@ Run the SQL files in order:
 2. `sql/policies.sql`
 3. `sql/shared_timetables.sql`
 
-Enable Google OAuth in Supabase Auth, configure the callback URL for your Vercel or local domain, then use `/login`.
+Sign-in uses email + password. Turn **Confirm email** off under Authentication → Sign In / Providers → Email so sign-up completes without a confirmation mail.
+
+Incremental migrations live in `sql/migrations/` and are already folded into `sql/schema.sql`; run them on an existing database:
+
+- `001_project_kind.sql` — weekly vs date-range timetables
+- `002_google_calendar.sql` — Google Calendar sync tables/columns
 
 The standalone shared timetable at `/shared-timetable.html` does not require login. It stores timetable JSON through the RPC functions in `sql/shared_timetables.sql`; the random `tt` URL parameter acts as the share/edit capability token.
+
+## Google Calendar sync
+
+Each project syncs into its own Google calendar named `PlanTogether · {title}`. Schedules are pushed one way (app → Google) and re-syncs update existing events rather than duplicating them.
+
+Setup:
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Google Calendar API**.
+2. Configure the OAuth consent screen (External). While the app is in Testing, add each Google account that will connect under **Test users**.
+3. Create an **OAuth client ID** of type *Web application* with these authorized redirect URIs:
+   - `https://your-domain.example/api/google/callback`
+   - `http://localhost:3000/api/google/callback`
+4. Set the server-only environment variables (Vercel → Settings → Environment Variables, and `.env.local` for development):
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`)
+5. Run `sql/migrations/002_google_calendar.sql`.
+
+OAuth tokens are stored in `public.google_accounts`, which has RLS enabled and no policies, so only server routes using the service role can read them.
 
 ## Deployment
 

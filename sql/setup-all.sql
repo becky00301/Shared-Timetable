@@ -25,6 +25,10 @@ alter table public.projects
   add column if not exists kind text not null default 'daterange'
   check (kind in ('weekly', 'daterange'));
 
+-- Google Calendar sync targets.
+alter table public.projects
+  add column if not exists google_calendar_id text;
+
 create table if not exists public.project_members (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -57,6 +61,19 @@ create table if not exists public.schedule_items (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (end_time > start_time)
+);
+
+alter table public.schedule_items
+  add column if not exists google_event_id text;
+
+create table if not exists public.google_accounts (
+  user_id uuid primary key references public.users(id) on delete cascade,
+  google_email text,
+  access_token text not null,
+  refresh_token text,
+  token_expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.availability (
@@ -174,6 +191,11 @@ alter table public.project_days enable row level security;
 alter table public.schedule_items enable row level security;
 alter table public.availability enable row level security;
 alter table public.attachments enable row level security;
+
+-- Google OAuth tokens: RLS on with no policies at all, so only the service role
+-- (server routes) can touch this table. Never expose it to the browser.
+alter table public.google_accounts enable row level security;
+revoke all on table public.google_accounts from anon, authenticated;
 
 create or replace function public.project_role(project_uuid uuid)
 returns text

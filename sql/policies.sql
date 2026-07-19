@@ -6,6 +6,11 @@ alter table public.schedule_items enable row level security;
 alter table public.availability enable row level security;
 alter table public.attachments enable row level security;
 
+-- Google OAuth tokens: RLS on with no policies at all, so only the service role
+-- (server routes) can touch this table. Never expose it to the browser.
+alter table public.google_accounts enable row level security;
+revoke all on table public.google_accounts from anon, authenticated;
+
 create or replace function public.project_role(project_uuid uuid)
 returns text
 language sql
