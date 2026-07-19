@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
 import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
@@ -54,8 +53,10 @@ export function DateColumn({
             <p className="text-sm font-semibold text-foreground">{weekdayKo}</p>
           ) : (
             <>
-              <p className="text-sm font-semibold text-foreground">{format(new Date(day.date), "MMM d")}</p>
-              <p className="text-[11px] uppercase text-muted">{format(new Date(day.date), "EEE")}</p>
+              <p className="text-sm font-semibold text-foreground">
+                {new Date(day.date).getMonth() + 1}월 {new Date(day.date).getDate()}일
+              </p>
+              <p className="text-[11px] text-muted">{weekdayKo}</p>
             </>
           )}
         </div>

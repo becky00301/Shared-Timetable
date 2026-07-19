@@ -40,21 +40,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <Link href="/dashboard" className="transition hover:text-foreground">
-              Dashboard
+              대시보드
             </Link>
             {!signedIn ? (
               <Link href="/login" className="transition hover:text-foreground">
-                Login
+                로그인
               </Link>
             ) : null}
           </nav>
           {signedIn ? (
             <Button size="sm" variant="outline" onClick={signOut}>
-              Sign out
+              로그아웃
             </Button>
           ) : (
             <Button asChild size="sm">
-              <Link href="/dashboard">Open app</Link>
+              <Link href="/dashboard">앱 열기</Link>
             </Button>
           )}
         </div>

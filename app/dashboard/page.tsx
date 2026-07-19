@@ -23,7 +23,7 @@ export default function DashboardPage() {
     loadDashboard().catch((error) => {
       console.error(error);
       setLoadError(true);
-      toast.error("Could not load your projects.");
+      toast.error("프로젝트를 불러오지 못했어요.");
     });
   }, [loadDashboard]);
 
@@ -32,12 +32,12 @@ export default function DashboardPage() {
       <main className="mx-auto max-w-7xl px-5 py-10">
         <div className="flex flex-col justify-between gap-4 border-b border-border pb-8 md:flex-row md:items-end">
           <div>
-            <h1 className="text-4xl font-semibold text-foreground">Dashboard</h1>
-            <p className="mt-2 text-muted">Your collaborative timetable documents.</p>
+            <h1 className="text-4xl font-semibold text-foreground">대시보드</h1>
+            <p className="mt-2 text-muted">함께 만드는 공유 시간표 목록이에요.</p>
           </div>
           <Button onClick={() => setCreateProjectOpen(true)}>
             <Plus size={16} />
-            Create project
+            새 시간표
           </Button>
         </div>
         {loading && !projects.length ? (

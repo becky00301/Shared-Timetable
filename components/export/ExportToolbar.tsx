@@ -12,7 +12,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
 
   function getTarget() {
     const element = document.getElementById(targetId);
-    if (!element) toast.error("Timetable is not ready to export.");
+    if (!element) toast.error("아직 내보낼 준비가 안 됐어요.");
     return element;
   }
 
@@ -20,7 +20,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
         <Share2 size={15} />
-        Share
+        공유
       </Button>
       <Button
         variant="outline"

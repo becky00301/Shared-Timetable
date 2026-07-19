@@ -37,7 +37,7 @@ export default function ProjectPage() {
       if (!result) setNotFound(true);
     }).catch((error) => {
       console.error(error);
-      toast.error("Could not load this project.");
+      toast.error("이 시간표를 불러오지 못했어요.");
       setNotFound(true);
     });
   }, [params.slug, loadProject]);
@@ -51,15 +51,15 @@ export default function ProjectPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-5 text-foreground">
         <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center">
-          <h1 className="text-2xl font-semibold">{notFound ? "Project not found" : "Loading..."}</h1>
+          <h1 className="text-2xl font-semibold">{notFound ? "시간표를 찾을 수 없어요" : "불러오는 중..."}</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
             {notFound
-              ? "This timetable does not exist, or you do not have access to it."
-              : "Fetching your timetable."}
+              ? "이 시간표가 없거나 접근 권한이 없어요."
+              : "시간표를 불러오고 있어요."}
           </p>
           {notFound ? (
             <Link className="mt-5 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white" href="/dashboard">
-              Back to dashboard
+              대시보드로 돌아가기
             </Link>
           ) : null}
         </div>
@@ -97,7 +97,9 @@ export default function ProjectPage() {
           </Link>
           <div className="min-w-0">
             <h1 className="truncate font-semibold text-foreground">{project.title}</h1>
-            <p className="text-xs text-muted">{currentRole}</p>
+            <p className="text-xs text-muted">
+              {currentRole === "owner" ? "소유자" : currentRole === "editor" ? "편집자" : "뷰어"}
+            </p>
           </div>
         </div>
         {days.length === 0 ? (
