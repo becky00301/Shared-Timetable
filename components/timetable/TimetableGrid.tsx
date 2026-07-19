@@ -27,6 +27,7 @@ export function TimetableGrid({
   const schedules = useProjectStore((state) => state.schedules).filter((item) => item.project_id === projectId);
   const availability = useProjectStore((state) => state.availability).filter((slot) => slot.project_id === projectId);
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
+  const deleteSchedule = useProjectStore((state) => state.deleteSchedule);
   const addAvailability = useProjectStore((state) => state.addAvailability);
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
@@ -221,6 +222,17 @@ export function TimetableGrid({
               onDraftCancel={() => setDraft(null)}
               onSelectSchedule={setSelectedSchedule}
               onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
+              onDeleteSchedule={(id) => {
+                deleteSchedule(id)
+                  .then(() => {
+                    if (selectedScheduleId === id) setSelectedSchedule(null);
+                    toast.success("일정을 삭제했어요.");
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                    toast.error("일정을 삭제하지 못했어요.");
+                  });
+              }}
               onPointerStart={onPointerStart}
             />
           ))}

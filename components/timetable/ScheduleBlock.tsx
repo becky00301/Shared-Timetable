@@ -4,6 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
 import { GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useContextMenu } from "@/components/ui/context-menu";
 import { durationToHeight, formatTimeRange, minutesToTop, timeToMinutes } from "@/lib/utils/time";
 import type { ScheduleItem } from "@/types/schedule";
 
@@ -12,14 +13,19 @@ export function ScheduleBlock({
   isSelected,
   canEdit,
   onSelect,
-  onResize
+  onResize,
+  onDelete
 }: {
   item: ScheduleItem;
   isSelected: boolean;
   canEdit: boolean;
   onSelect: () => void;
   onResize: (edge: "top" | "bottom", deltaY: number) => void;
+  onDelete: () => void;
 }) {
+  const { onContextMenu, menu } = useContextMenu(
+    canEdit ? [{ label: "삭제", onSelect: onDelete, danger: true }] : []
+  );
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     disabled: !canEdit,
@@ -56,9 +62,11 @@ export function ScheduleBlock({
         transform: CSS.Translate.toString(transform)
       }}
       onClick={onSelect}
+      onContextMenu={onContextMenu}
       {...attributes}
       {...listeners}
     >
+      {menu}
       <button
         type="button"
         className="absolute inset-x-0 top-0 flex h-2 items-center justify-center text-white/70"

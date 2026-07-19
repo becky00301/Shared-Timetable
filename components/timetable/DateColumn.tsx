@@ -22,6 +22,7 @@ export function DateColumn({
   onDraftCancel,
   onSelectSchedule,
   onResize,
+  onDeleteSchedule,
   onPointerStart
 }: {
   day: ProjectDay;
@@ -38,6 +39,7 @@ export function DateColumn({
   onDraftCancel: () => void;
   onSelectSchedule: (id: string) => void;
   onResize: (item: ScheduleItem, edge: "top" | "bottom", deltaY: number) => void;
+  onDeleteSchedule: (id: string) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
 }) {
   const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
@@ -78,6 +80,7 @@ export function DateColumn({
             isSelected={selectedScheduleId === item.id}
             onSelect={() => onSelectSchedule(item.id)}
             onResize={(edge, deltaY) => onResize(item, edge, deltaY)}
+            onDelete={() => onDeleteSchedule(item.id)}
           />
         ))}
         {draft ? (

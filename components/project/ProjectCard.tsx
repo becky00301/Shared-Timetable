@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, MousePointer2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { useContextMenu } from "@/components/ui/context-menu";
 import { useProjectStore } from "@/stores/project-store";
 import type { Project } from "@/types/project";
 import type { ProjectDay } from "@/types/project";
@@ -21,8 +22,32 @@ export function ProjectCard({
   schedules: ScheduleItem[];
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
+  const deleteProject = useProjectStore((state) => state.deleteProject);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(project.title);
+
+  const { onContextMenu, menu } = useContextMenu([
+    {
+      label: "이름 수정",
+      onSelect: () => {
+        setDraft(project.title);
+        setEditing(true);
+      }
+    },
+    {
+      label: "삭제",
+      danger: true,
+      onSelect: () => {
+        if (!window.confirm(`"${project.title}" 시간표를 삭제할까요? 되돌릴 수 없어요.`)) return;
+        deleteProject(project.id)
+          .then(() => toast.success("시간표를 삭제했어요."))
+          .catch((error) => {
+            console.error(error);
+            toast.error("삭제하지 못했어요. 소유자만 삭제할 수 있어요.");
+          });
+      }
+    }
+  ]);
 
   const sortedDates = days.map((day) => day.date).sort();
   const first = sortedDates[0];
@@ -51,12 +76,9 @@ export function ProjectCard({
   return (
     <div
       className="group relative flex min-h-48 flex-col justify-between rounded-xl border border-border bg-card p-5 transition hover:border-primary/50 hover:bg-black/[0.04]"
-      onContextMenu={(event) => {
-        event.preventDefault();
-        setDraft(project.title);
-        setEditing(true);
-      }}
+      onContextMenu={onContextMenu}
     >
+      {menu}
       {editing ? (
         <div className="flex flex-col gap-2">
           <Input
@@ -99,8 +121,8 @@ export function ProjectCard({
       <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted">
         <span>일정 {schedules.length}개</span>
         <span className="inline-flex items-center gap-1">
-          <Users size={14} />
-          우클릭으로 이름 수정
+          <MousePointer2 size={14} />
+          우클릭 메뉴
         </span>
       </div>
     </div>

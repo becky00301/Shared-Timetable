@@ -20,6 +20,7 @@ type ProjectStore = {
   loadProject: (slug: string) => Promise<Project | null>;
   createProject: (title: string, description?: string, kind?: ProjectKind) => Promise<Project>;
   updateProject: (projectId: string, patch: { title?: string; description?: string }) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
   removeDay: (dayId: string) => Promise<void>;
@@ -178,6 +179,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (error) throw error;
     set((state) => ({
       projects: state.projects.map((project) => (project.id === projectId ? (data as Project) : project))
+    }));
+  },
+
+  deleteProject: async (projectId) => {
+    const supabase = requireClient();
+    const { error } = await supabase.from("projects").delete().eq("id", projectId);
+    if (error) throw error;
+    set((state) => ({
+      projects: state.projects.filter((project) => project.id !== projectId),
+      days: state.days.filter((day) => day.project_id !== projectId),
+      members: state.members.filter((member) => member.project_id !== projectId),
+      schedules: state.schedules.filter((schedule) => schedule.project_id !== projectId)
     }));
   },
 
