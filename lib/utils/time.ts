@@ -1,7 +1,8 @@
 export const HOUR_HEIGHT = 72;
 export const DAY_START_MINUTES = 0;
 export const DAY_END_MINUTES = 24 * 60;
-export const SLOT_MINUTES = 30;
+export const SLOT_MINUTES = 5;
+export const MIN_DURATION_MINUTES = 5;
 
 export function timeToMinutes(time: string) {
   const [hours, minutes] = time.split(":").map(Number);

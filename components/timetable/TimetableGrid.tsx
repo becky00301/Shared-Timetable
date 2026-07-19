@@ -6,7 +6,14 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
 import { DateColumn } from "@/components/timetable/DateColumn";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
-import { DAY_END_MINUTES, minutesToTime, pointerYToTime, snapMinutes, timeToMinutes } from "@/lib/utils/time";
+import {
+  DAY_END_MINUTES,
+  MIN_DURATION_MINUTES,
+  minutesToTime,
+  pointerYToTime,
+  snapMinutes,
+  timeToMinutes
+} from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay, ProjectMember } from "@/types/project";
@@ -75,7 +82,7 @@ export function TimetableGrid({
           project_id: projectId,
           day_id: dayId,
           start_time: minutesToTime(Math.min(anchor, end)),
-          end_time: minutesToTime(Math.max(anchor + 30, end))
+          end_time: minutesToTime(Math.max(anchor + MIN_DURATION_MINUTES, end))
         })
           .then(() => toast.success("Availability added."))
           .catch((error) => {
@@ -88,12 +95,12 @@ export function TimetableGrid({
       return;
     }
 
-    dragRef.current = { dayId, start: anchor, end: anchor + 30 };
-    setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + 30, naming: false });
+    dragRef.current = { dayId, start: anchor, end: anchor + MIN_DURATION_MINUTES };
+    setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + MIN_DURATION_MINUTES, naming: false });
     const onMove = (moveEvent: PointerEvent) => {
       const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top));
       const start = Math.min(anchor, current);
-      const end = Math.min(DAY_END_MINUTES, Math.max(anchor + 30, current));
+      const end = Math.min(DAY_END_MINUTES, Math.max(anchor + MIN_DURATION_MINUTES, current));
       if (dragRef.current) {
         dragRef.current.start = start;
         dragRef.current.end = end;
@@ -139,7 +146,7 @@ export function TimetableGrid({
     const item = schedules.find((schedule) => schedule.id === event.active.id);
     if (!item || !canEdit) return;
     const deltaMinutes = snapMinutes((event.delta.y / 72) * 60);
-    const start = Math.max(0, Math.min(DAY_END_MINUTES - 30, timeToMinutes(item.start_time) + deltaMinutes));
+    const start = Math.max(0, Math.min(DAY_END_MINUTES - MIN_DURATION_MINUTES, timeToMinutes(item.start_time) + deltaMinutes));
     const duration = timeToMinutes(item.end_time) - timeToMinutes(item.start_time);
     const currentDayIndex = days.findIndex((day) => day.id === item.day_id);
     const measuredWidth = colsRef.current ? colsRef.current.offsetWidth / days.length : 208;
@@ -163,8 +170,8 @@ export function TimetableGrid({
     const deltaMinutes = snapMinutes((deltaY / 72) * 60);
     const start = timeToMinutes(item.start_time);
     const end = timeToMinutes(item.end_time);
-    const nextStart = edge === "top" ? Math.min(end - 30, Math.max(0, start + deltaMinutes)) : start;
-    const nextEnd = edge === "bottom" ? Math.max(start + 30, Math.min(DAY_END_MINUTES, end + deltaMinutes)) : end;
+    const nextStart = edge === "top" ? Math.min(end - MIN_DURATION_MINUTES, Math.max(0, start + deltaMinutes)) : start;
+    const nextEnd = edge === "bottom" ? Math.max(start + MIN_DURATION_MINUTES, Math.min(DAY_END_MINUTES, end + deltaMinutes)) : end;
     upsertSchedule({
       ...item,
       start_time: minutesToTime(nextStart),

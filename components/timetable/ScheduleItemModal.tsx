@@ -106,8 +106,8 @@ export function ScheduleItemModal({
                 </option>
               ))}
             </select>
-            <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
-            <Input type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
+            <Input type="time" step={300} value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+            <Input type="time" step={300} value={endTime} onChange={(event) => setEndTime(event.target.value)} />
           </div>
           <Input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Location" />
           <Textarea

@@ -129,6 +129,7 @@ export function ScheduleDetailPanel({
             시작
             <Input
               type="time"
+              step={300}
               value={startTime}
               disabled={!canEdit}
               onChange={(event) => {
@@ -141,6 +142,7 @@ export function ScheduleDetailPanel({
             종료
             <Input
               type="time"
+              step={300}
               value={endTime}
               disabled={!canEdit}
               onChange={(event) => {
