@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CalendarPlus, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExportToolbar } from "@/components/export/ExportToolbar";
 import { ParticipantList } from "@/components/project/ParticipantList";
@@ -18,16 +17,13 @@ export function ProjectSidebar({
   project,
   days,
   members,
-  currentRole,
-  canEdit
+  currentRole
 }: {
   project: Project;
   days: ProjectDay[];
   members: ProjectMember[];
   currentRole: ProjectRole;
-  canEdit: boolean;
 }) {
-  const setAddDateOpen = useUiStore((state) => state.setAddDateOpen);
   const activeMode = useUiStore((state) => state.activeMode);
   const setMode = useUiStore((state) => state.setMode);
   const updateProject = useProjectStore((state) => state.updateProject);
@@ -133,15 +129,11 @@ export function ProjectSidebar({
         <ParticipantList members={members} canManage={currentRole === "owner"} />
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-6">
         <h2 className="text-sm font-semibold text-foreground">선택한 날짜</h2>
-        <Button size="sm" variant="outline" disabled={!canEdit} onClick={() => setAddDateOpen(true)}>
-          <CalendarPlus size={15} />
-          추가
-        </Button>
       </div>
       <div className="mt-3">
-        <SelectedDatesCalendar days={days} canEdit={canEdit} />
+        <SelectedDatesCalendar days={days} />
       </div>
     </aside>
   );

@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AddDateModal } from "@/components/project/AddDateModal";
 import { ProjectSetup } from "@/components/project/ProjectSetup";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
@@ -79,13 +78,7 @@ export default function ProjectPage() {
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
-      <ProjectSidebar
-        project={project}
-        days={days}
-        members={members}
-        currentRole={currentRole}
-        canEdit={canEdit}
-      />
+      <ProjectSidebar project={project} days={days} members={members} currentRole={currentRole} />
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
           <Link
@@ -124,7 +117,6 @@ export default function ProjectPage() {
         )}
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
-      <AddDateModal projectId={project.id} />
       <ShareModal project={project} />
       <ScheduleItemModal projectId={project.id} days={days} canEdit={canEdit} />
     </main>

@@ -2,21 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, getDay, startOfMonth } from "date-fns";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
-import { useProjectStore } from "@/stores/project-store";
 import type { ProjectDay } from "@/types/project";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
-export function SelectedDatesCalendar({
-  days,
-  canEdit
-}: {
-  days: ProjectDay[];
-  canEdit: boolean;
-}) {
-  const removeDay = useProjectStore((state) => state.removeDay);
+export function SelectedDatesCalendar({ days }: { days: ProjectDay[] }) {
   const dayByDate = useMemo(() => new Map(days.map((day) => [day.date, day])), [days]);
 
   const sorted = days.map((day) => day.date).sort();
@@ -33,17 +24,6 @@ export function SelectedDatesCalendar({
     }
     return list;
   }, [month]);
-
-  function onDayClick(iso: string) {
-    const day = dayByDate.get(iso);
-    if (!day || !canEdit) return;
-    removeDay(day.id)
-      .then(() => toast.success("날짜를 제거했어요."))
-      .catch((error) => {
-        console.error(error);
-        toast.error("날짜를 제거하지 못했어요.");
-      });
-  }
 
   return (
     <div className="rounded-xl border border-border bg-black/[0.02] p-3">
@@ -79,27 +59,18 @@ export function SelectedDatesCalendar({
           const iso = format(date, "yyyy-MM-dd");
           const selected = dayByDate.has(iso);
           return (
-            <button
+            <span
               key={index}
-              type="button"
-              disabled={!selected || !canEdit}
-              onClick={() => onDayClick(iso)}
-              title={selected && canEdit ? "클릭하면 이 날짜를 제거해요" : undefined}
               className={cn(
-                "aspect-square rounded-md text-xs transition",
-                selected
-                  ? "bg-primary font-medium text-white hover:bg-primary/85"
-                  : "text-foreground/70"
+                "flex aspect-square items-center justify-center rounded-md text-xs",
+                selected ? "bg-primary font-medium text-white" : "text-foreground/70"
               )}
             >
               {date.getDate()}
-            </button>
+            </span>
           );
         })}
       </div>
-      {canEdit ? (
-        <p className="mt-2 text-[11px] leading-4 text-muted">파란 날짜를 클릭하면 제거돼요.</p>
-      ) : null}
     </div>
   );
 }
