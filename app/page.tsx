@@ -40,12 +40,6 @@ export default async function HomePage() {
         <span className="text-lg font-semibold">📅 PlanTogether</span>
         <nav className="flex items-center gap-2">
           <Link
-            href="/shared-timetable.html"
-            className="rounded-lg px-3 py-2 text-sm text-muted transition hover:text-foreground"
-          >
-            로그인 없이 써보기
-          </Link>
-          <Link
             href={loggedIn ? "/dashboard" : "/login"}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
           >
@@ -63,18 +57,12 @@ export default async function HomePage() {
           드래그로 만들고 링크 하나로 공유하세요. 여행·MT·스터디·프로젝트까지, 필요한 날짜만 골라 함께
           채우는 시간표.
         </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-8 flex items-center justify-center">
           <Link
             href={loggedIn ? "/dashboard" : "/login"}
             className="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 sm:w-auto"
           >
             {loggedIn ? "내 시간표로 이동" : "무료로 시작하기"}
-          </Link>
-          <Link
-            href="/shared-timetable.html"
-            className="w-full rounded-lg border border-border px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-black/6 sm:w-auto"
-          >
-            로그인 없이 바로 써보기
           </Link>
         </div>
       </section>
@@ -95,9 +83,6 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">
           <span>© PlanTogether</span>
           <div className="flex gap-4">
-            <Link href="/shared-timetable.html" className="transition hover:text-foreground">
-              공유 시간표 도구
-            </Link>
             <Link href={loggedIn ? "/dashboard" : "/login"} className="transition hover:text-foreground">
               {loggedIn ? "대시보드" : "로그인"}
             </Link>
