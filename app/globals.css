@@ -41,13 +41,16 @@ select {
   background: rgba(35, 131, 226, 0.22);
 }
 
+/* Hour, half-hour, then very faint 5-minute guides (72px / 12 = 6px). */
 .timetable-grid {
   background-image:
     linear-gradient(to bottom, rgba(55, 53, 47, 0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(55, 53, 47, 0.06) 1px, transparent 1px);
+    linear-gradient(to bottom, rgba(55, 53, 47, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(55, 53, 47, 0.03) 1px, transparent 1px);
   background-size:
     100% 72px,
-    100% 36px;
+    100% 36px,
+    100% 6px;
 }
 
 .export-mode .editor-only {
