@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
 import { DateColumn } from "@/components/timetable/DateColumn";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import {
   DAY_END_MINUTES,
+  HOUR_HEIGHT,
   MIN_DURATION_MINUTES,
   minutesToTime,
   pointerYToTime,
@@ -49,6 +50,9 @@ export function TimetableGrid({
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
+  // A small activation distance keeps clicks from registering as drags, so a
+  // real drag starts crisply instead of being swallowed by the click handler.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   // Show up to 7 columns at a time; extra days scroll horizontally.
   useEffect(() => {
@@ -145,7 +149,7 @@ export function TimetableGrid({
   function onDragEnd(event: DragEndEvent) {
     const item = schedules.find((schedule) => schedule.id === event.active.id);
     if (!item || !canEdit) return;
-    const deltaMinutes = snapMinutes((event.delta.y / 72) * 60);
+    const deltaMinutes = snapMinutes((event.delta.y / HOUR_HEIGHT) * 60);
     const start = Math.max(0, Math.min(DAY_END_MINUTES - MIN_DURATION_MINUTES, timeToMinutes(item.start_time) + deltaMinutes));
     const duration = timeToMinutes(item.end_time) - timeToMinutes(item.start_time);
     const currentDayIndex = days.findIndex((day) => day.id === item.day_id);
@@ -160,7 +164,7 @@ export function TimetableGrid({
       end_time: minutesToTime(Math.min(DAY_END_MINUTES, start + duration))
     }).catch((error) => {
       console.error(error);
-      toast.error("Could not move the schedule.");
+      toast.error(`일정을 옮기지 못했어요: ${error instanceof Error ? error.message : ""}`);
     });
   }
 
@@ -178,7 +182,7 @@ export function TimetableGrid({
       end_time: minutesToTime(nextEnd)
     }).catch((error) => {
       console.error(error);
-      toast.error("Could not resize the schedule.");
+      toast.error(`길이를 바꾸지 못했어요: ${error instanceof Error ? error.message : ""}`);
     });
   }
 
@@ -196,7 +200,14 @@ export function TimetableGrid({
   }
 
   return (
-    <DndContext id={`timetable-${projectId}`} onDragEnd={onDragEnd} modifiers={[restrictToWindowEdges]}>
+    // autoScroll is off: scrolling mid-drag skews delta against the drop position.
+    <DndContext
+      id={`timetable-${projectId}`}
+      sensors={sensors}
+      autoScroll={false}
+      onDragEnd={onDragEnd}
+      modifiers={[restrictToWindowEdges]}
+    >
       <div
         ref={scrollRef}
         id="timetable-export"
