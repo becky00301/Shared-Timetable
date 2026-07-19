@@ -36,7 +36,6 @@ export function TimetableGrid({
     startMinutes: number;
     endMinutes: number;
     naming: boolean;
-    itemId?: string;
   } | null>(null);
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
@@ -57,9 +56,6 @@ export function TimetableGrid({
   const TIME_COL_WIDTH = 64; // matches TimeColumn w-16
   const manyDays = days.length > 7;
   const colWidth = manyDays && viewportWidth ? Math.floor((viewportWidth - TIME_COL_WIDTH) / 7) : undefined;
-  // null = rename input still open; "" = closed without a rename;
-  // non-empty = title typed before the insert round-trip finished.
-  const pendingTitleRef = useRef<string | null>(null);
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
@@ -106,40 +102,10 @@ export function TimetableGrid({
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      const drag = dragRef.current;
-      dragRef.current = null;
-      if (!drag) return;
-
-      // The schedule is persisted the moment the drag ends; the inline input
-      // only renames the row that already exists.
+      // Keep the draft local and open the name input; nothing is saved until a
+      // name is entered.
       setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
-      pendingTitleRef.current = null;
-      upsertSchedule({
-        project_id: projectId,
-        day_id: drag.dayId,
-        title: "새 일정",
-        start_time: minutesToTime(drag.start),
-        end_time: minutesToTime(drag.end)
-      })
-        .then((item) => {
-          setSelectedSchedule(item.id);
-          const pending = pendingTitleRef.current;
-          if (pending === null) {
-            setDraft((prev) => (prev && prev.dayId === drag.dayId ? { ...prev, itemId: item.id } : prev));
-            return;
-          }
-          if (pending && pending !== item.title) {
-            upsertSchedule({ ...item, title: pending }).catch((error) => {
-              console.error(error);
-              toast.error("이름을 저장하지 못했어요.");
-            });
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-          toast.error("일정을 저장하지 못했어요.");
-          setDraft(null);
-        });
+      dragRef.current = null;
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -147,17 +113,24 @@ export function TimetableGrid({
 
   function commitDraft(title: string) {
     if (!draft) return;
-    if (draft.itemId) {
-      const item = schedules.find((schedule) => schedule.id === draft.itemId);
-      if (item && title && title !== item.title) {
-        upsertSchedule({ ...item, title }).catch((error) => {
-          console.error(error);
-          toast.error("이름을 저장하지 못했어요.");
-        });
-      }
-    } else {
-      pendingTitleRef.current = title;
+    const name = title.trim();
+    // No name → discard the draft without creating anything.
+    if (!name) {
+      setDraft(null);
+      return;
     }
+    upsertSchedule({
+      project_id: projectId,
+      day_id: draft.dayId,
+      title: name,
+      start_time: minutesToTime(draft.startMinutes),
+      end_time: minutesToTime(draft.endMinutes)
+    })
+      .then((item) => setSelectedSchedule(item.id))
+      .catch((error) => {
+        console.error(error);
+        toast.error("일정을 저장하지 못했어요.");
+      });
     setDraft(null);
   }
 
@@ -233,9 +206,7 @@ export function TimetableGrid({
               weekdayOnly={weekdayOnly}
               width={colWidth}
               selectedScheduleId={selectedScheduleId}
-              schedules={schedules.filter(
-                (item) => item.day_id === day.id && item.id !== (draft?.naming ? draft.itemId : undefined)
-              )}
+              schedules={schedules.filter((item) => item.day_id === day.id)}
               availability={availability.filter((slot) => slot.day_id === day.id)}
               draft={
                 draft && draft.dayId === day.id
@@ -247,10 +218,7 @@ export function TimetableGrid({
                   : null
               }
               onDraftCommit={commitDraft}
-              onDraftCancel={() => {
-                pendingTitleRef.current = "";
-                setDraft(null);
-              }}
+              onDraftCancel={() => setDraft(null)}
               onSelectSchedule={setSelectedSchedule}
               onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
               onPointerStart={onPointerStart}

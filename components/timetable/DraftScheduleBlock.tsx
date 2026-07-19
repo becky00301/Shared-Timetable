@@ -21,8 +21,8 @@ export function DraftScheduleBlock({
   const top = minutesToTop(timeToMinutes(startTime));
   const height = Math.max(34, durationToHeight(startTime, endTime));
 
-  // Blur or Enter always saves; an empty name falls back to a default in the
-  // parent, so a stray click can never silently discard the schedule.
+  // Blur or Enter commits the typed name; the parent creates the schedule only
+  // when a name was entered, and discards the draft otherwise.
   function finish() {
     onCommit(title.trim());
   }
@@ -51,7 +51,7 @@ export function DraftScheduleBlock({
             }
           }}
           onBlur={finish}
-          placeholder="일정 이름 (비우면 '새 일정')"
+          placeholder="일정 이름 (비우면 취소)"
           className="w-full bg-transparent text-sm font-semibold text-white placeholder:text-white/60 focus:outline-none"
         />
       ) : (
