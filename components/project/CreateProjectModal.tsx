@@ -76,7 +76,7 @@ export function CreateProjectModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         {step === "mode" ? (
           <>
             <DialogHeader>
@@ -85,66 +85,61 @@ export function CreateProjectModal() {
                 드래그로 만들고 링크 하나로 공유하는 시간표
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-3">
-              <div className="rounded-xl border border-border bg-black/[0.03] p-4">
-                <div className="flex items-start gap-3">
-                  <CalendarDays className="mt-0.5 shrink-0 text-primary" size={20} />
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground">일주일 시간표 만들기</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted">날짜 입력 없이 기본 틀로 즉시 시작</p>
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
-                  <button
-                    type="button"
-                    onClick={() => setWeekStart("mon")}
-                    className={cn(
-                      "rounded-md px-3 py-1.5 text-sm transition",
-                      weekStart === "mon" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
-                    )}
-                  >
-                    월요일 시작
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWeekStart("sun")}
-                    className={cn(
-                      "rounded-md px-3 py-1.5 text-sm transition",
-                      weekStart === "sun" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
-                    )}
-                  >
-                    일요일 시작
-                  </button>
-                </div>
-                <Button
-                  className="mt-3 w-full"
-                  onClick={() => {
-                    setMode("weekly");
-                    setStep("name");
-                  }}
-                >
-                  이대로 시작하기
-                </Button>
-              </div>
-
+            <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => {
                   setMode("daterange");
                   setStep("datepick");
                 }}
-                className="rounded-xl border border-border bg-black/[0.03] p-4 text-left transition hover:border-primary"
+                className="flex flex-col rounded-xl border border-border bg-black/[0.03] p-4 text-left transition hover:border-primary"
               >
-                <div className="flex items-start gap-3">
-                  <CalendarRange className="mt-0.5 shrink-0 text-primary" size={20} />
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground">날짜 직접 선택</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted">
-                      기간을 골라 여행·MT·행사 일정에 맞는 날짜만 추가
-                    </p>
-                  </div>
-                </div>
+                <CalendarRange className="shrink-0 text-primary" size={20} />
+                <h3 className="mt-3 font-semibold text-foreground">날짜 직접 선택</h3>
+                <p className="mt-1 text-sm leading-6 text-muted">
+                  기간을 골라 여행·MT·행사 일정에 맞는 날짜만 추가
+                </p>
+                <span className="mt-auto pt-4 text-sm font-medium text-primary">기간 선택하기 →</span>
               </button>
+
+              <div className="flex flex-col rounded-xl border border-border bg-black/[0.03] p-4">
+                <CalendarDays className="shrink-0 text-primary" size={20} />
+                <h3 className="mt-3 font-semibold text-foreground">일주일 시간표 만들기</h3>
+                <p className="mt-1 text-sm leading-6 text-muted">날짜 입력 없이 기본 틀로 즉시 시작</p>
+                <div className="mt-auto pt-4">
+                  <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
+                    <button
+                      type="button"
+                      onClick={() => setWeekStart("mon")}
+                      className={cn(
+                        "rounded-md px-3 py-1.5 text-sm transition",
+                        weekStart === "mon" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+                      )}
+                    >
+                      월요일 시작
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWeekStart("sun")}
+                      className={cn(
+                        "rounded-md px-3 py-1.5 text-sm transition",
+                        weekStart === "sun" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+                      )}
+                    >
+                      일요일 시작
+                    </button>
+                  </div>
+                  <Button
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      setMode("weekly");
+                      setStep("name");
+                    }}
+                  >
+                    이대로 시작하기
+                  </Button>
+                </div>
+              </div>
             </div>
           </>
         ) : step === "datepick" ? (
