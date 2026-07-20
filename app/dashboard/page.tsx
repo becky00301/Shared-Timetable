@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
 import { ProjectCard } from "@/components/project/ProjectCard";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const projects = useProjectStore((state) => state.projects);
   const days = useProjectStore((state) => state.days);
   const schedules = useProjectStore((state) => state.schedules);
@@ -19,13 +22,32 @@ export default function DashboardPage() {
   const setCreateProjectOpen = useUiStore((state) => state.setCreateProjectOpen);
   const [loadError, setLoadError] = useState(false);
 
+  // This page is prerendered, so a client-side navigation can reach it without
+  // passing through middleware. Verify the session here too, and clear any
+  // cached data before redirecting.
   useEffect(() => {
-    loadDashboard().catch((error) => {
-      console.error(error);
-      setLoadError(true);
-      toast.error("프로젝트를 불러오지 못했어요.");
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data }) => {
+      if (cancelled) return;
+      if (!data.user) {
+        useProjectStore.getState().reset();
+        router.replace("/login?next=%2Fdashboard");
+        return;
+      }
+      loadDashboard().catch((error) => {
+        console.error(error);
+        setLoadError(true);
+        toast.error("프로젝트를 불러오지 못했어요.");
+      });
     });
-  }, [loadDashboard]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadDashboard, router]);
 
   return (
     <AppShell>

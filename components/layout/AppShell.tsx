@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useProjectStore } from "@/stores/project-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,6 +26,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   async function signOut() {
     if (!supabase) return;
     await supabase.auth.signOut();
+    // The store lives in memory across client-side navigations, so it has to be
+    // cleared explicitly or the next page still renders the old account's data.
+    useProjectStore.getState().reset();
     router.push("/login");
     router.refresh();
   }

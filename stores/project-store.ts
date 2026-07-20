@@ -33,6 +33,7 @@ type ProjectStore = {
   ) => Promise<ScheduleItem>;
   deleteSchedule: (itemId: string) => Promise<void>;
   addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
+  reset: () => void;
   joinByInviteToken: (token: string) => Promise<string>;
   updateMemberRole: (memberId: string, role: "editor" | "viewer") => Promise<void>;
   getProjectBySlug: (slug: string) => Project | undefined;
@@ -350,6 +351,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (error) throw error;
     set((state) => ({ availability: [...state.availability, data as AvailabilitySlot] }));
   },
+
+  // Wipe cached project data so a signed-out user never sees the previous
+  // account's timetables lingering in memory.
+  reset: () =>
+    set({
+      currentUserId: null,
+      projects: [],
+      days: [],
+      members: [],
+      schedules: [],
+      availability: [],
+      attachments: [],
+      notes: []
+    }),
 
   joinByInviteToken: async (token) => {
     const supabase = requireClient();
