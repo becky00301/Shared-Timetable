@@ -1,7 +1,7 @@
 "use client";
 
 import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
-import { DayNoteCell } from "@/components/timetable/DayNoteCell";
+import { AllDayRow } from "@/components/timetable/AllDayRow";
 import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
 import { cn } from "@/lib/utils/cn";
@@ -21,6 +21,8 @@ export function DateColumn({
   draft,
   onDraftCommit,
   onDraftCancel,
+  allDayItems,
+  onCreateAllDay,
   onSelectSchedule,
   onResize,
   onDeleteSchedule,
@@ -28,6 +30,8 @@ export function DateColumn({
 }: {
   day: ProjectDay;
   schedules: ScheduleItem[];
+  allDayItems: ScheduleItem[];
+  onCreateAllDay: (dayId: string, title: string) => void;
   availability: AvailabilitySlot[];
   memberCount: number;
   activeMode: "schedule" | "availability";
@@ -65,9 +69,16 @@ export function DateColumn({
           )}
         </div>
       </div>
-      {/* All-day note row, pinned right below the date header. */}
+      {/* All-day row, pinned right below the date header. */}
       <div className="sticky top-12 z-30 border-b border-border bg-surface">
-        <DayNoteCell day={day} canEdit={canEdit} />
+        <AllDayRow
+          items={allDayItems}
+          canEdit={canEdit}
+          selectedScheduleId={selectedScheduleId}
+          onCreate={(title) => onCreateAllDay(day.id, title)}
+          onSelect={onSelectSchedule}
+          onDelete={onDeleteSchedule}
+        />
       </div>
       <div
         className={cn("timetable-grid relative h-[1728px]", canEdit && "cursor-crosshair")}

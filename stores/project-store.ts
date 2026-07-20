@@ -24,7 +24,6 @@ type ProjectStore = {
   deleteProject: (projectId: string) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
-  updateDayNote: (dayId: string, note: string) => Promise<void>;
   addNote: (projectId: string, body: string) => Promise<void>;
   updateNote: (noteId: string, body: string) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
@@ -245,21 +244,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set((state) => ({ days: [...state.days, ...((data ?? []) as ProjectDay[])] }));
   },
 
-  updateDayNote: async (dayId, note) => {
-    const supabase = requireClient();
-    const value = note.trim() || null;
-    const { data, error } = await supabase
-      .from("project_days")
-      .update({ note: value })
-      .eq("id", dayId)
-      .select("*")
-      .single();
-    if (error) throw error;
-    set((state) => ({
-      days: state.days.map((day) => (day.id === dayId ? (data as ProjectDay) : day))
-    }));
-  },
-
   addNote: async (projectId, body) => {
     const supabase = requireClient();
     const userId = get().currentUserId ?? (await get().loadCurrentUser());
@@ -314,7 +298,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       location: item.location || null,
       start_time: item.start_time,
       end_time: item.end_time,
-      color: item.color ?? "#1972F7"
+      color: item.color ?? "#1972F7",
+      all_day: item.all_day ?? false
     };
 
     if (item.id) {

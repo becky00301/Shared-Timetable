@@ -81,6 +81,9 @@ create table if not exists public.schedule_items (
 alter table public.schedule_items
   add column if not exists google_event_id text;
 
+alter table public.schedule_items
+  add column if not exists all_day boolean not null default false;
+
 create table if not exists public.google_accounts (
   user_id uuid primary key references public.users(id) on delete cascade,
   google_email text,

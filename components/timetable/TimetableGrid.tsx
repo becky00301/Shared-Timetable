@@ -123,6 +123,22 @@ export function TimetableGrid({
     window.addEventListener("pointerup", onUp);
   }
 
+  function createAllDay(dayId: string, title: string) {
+    upsertSchedule({
+      project_id: projectId,
+      day_id: dayId,
+      title,
+      all_day: true,
+      start_time: "00:00",
+      end_time: "23:59"
+    })
+      .then((item) => setSelectedSchedule(item.id))
+      .catch((error) => {
+        console.error(error);
+        toast.error("종일 일정을 저장하지 못했어요.");
+      });
+  }
+
   function commitDraft(title: string) {
     if (!draft) return;
     const name = title.trim();
@@ -225,7 +241,9 @@ export function TimetableGrid({
               weekdayOnly={weekdayOnly}
               width={colWidth}
               selectedScheduleId={selectedScheduleId}
-              schedules={schedules.filter((item) => item.day_id === day.id)}
+              schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
+              allDayItems={schedules.filter((item) => item.day_id === day.id && item.all_day)}
+              onCreateAllDay={createAllDay}
               availability={availability.filter((slot) => slot.day_id === day.id)}
               draft={
                 draft && draft.dayId === day.id

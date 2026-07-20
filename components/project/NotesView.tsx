@@ -42,7 +42,6 @@ export function NotesView({
   );
 
   const hasScheduleMemos = byDay.some((group) => group.items.length > 0);
-  const daysWithNote = days.filter((day) => day.note?.trim());
 
   async function submitNote(event: React.FormEvent) {
     event.preventDefault();
@@ -115,23 +114,6 @@ export function NotesView({
             )}
           </div>
         </section>
-
-        {daysWithNote.length ? (
-          <section>
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <CalendarDays size={16} className="text-primary" />
-              날짜별 종일 메모
-            </h2>
-            <div className="mt-3 flex flex-col gap-2">
-              {daysWithNote.map((day) => (
-                <div key={day.id} className="rounded-xl border border-border bg-card p-4">
-                  <p className="text-xs text-muted">{day.date}</p>
-                  <p className="mt-1 text-sm leading-6 text-foreground">{day.note}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
 
         <section>
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">

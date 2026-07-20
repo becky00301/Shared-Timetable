@@ -124,6 +124,11 @@ export function ScheduleDetailPanel({
           </select>
         </label>
 
+        {item.all_day ? (
+          <p className="rounded-lg border border-border bg-black/[0.03] px-3 py-2 text-xs text-muted">
+            종일 일정이에요.
+          </p>
+        ) : (
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5 text-muted">
             시작
@@ -152,6 +157,7 @@ export function ScheduleDetailPanel({
             />
           </label>
         </div>
+        )}
 
         <label className="flex flex-col gap-1.5 text-muted">
           장소

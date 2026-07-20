@@ -51,15 +51,26 @@ export type SyncEventInput = {
   title: string;
   description?: string | null;
   location?: string | null;
+  allDay?: boolean;
 };
 
+function nextDay(date: string) {
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return next.toISOString().slice(0, 10);
+}
+
 function eventBody(input: SyncEventInput) {
+  // All-day events use date-only bounds, and Google treats `end` as exclusive.
+  const bounds = input.allDay
+    ? { start: { date: input.date }, end: { date: nextDay(input.date) } }
+    : { start: toEventTime(input.date, input.startTime), end: toEventTime(input.date, input.endTime) };
+
   return {
     summary: input.title,
     description: input.description || undefined,
     location: input.location || undefined,
-    start: toEventTime(input.date, input.startTime),
-    end: toEventTime(input.date, input.endTime)
+    ...bounds
   };
 }
 

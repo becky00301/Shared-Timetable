@@ -121,7 +121,7 @@ export function MonthCalendarView({
                     className="truncate rounded px-1.5 py-0.5 text-left text-xs text-foreground transition hover:opacity-80"
                     style={{ backgroundColor: `${item.color ?? "#1972F7"}55` }}
                   >
-                    {item.start_time.slice(0, 5)} {item.title}
+                    {item.all_day ? item.title : `${item.start_time.slice(0, 5)} ${item.title}`}
                   </button>
                 ))}
                 {dayItems.length > 3 ? (
