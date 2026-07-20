@@ -83,6 +83,9 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">
           <span>© PlanTogether</span>
           <div className="flex gap-4">
+            <Link href="/privacy" className="transition hover:text-foreground">
+              개인정보처리방침
+            </Link>
             <Link href={loggedIn ? "/dashboard" : "/login"} className="transition hover:text-foreground">
               {loggedIn ? "대시보드" : "로그인"}
             </Link>

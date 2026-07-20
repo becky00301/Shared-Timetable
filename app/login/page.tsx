@@ -26,6 +26,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -36,6 +37,10 @@ function LoginForm() {
     if (!email || !password) return;
     if (password.length < 6) {
       toast.error("비밀번호는 6자 이상이어야 해요.");
+      return;
+    }
+    if (mode === "signup" && !agreed) {
+      toast.error("개인정보 수집·이용에 동의해주세요.");
       return;
     }
     setLoading(true);
@@ -85,22 +90,52 @@ function LoginForm() {
             : "이메일과 비밀번호로 계정을 만들어요."}
         </p>
 
-        <form className="mt-6 flex flex-col gap-3" onSubmit={submit}>
-          <Input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            autoFocus
-          />
-          <Input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="비밀번호 (6자 이상)"
-            autoComplete={mode === "signin" ? "current-password" : "new-password"}
-          />
+        <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
+          <label className="flex flex-col gap-1.5 text-sm text-muted">
+            이메일
+            <Input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              autoFocus
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm text-muted">
+            비밀번호
+            <Input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="6자 이상"
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+            />
+          </label>
+
+          {mode === "signup" ? (
+            <label className="flex items-start gap-2 rounded-lg border border-border bg-black/[0.02] p-3 text-sm leading-6 text-muted">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(event) => setAgreed(event.target.checked)}
+                className="mt-1 size-4 shrink-0 accent-[color:var(--primary)]"
+              />
+              <span>
+                <span className="text-foreground">개인정보 수집·이용에 동의합니다.</span> (필수)
+                <br />
+                이메일과 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  className="font-medium text-primary underline underline-offset-2"
+                >
+                  개인정보처리방침
+                </Link>
+              </span>
+            </label>
+          ) : null}
+
           <Button type="submit" disabled={loading}>
             {loading ? "처리 중..." : mode === "signin" ? "로그인" : "가입하기"}
           </Button>
