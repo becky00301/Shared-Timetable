@@ -49,7 +49,8 @@ export function DateColumn({
       className={cn("border-r border-border last:border-r-0", width ? "shrink-0" : "min-w-0 flex-1")}
       style={width ? { width } : undefined}
     >
-      <div className="sticky top-0 z-10 flex h-12 items-center justify-center border-b border-border bg-surface">
+      {/* Above schedule blocks (z-10) and drafts (z-20) so they scroll under the header. */}
+      <div className="sticky top-0 z-30 flex h-12 items-center justify-center border-b border-border bg-surface">
         <div className="text-center">
           {weekdayOnly ? (
             <p className="text-sm font-semibold text-foreground">{weekdayKo}</p>
