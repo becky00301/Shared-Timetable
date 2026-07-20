@@ -201,8 +201,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   deleteProject: async (projectId) => {
     const supabase = requireClient();
-    const { error } = await supabase.from("projects").delete().eq("id", projectId);
+    // RLS-blocked deletes come back as success with zero rows, so confirm a row
+    // actually went away instead of trusting the missing error.
+    const { data, error } = await supabase.from("projects").delete().eq("id", projectId).select("id");
     if (error) throw error;
+    if (!data?.length) throw new Error("삭제 권한이 없어요. 소유자만 삭제할 수 있어요.");
     set((state) => ({
       projects: state.projects.filter((project) => project.id !== projectId),
       days: state.days.filter((day) => day.project_id !== projectId),
@@ -273,15 +276,17 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   deleteNote: async (noteId) => {
     const supabase = requireClient();
-    const { error } = await supabase.from("project_notes").delete().eq("id", noteId);
+    const { data, error } = await supabase.from("project_notes").delete().eq("id", noteId).select("id");
     if (error) throw error;
+    if (!data?.length) throw new Error("삭제 권한이 없어요.");
     set((state) => ({ notes: state.notes.filter((note) => note.id !== noteId) }));
   },
 
   removeDay: async (dayId) => {
     const supabase = requireClient();
-    const { error } = await supabase.from("project_days").delete().eq("id", dayId);
+    const { data, error } = await supabase.from("project_days").delete().eq("id", dayId).select("id");
     if (error) throw error;
+    if (!data?.length) throw new Error("삭제 권한이 없어요.");
     set((state) => ({
       days: state.days.filter((day) => day.id !== dayId),
       schedules: state.schedules.filter((item) => item.day_id !== dayId),
@@ -331,8 +336,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   deleteSchedule: async (itemId) => {
     const supabase = requireClient();
-    const { error } = await supabase.from("schedule_items").delete().eq("id", itemId);
+    const { data, error } = await supabase.from("schedule_items").delete().eq("id", itemId).select("id");
     if (error) throw error;
+    if (!data?.length) throw new Error("삭제 권한이 없어요.");
     set((state) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),
       attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)

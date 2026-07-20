@@ -94,18 +94,20 @@ on public.projects for insert
 to authenticated
 with check (owner_id = auth.uid());
 
+-- owner_id is accepted alongside membership so a project can always be managed
+-- by its owner, even if the project_members row is missing.
 drop policy if exists "owners can update projects" on public.projects;
 create policy "owners can update projects"
 on public.projects for update
 to authenticated
-using (public.can_manage_project(id))
-with check (public.can_manage_project(id));
+using (owner_id = auth.uid() or public.can_manage_project(id))
+with check (owner_id = auth.uid() or public.can_manage_project(id));
 
 drop policy if exists "owners can delete projects" on public.projects;
 create policy "owners can delete projects"
 on public.projects for delete
 to authenticated
-using (public.can_manage_project(id));
+using (owner_id = auth.uid() or public.can_manage_project(id));
 
 drop policy if exists "members can read memberships" on public.project_members;
 create policy "members can read memberships"
