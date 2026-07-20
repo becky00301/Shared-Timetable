@@ -1,6 +1,6 @@
 "use client";
 
-import { FileDown, ImageDown, Share2 } from "lucide-react";
+import { FileDown, ImageDown, Share2, Sheet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { exportTimetablePdf, exportTimetablePng } from "@/lib/export/timetable-export";
@@ -43,6 +43,17 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
       >
         <FileDown size={15} />
         PDF
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          // Built server-side, so the xlsx writer never ships to the browser.
+          window.location.href = `/api/export/excel?projectId=${encodeURIComponent(project.id)}`;
+        }}
+      >
+        <Sheet size={15} />
+        엑셀
       </Button>
     </div>
   );
