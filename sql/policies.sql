@@ -174,6 +174,21 @@ to authenticated
 using (public.can_edit_project(project_id) and user_id = auth.uid())
 with check (public.can_edit_project(project_id) and user_id = auth.uid());
 
+alter table public.project_notes enable row level security;
+
+drop policy if exists "members read project notes" on public.project_notes;
+create policy "members read project notes"
+on public.project_notes for select
+to authenticated
+using (public.is_project_member(project_id));
+
+drop policy if exists "editors manage project notes" on public.project_notes;
+create policy "editors manage project notes"
+on public.project_notes for all
+to authenticated
+using (public.can_edit_project(project_id))
+with check (public.can_edit_project(project_id));
+
 drop policy if exists "members read attachments" on public.attachments;
 create policy "members read attachments"
 on public.attachments for select
@@ -223,6 +238,7 @@ grant select, insert, update, delete on table
   public.projects,
   public.project_members,
   public.project_days,
+  public.project_notes,
   public.schedule_items,
   public.availability,
   public.attachments

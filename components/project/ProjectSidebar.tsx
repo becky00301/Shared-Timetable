@@ -11,7 +11,6 @@ import { ParticipantList } from "@/components/project/ParticipantList";
 import { RoleBadge } from "@/components/project/RoleBadge";
 import { SelectedDatesCalendar } from "@/components/project/SelectedDatesCalendar";
 import { useProjectStore } from "@/stores/project-store";
-import { useUiStore } from "@/stores/ui-store";
 import type { Project, ProjectDay, ProjectMember, ProjectRole } from "@/types/project";
 
 export function ProjectSidebar({
@@ -25,8 +24,6 @@ export function ProjectSidebar({
   members: ProjectMember[];
   currentRole: ProjectRole;
 }) {
-  const activeMode = useUiStore((state) => state.activeMode);
-  const setMode = useUiStore((state) => state.setMode);
   const updateProject = useProjectStore((state) => state.updateProject);
   const canRename = currentRole === "owner" || currentRole === "editor";
   const [editingTitle, setEditingTitle] = useState(false);
@@ -95,27 +92,6 @@ export function ProjectSidebar({
           ) : null}
         </div>
         <RoleBadge role={currentRole} />
-      </div>
-
-      <div className="mt-5 rounded-xl border border-border bg-card p-1">
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            className={`rounded-lg px-3 py-2 text-sm transition ${
-              activeMode === "schedule" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
-            }`}
-            onClick={() => setMode("schedule")}
-          >
-            일정
-          </button>
-          <button
-            className={`rounded-lg px-3 py-2 text-sm transition ${
-              activeMode === "availability" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
-            }`}
-            onClick={() => setMode("availability")}
-          >
-            가능 시간
-          </button>
-        </div>
       </div>
 
       <div className="mt-5">

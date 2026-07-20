@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { Project, ProjectDay, ProjectKind, ProjectMember } from "@/types/project";
+import type { Project, ProjectDay, ProjectKind, ProjectMember, ProjectNote } from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
 type ProjectStore = {
@@ -15,6 +15,7 @@ type ProjectStore = {
   schedules: ScheduleItem[];
   availability: AvailabilitySlot[];
   attachments: Attachment[];
+  notes: ProjectNote[];
   loadCurrentUser: () => Promise<string | null>;
   loadDashboard: () => Promise<void>;
   loadProject: (slug: string) => Promise<Project | null>;
@@ -23,6 +24,10 @@ type ProjectStore = {
   deleteProject: (projectId: string) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
+  updateDayNote: (dayId: string, note: string) => Promise<void>;
+  addNote: (projectId: string, body: string) => Promise<void>;
+  updateNote: (noteId: string, body: string) => Promise<void>;
+  deleteNote: (noteId: string) => Promise<void>;
   removeDay: (dayId: string) => Promise<void>;
   upsertSchedule: (
     item: Partial<ScheduleItem> & Pick<ScheduleItem, "project_id" | "day_id" | "title" | "start_time" | "end_time">
@@ -56,6 +61,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   schedules: [],
   availability: [],
   attachments: [],
+  notes: [],
 
   loadCurrentUser: async () => {
     const supabase = createSupabaseBrowserClient();
@@ -103,18 +109,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (projectError) throw projectError;
       if (!project) return null;
 
-      const [daysRes, membersRes, schedulesRes, availabilityRes, attachmentsRes] = await Promise.all([
-        supabase.from("project_days").select("*").eq("project_id", project.id),
-        supabase.from("project_members").select("*, user:users(*)").eq("project_id", project.id),
-        supabase.from("schedule_items").select("*").eq("project_id", project.id),
-        supabase.from("availability").select("*").eq("project_id", project.id),
-        supabase.from("attachments").select("*").eq("project_id", project.id)
-      ]);
+      const [daysRes, membersRes, schedulesRes, availabilityRes, attachmentsRes, notesRes] =
+        await Promise.all([
+          supabase.from("project_days").select("*").eq("project_id", project.id),
+          supabase.from("project_members").select("*, user:users(*)").eq("project_id", project.id),
+          supabase.from("schedule_items").select("*").eq("project_id", project.id),
+          supabase.from("availability").select("*").eq("project_id", project.id),
+          supabase.from("attachments").select("*").eq("project_id", project.id),
+          supabase
+            .from("project_notes")
+            .select("*")
+            .eq("project_id", project.id)
+            .order("created_at", { ascending: true })
+        ]);
       if (daysRes.error) throw daysRes.error;
       if (membersRes.error) throw membersRes.error;
       if (schedulesRes.error) throw schedulesRes.error;
       if (availabilityRes.error) throw availabilityRes.error;
       if (attachmentsRes.error) throw attachmentsRes.error;
+      if (notesRes.error) throw notesRes.error;
 
       set((state) => ({
         projects: [project as Project, ...state.projects.filter((p) => p.id !== project.id)],
@@ -134,6 +147,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         attachments: [
           ...state.attachments.filter((a) => a.project_id !== project.id),
           ...((attachmentsRes.data ?? []) as Attachment[])
+        ],
+        notes: [
+          ...state.notes.filter((n) => n.project_id !== project.id),
+          ...((notesRes.data ?? []) as ProjectNote[])
         ]
       }));
 
@@ -226,6 +243,54 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*");
     if (error) throw error;
     set((state) => ({ days: [...state.days, ...((data ?? []) as ProjectDay[])] }));
+  },
+
+  updateDayNote: async (dayId, note) => {
+    const supabase = requireClient();
+    const value = note.trim() || null;
+    const { data, error } = await supabase
+      .from("project_days")
+      .update({ note: value })
+      .eq("id", dayId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    set((state) => ({
+      days: state.days.map((day) => (day.id === dayId ? (data as ProjectDay) : day))
+    }));
+  },
+
+  addNote: async (projectId, body) => {
+    const supabase = requireClient();
+    const userId = get().currentUserId ?? (await get().loadCurrentUser());
+    const { data, error } = await supabase
+      .from("project_notes")
+      .insert({ project_id: projectId, body, creator_id: userId })
+      .select("*")
+      .single();
+    if (error) throw error;
+    set((state) => ({ notes: [...state.notes, data as ProjectNote] }));
+  },
+
+  updateNote: async (noteId, body) => {
+    const supabase = requireClient();
+    const { data, error } = await supabase
+      .from("project_notes")
+      .update({ body })
+      .eq("id", noteId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    set((state) => ({
+      notes: state.notes.map((note) => (note.id === noteId ? (data as ProjectNote) : note))
+    }));
+  },
+
+  deleteNote: async (noteId) => {
+    const supabase = requireClient();
+    const { error } = await supabase.from("project_notes").delete().eq("id", noteId);
+    if (error) throw error;
+    set((state) => ({ notes: state.notes.filter((note) => note.id !== noteId) }));
   },
 
   removeDay: async (dayId) => {

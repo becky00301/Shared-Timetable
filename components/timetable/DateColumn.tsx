@@ -1,6 +1,7 @@
 "use client";
 
 import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
+import { DayNoteCell } from "@/components/timetable/DayNoteCell";
 import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
 import { cn } from "@/lib/utils/cn";
@@ -63,6 +64,10 @@ export function DateColumn({
             </>
           )}
         </div>
+      </div>
+      {/* All-day note row, pinned right below the date header. */}
+      <div className="sticky top-12 z-30 border-b border-border bg-surface">
+        <DayNoteCell day={day} canEdit={canEdit} />
       </div>
       <div
         className={cn("timetable-grid relative h-[1728px]", canEdit && "cursor-crosshair")}

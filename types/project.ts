@@ -37,5 +37,15 @@ export type ProjectDay = {
   project_id: string;
   date: string;
   sort_order: number;
+  note?: string | null;
   created_at: string;
+};
+
+export type ProjectNote = {
+  id: string;
+  project_id: string;
+  creator_id: string | null;
+  body: string;
+  created_at: string;
+  updated_at: string;
 };

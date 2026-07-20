@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -12,7 +12,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2">
-      <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
+      <div className="grid grid-cols-3 gap-1 rounded-lg border border-border bg-card p-1">
         <button
           type="button"
           onClick={() => setViewMode("grid")}
@@ -34,6 +34,17 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
         >
           <CalendarDays size={14} />
           월간 달력
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode("notes")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition",
+            viewMode === "notes" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+          )}
+        >
+          <StickyNote size={14} />
+          메모
         </button>
       </div>
 

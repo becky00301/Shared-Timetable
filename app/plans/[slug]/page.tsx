@@ -10,6 +10,7 @@ import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
 import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
+import { NotesView } from "@/components/project/NotesView";
 import { ScheduleItemModal } from "@/components/timetable/ScheduleItemModal";
 import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 import { TimetableHeader } from "@/components/timetable/TimetableHeader";
@@ -102,6 +103,8 @@ export default function ProjectPage() {
             <TimetableHeader isWeekly={isWeekly} />
             {viewMode === "month" ? (
               <MonthCalendarView projectId={project.id} days={days} canEdit={canEdit} />
+            ) : viewMode === "notes" ? (
+              <NotesView projectId={project.id} days={days} canEdit={canEdit} />
             ) : (
               <div className="flex min-h-0 flex-1">
                 <TimetableGrid

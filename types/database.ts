@@ -81,6 +81,7 @@ export type Database = {
           project_id: string;
           date: string;
           sort_order: number;
+          note: string | null;
           created_at: string;
         };
         Insert: {
@@ -88,9 +89,30 @@ export type Database = {
           project_id: string;
           date: string;
           sort_order?: number;
+          note?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_days"]["Insert"]>;
+        Relationships: [];
+      };
+      project_notes: {
+        Row: {
+          id: string;
+          project_id: string;
+          creator_id: string | null;
+          body: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          creator_id?: string | null;
+          body: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_notes"]["Insert"]>;
         Relationships: [];
       };
       schedule_items: {

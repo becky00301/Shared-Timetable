@@ -7,7 +7,7 @@ type UiStore = {
   selectedDateId: string | null;
   selectedScheduleId: string | null;
   activeMode: "schedule" | "availability";
-  viewMode: "grid" | "month";
+  viewMode: "grid" | "month" | "notes";
   weekStartsOnSunday: boolean;
   draftSelection: DraftSelection | null;
   isCreateProjectOpen: boolean;
@@ -17,7 +17,7 @@ type UiStore = {
   setSelectedDate: (id: string | null) => void;
   setSelectedSchedule: (id: string | null) => void;
   setMode: (mode: "schedule" | "availability") => void;
-  setViewMode: (mode: "grid" | "month") => void;
+  setViewMode: (mode: "grid" | "month" | "notes") => void;
   setWeekStartsOnSunday: (sundayFirst: boolean) => void;
   openScheduleModal: (selection?: DraftSelection | null, item?: ScheduleItem | null) => void;
   closeScheduleModal: () => void;
