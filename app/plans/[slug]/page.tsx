@@ -79,7 +79,13 @@ export default function ProjectPage() {
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
-      <ProjectSidebar project={project} days={days} members={members} currentRole={currentRole} />
+      <ProjectSidebar
+        project={project}
+        days={days}
+        members={members}
+        currentRole={currentRole}
+        canEdit={canEdit}
+      />
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
           <Link
@@ -104,7 +110,7 @@ export default function ProjectPage() {
             {viewMode === "month" ? (
               <MonthCalendarView projectId={project.id} days={days} canEdit={canEdit} />
             ) : viewMode === "notes" ? (
-              <NotesView projectId={project.id} days={days} canEdit={canEdit} />
+              <NotesView projectId={project.id} days={days} />
             ) : (
               <div className="flex min-h-0 flex-1">
                 <TimetableGrid

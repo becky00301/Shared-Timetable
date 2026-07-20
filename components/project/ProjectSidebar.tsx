@@ -10,6 +10,7 @@ import { GoogleCalendarSync } from "@/components/project/GoogleCalendarSync";
 import { ParticipantList } from "@/components/project/ParticipantList";
 import { RoleBadge } from "@/components/project/RoleBadge";
 import { SelectedDatesCalendar } from "@/components/project/SelectedDatesCalendar";
+import { SidebarNotes } from "@/components/project/SidebarNotes";
 import { useProjectStore } from "@/stores/project-store";
 import type { Project, ProjectDay, ProjectMember, ProjectRole } from "@/types/project";
 
@@ -17,12 +18,14 @@ export function ProjectSidebar({
   project,
   days,
   members,
-  currentRole
+  currentRole,
+  canEdit
 }: {
   project: Project;
   days: ProjectDay[];
   members: ProjectMember[];
   currentRole: ProjectRole;
+  canEdit: boolean;
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
   const canRename = currentRole === "owner" || currentRole === "editor";
@@ -115,6 +118,13 @@ export function ProjectSidebar({
       </div>
       <div className="mt-3">
         <SelectedDatesCalendar days={days} />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold text-foreground">메모</h2>
+      </div>
+      <div className="mt-3">
+        <SidebarNotes projectId={project.id} canEdit={canEdit} />
       </div>
     </aside>
   );
