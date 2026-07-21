@@ -264,7 +264,12 @@ export function TimetableGrid({
             <div className="sticky left-0 z-40 w-16 shrink-0 border-b border-r border-border bg-surface pr-2 pt-1 text-right text-[11px] text-muted">
               종일
             </div>
-            <div className={cn("border-b border-border", manyDays ? "flex" : "flex flex-1")}>
+            {/* Bars are positioned as a percentage of this element, so with
+                fixed-width columns it must span their combined width. */}
+            <div
+              className={cn("flex border-b border-border", !colWidth && "flex-1")}
+              style={colWidth ? { width: colWidth * days.length } : undefined}
+            >
               <AllDayBand
                 days={days}
                 items={allDayItems}
