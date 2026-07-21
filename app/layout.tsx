@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { Toaster } from "sonner";
+import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({
           </noscript>
         ) : null}
         {children}
+        <FeedbackButton />
         <Toaster richColors position="top-right" />
       </body>
       {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
