@@ -45,6 +45,39 @@ export function ScheduleDetailPanel({
     setDescription(item.description ?? "");
   }, [item]);
 
+  // Delete/Backspace removes the selected schedule, unless the user is typing.
+  const selectedId = item?.id;
+  useEffect(() => {
+    if (!selectedId || !canEdit) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+      event.preventDefault();
+      deleteSchedule(selectedId!)
+        .then(() => {
+          setSelectedSchedule(null);
+          toast.success("일정을 삭제했어요.");
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error("일정을 삭제하지 못했어요.");
+        });
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, canEdit, deleteSchedule, setSelectedSchedule]);
+
   if (!item) {
     return (
       <aside className="hidden w-80 shrink-0 border-l border-border bg-surface p-5 xl:block">
@@ -240,6 +273,9 @@ export function ScheduleDetailPanel({
           <Trash2 size={16} />
           삭제
         </Button>
+        {canEdit ? (
+          <p className="mt-2 text-center text-xs text-muted">Delete 키로도 삭제할 수 있어요.</p>
+        ) : null}
       </div>
     </aside>
   );
