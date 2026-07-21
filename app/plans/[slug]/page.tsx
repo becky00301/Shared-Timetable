@@ -10,7 +10,6 @@ import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
 import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
-import { ScheduleItemModal } from "@/components/timetable/ScheduleItemModal";
 import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 import { TimetableHeader } from "@/components/timetable/TimetableHeader";
 import { useProjectRealtime } from "@/lib/supabase/realtime";
@@ -107,7 +106,7 @@ export default function ProjectPage() {
           <>
             <TimetableHeader isWeekly={isWeekly} />
             {viewMode === "month" ? (
-              <MonthCalendarView projectId={project.id} days={days} canEdit={canEdit} />
+              <MonthCalendarView projectId={project.id} days={days} />
             ) : (
               <div className="flex min-h-0 flex-1">
                 <TimetableGrid
@@ -124,7 +123,6 @@ export default function ProjectPage() {
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
       <ShareModal project={project} />
-      <ScheduleItemModal projectId={project.id} days={days} canEdit={canEdit} />
     </main>
   );
 }

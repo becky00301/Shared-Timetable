@@ -10,19 +10,10 @@ import type { ProjectDay } from "@/types/project";
 
 const WEEKDAY_LABELS_SUN = ["일", "월", "화", "수", "목", "금", "토"];
 
-export function MonthCalendarView({
-  projectId,
-  days,
-  canEdit
-}: {
-  projectId: string;
-  days: ProjectDay[];
-  canEdit: boolean;
-}) {
+export function MonthCalendarView({ projectId, days }: { projectId: string; days: ProjectDay[] }) {
   const schedules = useProjectStore((state) => state.schedules).filter(
     (item) => item.project_id === projectId
   );
-  const openScheduleModal = useUiStore((state) => state.openScheduleModal);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
 
@@ -73,7 +64,8 @@ export function MonthCalendarView({
         ))}
       </div>
 
-      <div className="grid flex-1 auto-rows-fr grid-cols-7 gap-1">
+      {/* Rows size to their content so every schedule is listed, no "+N more". */}
+      <div className="grid auto-rows-auto grid-cols-7 gap-1">
         {cells.map((date, index) => {
           if (!date) return <div key={index} className="rounded-lg" />;
           const iso = format(date, "yyyy-MM-dd");
@@ -81,23 +73,18 @@ export function MonthCalendarView({
           const dayItems = projectDay
             ? schedules
                 .filter((item) => item.day_id === projectDay.id)
-                .sort((a, b) => a.start_time.localeCompare(b.start_time))
+                .sort(
+                  (a, b) =>
+                    Number(b.all_day) - Number(a.all_day) || a.start_time.localeCompare(b.start_time)
+                )
             : [];
 
           return (
             <div
               key={index}
-              onClick={() => {
-                if (projectDay && canEdit) {
-                  openScheduleModal({ day_id: projectDay.id, start_time: "09:00", end_time: "10:00" });
-                }
-              }}
               className={cn(
                 "min-h-20 rounded-lg border p-1.5 text-left align-top",
-                projectDay
-                  ? "border-primary/40 bg-primary/[0.07]"
-                  : "border-border/50 bg-card/40 opacity-50",
-                projectDay && canEdit && "cursor-pointer transition hover:border-primary"
+                projectDay ? "border-primary/40 bg-primary/[0.07]" : "border-border/50 bg-card/40 opacity-50"
               )}
             >
               <span
@@ -109,24 +96,18 @@ export function MonthCalendarView({
                 {date.getDate()}
               </span>
               <div className="mt-1 flex flex-col gap-0.5">
-                {dayItems.slice(0, 3).map((item) => (
+                {dayItems.map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setSelectedSchedule(item.id);
-                      openScheduleModal(null, item);
-                    }}
+                    onClick={() => setSelectedSchedule(item.id)}
+                    title={item.title}
                     className="truncate rounded px-1.5 py-0.5 text-left text-xs text-foreground transition hover:opacity-80"
                     style={{ backgroundColor: `${item.color ?? "#1972F7"}55` }}
                   >
                     {item.all_day ? item.title : `${item.start_time.slice(0, 5)} ${item.title}`}
                   </button>
                 ))}
-                {dayItems.length > 3 ? (
-                  <span className="px-1.5 text-xs text-muted">+{dayItems.length - 3}개 더</span>
-                ) : null}
               </div>
             </div>
           );
