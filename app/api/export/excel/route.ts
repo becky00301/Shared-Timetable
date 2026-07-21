@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     supabase.from("project_days").select("id, date, sort_order").eq("project_id", projectId),
     supabase
       .from("schedule_items")
-      .select("day_id, title, description, location, start_time, end_time, all_day")
+      .select("day_id, end_day_id, title, description, location, start_time, end_time, all_day")
       .eq("project_id", projectId),
     supabase
       .from("project_notes")
@@ -90,16 +90,20 @@ export async function GET(request: Request) {
         Number(b.item.all_day) - Number(a.item.all_day) ||
         a.item.start_time.localeCompare(b.item.start_time)
     )
-    .map(({ item, date }) => ({
-      date,
-      weekday: WEEKDAY_KO[new Date(`${date}T00:00:00`).getDay()] ?? "",
-      kind: item.all_day ? "종일" : "시간",
-      start: item.all_day ? "" : item.start_time.slice(0, 5),
-      end: item.all_day ? "" : item.end_time.slice(0, 5),
-      title: item.title,
-      location: item.location ?? "",
-      memo: item.description ?? ""
-    }));
+    .map(({ item, date }) => {
+      // Multi-day all-day items show their full range in the date cell.
+      const endDate = item.end_day_id ? dayById.get(item.end_day_id)?.date : undefined;
+      return {
+        date: endDate && endDate !== date ? `${date} ~ ${endDate}` : date,
+        weekday: WEEKDAY_KO[new Date(`${date}T00:00:00`).getDay()] ?? "",
+        kind: item.all_day ? "종일" : "시간",
+        start: item.all_day ? "" : item.start_time.slice(0, 5),
+        end: item.all_day ? "" : item.end_time.slice(0, 5),
+        title: item.title,
+        location: item.location ?? "",
+        memo: item.description ?? ""
+      };
+    });
 
   const noteRows: NoteRow[] = (notes ?? []).map((note) => ({
     body: note.body,

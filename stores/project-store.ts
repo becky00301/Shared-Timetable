@@ -305,7 +305,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       start_time: item.start_time,
       end_time: item.end_time,
       color: item.color ?? "#1972F7",
-      all_day: item.all_day ?? false
+      all_day: item.all_day ?? false,
+      end_day_id: item.end_day_id ?? null
     };
 
     if (item.id) {

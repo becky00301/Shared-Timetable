@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     supabase.from("project_days").select("id, date").eq("project_id", projectId),
     supabase
       .from("schedule_items")
-      .select("id, day_id, title, description, location, start_time, end_time, all_day, google_event_id")
+      .select("id, day_id, end_day_id, title, description, location, start_time, end_time, all_day, google_event_id")
       .eq("project_id", projectId)
   ]);
 
@@ -85,7 +85,8 @@ export async function POST(request: Request) {
         title: item.title,
         description: item.description,
         location: item.location,
-        allDay: item.all_day
+        allDay: item.all_day,
+        endDate: item.end_day_id ? dateByDayId.get(item.end_day_id) : null
       };
 
       if (item.google_event_id) {

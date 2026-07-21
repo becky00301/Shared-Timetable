@@ -128,6 +128,7 @@ export type Database = {
           end_time: string;
           color: string | null;
           all_day: boolean;
+          end_day_id: string | null;
           google_event_id: string | null;
           created_at: string;
           updated_at: string;
@@ -144,6 +145,7 @@ export type Database = {
           end_time: string;
           color?: string | null;
           all_day?: boolean;
+          end_day_id?: string | null;
           google_event_id?: string | null;
           created_at?: string;
           updated_at?: string;

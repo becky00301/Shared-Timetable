@@ -28,6 +28,7 @@ export function ScheduleDetailPanel({
 
   const [title, setTitle] = useState("");
   const [dayId, setDayId] = useState("");
+  const [endDayId, setEndDayId] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [location, setLocation] = useState("");
@@ -37,6 +38,7 @@ export function ScheduleDetailPanel({
     if (!item) return;
     setTitle(item.title);
     setDayId(item.day_id);
+    setEndDayId(item.end_day_id ?? item.day_id);
     setStartTime(item.start_time.slice(0, 5));
     setEndTime(item.end_time.slice(0, 5));
     setLocation(item.location ?? "");
@@ -106,7 +108,7 @@ export function ScheduleDetailPanel({
         </label>
 
         <label className="flex flex-col gap-1.5 text-muted">
-          날짜
+          {item.all_day ? "시작 날짜" : "날짜"}
           <select
             className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
             value={dayId}
@@ -125,9 +127,28 @@ export function ScheduleDetailPanel({
         </label>
 
         {item.all_day ? (
-          <p className="rounded-lg border border-border bg-black/[0.03] px-3 py-2 text-xs text-muted">
-            종일 일정이에요.
-          </p>
+          <label className="flex flex-col gap-1.5 text-muted">
+            종료 날짜
+            <select
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
+              value={endDayId}
+              disabled={!canEdit}
+              onChange={(event) => {
+                const next = event.target.value;
+                setEndDayId(next);
+                // Same day as the start means a single-day item.
+                save({ end_day_id: next === dayId ? null : next });
+              }}
+            >
+              {days
+                .filter((day) => day.date >= (days.find((d) => d.id === dayId)?.date ?? ""))
+                .map((day) => (
+                  <option key={day.id} value={day.id}>
+                    {day.date}
+                  </option>
+                ))}
+            </select>
+          </label>
         ) : (
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5 text-muted">

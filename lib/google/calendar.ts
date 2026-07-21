@@ -46,6 +46,7 @@ function toEventTime(date: string, time: string) {
 
 export type SyncEventInput = {
   date: string;
+  endDate?: string | null;
   startTime: string;
   endTime: string;
   title: string;
@@ -61,9 +62,10 @@ function nextDay(date: string) {
 }
 
 function eventBody(input: SyncEventInput) {
-  // All-day events use date-only bounds, and Google treats `end` as exclusive.
+  // All-day events use date-only bounds, and Google treats `end` as exclusive,
+  // so a span ends the day after its last day.
   const bounds = input.allDay
-    ? { start: { date: input.date }, end: { date: nextDay(input.date) } }
+    ? { start: { date: input.date }, end: { date: nextDay(input.endDate || input.date) } }
     : { start: toEventTime(input.date, input.startTime), end: toEventTime(input.date, input.endTime) };
 
   return {

@@ -84,6 +84,10 @@ alter table public.schedule_items
 alter table public.schedule_items
   add column if not exists all_day boolean not null default false;
 
+-- Inclusive end day for multi-day all-day items; null means a single day.
+alter table public.schedule_items
+  add column if not exists end_day_id uuid references public.project_days(id) on delete set null;
+
 create table if not exists public.google_accounts (
   user_id uuid primary key references public.users(id) on delete cascade,
   google_email text,

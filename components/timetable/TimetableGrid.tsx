@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
+import { AllDayBand } from "@/components/timetable/AllDayBand";
 import { DateColumn } from "@/components/timetable/DateColumn";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
+import { cn } from "@/lib/utils/cn";
 import {
   DAY_END_MINUTES,
   HOUR_HEIGHT,
@@ -50,6 +52,9 @@ export function TimetableGrid({
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [allDayExpanded, setAllDayExpanded] = useState(false);
+  const [, setAllDayLaneCount] = useState(0);
+  const allDayItems = schedules.filter((item) => item.all_day);
   // A small activation distance keeps clicks from registering as drags, so a
   // real drag starts crisply instead of being swallowed by the click handler.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -123,10 +128,11 @@ export function TimetableGrid({
     window.addEventListener("pointerup", onUp);
   }
 
-  function createAllDay(dayId: string, title: string) {
+  function createAllDay(startDayId: string, endDayId: string, title: string) {
     upsertSchedule({
       project_id: projectId,
-      day_id: dayId,
+      day_id: startDayId,
+      end_day_id: startDayId === endDayId ? null : endDayId,
       title,
       all_day: true,
       start_time: "00:00",
@@ -136,6 +142,18 @@ export function TimetableGrid({
       .catch((error) => {
         console.error(error);
         toast.error("종일 일정을 저장하지 못했어요.");
+      });
+  }
+
+  function removeSchedule(id: string) {
+    deleteSchedule(id)
+      .then(() => {
+        if (selectedScheduleId === id) setSelectedSchedule(null);
+        toast.success("일정을 삭제했어요.");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("일정을 삭제하지 못했어요.");
       });
   }
 
@@ -227,53 +245,116 @@ export function TimetableGrid({
       <div
         ref={scrollRef}
         id="timetable-export"
-        className="flex min-h-0 flex-1 items-start overflow-auto bg-background"
+        className="min-h-0 flex-1 overflow-auto bg-background"
       >
-        <TimeColumn />
-        <div ref={colsRef} className={manyDays ? "flex" : "flex flex-1"}>
-          {days.map((day) => (
-            <DateColumn
-              key={day.id}
-              day={day}
-              canEdit={canEdit}
-              activeMode={activeMode}
-              memberCount={members.length}
-              weekdayOnly={weekdayOnly}
-              width={colWidth}
-              selectedScheduleId={selectedScheduleId}
-              schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
-              allDayItems={schedules.filter((item) => item.day_id === day.id && item.all_day)}
-              onCreateAllDay={createAllDay}
-              availability={availability.filter((slot) => slot.day_id === day.id)}
-              draft={
-                draft && draft.dayId === day.id
-                  ? {
-                      start_time: minutesToTime(draft.startMinutes),
-                      end_time: minutesToTime(draft.endMinutes),
-                      naming: draft.naming
-                    }
-                  : null
-              }
-              onDraftCommit={commitDraft}
-              onDraftCancel={() => setDraft(null)}
-              onSelectSchedule={setSelectedSchedule}
-              onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
-              onDeleteSchedule={(id) => {
-                deleteSchedule(id)
-                  .then(() => {
-                    if (selectedScheduleId === id) setSelectedSchedule(null);
-                    toast.success("일정을 삭제했어요.");
-                  })
-                  .catch((error) => {
-                    console.error(error);
-                    toast.error("일정을 삭제하지 못했어요.");
-                  });
-              }}
-              onPointerStart={onPointerStart}
-            />
-          ))}
+        <div className={manyDays ? "w-max min-w-full" : "min-w-full"}>
+          {/* Date headers */}
+          <div className="sticky top-0 z-30 flex bg-surface">
+            <div className="sticky left-0 z-40 h-12 w-16 shrink-0 border-b border-r border-border bg-surface" />
+            <div ref={colsRef} className={manyDays ? "flex" : "flex flex-1"}>
+              {days.map((day) => (
+                <DayHeaderCell key={day.id} day={day} weekdayOnly={weekdayOnly} width={colWidth} />
+              ))}
+            </div>
+          </div>
+
+          {/* All-day band: one row across every column, fixed height so the
+              timed grid below never shifts as items are added. */}
+          <div className="sticky top-12 z-30 flex bg-surface">
+            <div className="sticky left-0 z-40 w-16 shrink-0 border-b border-r border-border bg-surface pr-2 pt-1 text-right text-[11px] text-muted">
+              종일
+            </div>
+            <div className={cn("border-b border-border", manyDays ? "flex" : "flex flex-1")}>
+              <AllDayBand
+                days={days}
+                items={allDayItems}
+                canEdit={canEdit}
+                selectedScheduleId={selectedScheduleId}
+                expanded={allDayExpanded}
+                onExpandedChange={setAllDayExpanded}
+                onLaneCount={setAllDayLaneCount}
+                onCreate={createAllDay}
+                onSelect={setSelectedSchedule}
+                onDelete={removeSchedule}
+              />
+            </div>
+          </div>
+
+          {/* Timed grid */}
+          <div className="flex">
+            <div className="sticky left-0 z-40">
+              <TimeColumn />
+            </div>
+            <div className={manyDays ? "flex" : "flex flex-1"}>
+              {days.map((day) => (
+                <DateColumn
+                  key={day.id}
+                  day={day}
+                  canEdit={canEdit}
+                  activeMode={activeMode}
+                  memberCount={members.length}
+                  width={colWidth}
+                  selectedScheduleId={selectedScheduleId}
+                  schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
+                  availability={availability.filter((slot) => slot.day_id === day.id)}
+                  draft={
+                    draft && draft.dayId === day.id
+                      ? {
+                          start_time: minutesToTime(draft.startMinutes),
+                          end_time: minutesToTime(draft.endMinutes),
+                          naming: draft.naming
+                        }
+                      : null
+                  }
+                  onDraftCommit={commitDraft}
+                  onDraftCancel={() => setDraft(null)}
+                  onSelectSchedule={setSelectedSchedule}
+                  onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
+                  onDeleteSchedule={removeSchedule}
+                  onPointerStart={onPointerStart}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </DndContext>
+  );
+}
+
+const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
+
+function DayHeaderCell({
+  day,
+  weekdayOnly,
+  width
+}: {
+  day: ProjectDay;
+  weekdayOnly?: boolean;
+  width?: number;
+}) {
+  const date = new Date(day.date);
+  const weekdayKo = WEEKDAY_KO[date.getDay()];
+  return (
+    <div
+      className={cn(
+        "flex h-12 items-center justify-center border-b border-r border-border last:border-r-0",
+        width ? "shrink-0" : "min-w-0 flex-1"
+      )}
+      style={width ? { width } : undefined}
+    >
+      <div className="text-center">
+        {weekdayOnly ? (
+          <p className="text-sm font-semibold text-foreground">{weekdayKo}</p>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-foreground">
+              {date.getMonth() + 1}월 {date.getDate()}일
+            </p>
+            <p className="text-[11px] text-muted">{weekdayKo}</p>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
