@@ -52,7 +52,7 @@ export function ScheduleBlock({
       ref={setNodeRef}
       className={cn(
         // transition-colors only: animating transform makes the block lag the cursor.
-        "absolute left-2 right-2 z-10 cursor-pointer overflow-hidden rounded-lg border border-black/20 p-2 text-left shadow-lg transition-colors",
+        "absolute left-1 right-1 z-10 cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",
         isSelected && "ring-2 ring-white/70",
         isDragging && "opacity-70"
       )}
@@ -77,9 +77,17 @@ export function ScheduleBlock({
         <GripHorizontal size={12} />
       </button>
       <div className="mt-1 min-w-0">
-        <p className="truncate text-sm font-semibold text-white">{item.title}</p>
-        <p className="truncate text-xs text-white/85">{formatTimeRange(item.start_time, item.end_time)}</p>
-        {item.location ? <p className="truncate text-xs text-white/75">{item.location}</p> : null}
+        <p className="text-[13px] font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-sm">
+          {item.title}
+        </p>
+        <p className="mt-1 text-[11px] leading-tight text-white/85 [overflow-wrap:anywhere] sm:text-xs">
+          {formatTimeRange(item.start_time, item.end_time)}
+        </p>
+        {item.location ? (
+          <p className="mt-1 text-[11px] leading-tight text-white/75 [overflow-wrap:anywhere] sm:text-xs">
+            {item.location}
+          </p>
+        ) : null}
       </div>
       <button
         type="button"

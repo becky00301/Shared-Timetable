@@ -71,8 +71,18 @@ export function TimetableGrid({
   }, []);
 
   const TIME_COL_WIDTH = 64; // matches TimeColumn w-16
+  const MAX_VISIBLE_DAYS = 7;
+  const MIN_DAY_COL_WIDTH = 96;
   const manyDays = days.length > 7;
-  const colWidth = manyDays && viewportWidth ? Math.floor((viewportWidth - TIME_COL_WIDTH) / 7) : undefined;
+  const visibleDayCount = Math.min(days.length, MAX_VISIBLE_DAYS);
+  const fittedColWidth =
+    viewportWidth && visibleDayCount
+      ? Math.floor(Math.max(0, viewportWidth - TIME_COL_WIDTH) / visibleDayCount)
+      : 0;
+  const colWidth =
+    viewportWidth && (manyDays || fittedColWidth < MIN_DAY_COL_WIDTH)
+      ? Math.max(MIN_DAY_COL_WIDTH, fittedColWidth)
+      : undefined;
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
