@@ -7,8 +7,8 @@ import { useContextMenu } from "@/components/ui/context-menu";
 import type { ProjectDay } from "@/types/project";
 import type { ScheduleItem } from "@/types/schedule";
 
-export const LANE_HEIGHT = 22;
-export const BAND_PADDING = 8;
+const LANE_HEIGHT = 22;
+const BAND_PADDING = 8;
 const COLLAPSED_LANES = 2;
 
 type Placed = { item: ScheduleItem; start: number; end: number; lane: number };
@@ -39,9 +39,14 @@ function packLanes(items: ScheduleItem[], indexByDayId: Map<string, number>): Pl
   });
 }
 
-export function bandHeight(laneCount: number, expanded: boolean) {
-  const lanes = Math.max(1, expanded ? laneCount : Math.min(laneCount, COLLAPSED_LANES));
-  return lanes * LANE_HEIGHT + BAND_PADDING;
+// First lane with nothing overlapping the given range — where a new bar lands.
+function firstFreeLane(placed: Placed[], start: number, end: number) {
+  for (let lane = 0; ; lane += 1) {
+    const taken = placed.some(
+      (span) => span.lane === lane && span.start <= end && span.end >= start
+    );
+    if (!taken) return lane;
+  }
 }
 
 export function AllDayBand({
@@ -84,7 +89,15 @@ export function AllDayBand({
     onLaneCount(laneCount);
   }
 
-  const visibleLanes = expanded ? laneCount : Math.min(laneCount, COLLAPSED_LANES);
+  // While drafting, reveal down to the lane the new bar will occupy so it
+  // appears exactly where it will be placed.
+  const draftLane = draft ? firstFreeLane(placed, draft.start, draft.end) : null;
+  const visibleLanes =
+    draftLane !== null
+      ? Math.max(expanded ? laneCount : Math.min(laneCount, COLLAPSED_LANES), draftLane + 1)
+      : expanded
+        ? laneCount
+        : Math.min(laneCount, COLLAPSED_LANES);
   const hiddenCount = placed.filter((span) => span.lane >= visibleLanes).length;
   const pct = (value: number) => `${(value / Math.max(1, days.length)) * 100}%`;
 
@@ -126,7 +139,10 @@ export function AllDayBand({
   }
 
   return (
-    <div className="relative flex-1" style={{ height: bandHeight(laneCount, expanded) }}>
+    <div
+      className="relative flex-1"
+      style={{ height: Math.max(1, visibleLanes) * LANE_HEIGHT + BAND_PADDING }}
+    >
       <div
         ref={areaRef}
         className={cn("absolute inset-0", canEdit && !draft && "cursor-cell")}
@@ -153,8 +169,8 @@ export function AllDayBand({
             style={{
               left: pct(draft.start),
               width: pct(draft.end - draft.start + 1),
-              top: visibleLanes * LANE_HEIGHT,
-              height: LANE_HEIGHT
+              top: (draftLane ?? 0) * LANE_HEIGHT + 2,
+              height: LANE_HEIGHT - 4
             }}
           >
             {draft.naming ? (
