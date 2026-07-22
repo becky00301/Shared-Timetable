@@ -211,3 +211,10 @@ begin
     alter publication supabase_realtime add table public.project_members;
   end if;
 end $$;
+
+-- Deletes replicate only the primary key unless replica identity is FULL, so a
+-- subscription filtered on project_id would never match a DELETE event.
+alter table public.schedule_items replica identity full;
+alter table public.project_days replica identity full;
+alter table public.availability replica identity full;
+alter table public.project_members replica identity full;
