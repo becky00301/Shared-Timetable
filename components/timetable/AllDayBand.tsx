@@ -246,6 +246,7 @@ function AllDayBar({
       {menu}
       <button
         type="button"
+        data-schedule-id={span.item.id}
         onClick={onSelect}
         onContextMenu={onContextMenu}
         onPointerDown={(event) => event.stopPropagation()}

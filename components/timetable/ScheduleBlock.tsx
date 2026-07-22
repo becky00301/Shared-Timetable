@@ -50,6 +50,7 @@ export function ScheduleBlock({
   return (
     <div
       ref={setNodeRef}
+      data-schedule-id={item.id}
       className={cn(
         // transition-colors only: animating transform makes the block lag the cursor.
         "absolute left-1 right-1 z-10 cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",

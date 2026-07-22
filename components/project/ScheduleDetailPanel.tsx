@@ -1,16 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
+import { cn } from "@/lib/utils/cn";
 import { timeToMinutes } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
 
 const COLORS = ["#1972F7", "#8B5CF6", "#F59E0B", "#22C55E", "#EF4444"];
+
+// Below this the sidebar has no room, so the panel becomes a popover pinned to
+// the schedule block instead — same breakpoint as the `xl:` classes below.
+const SIDEBAR_QUERY = "(min-width: 1280px)";
+const POPOVER_GAP = 8;
+const VIEWPORT_MARGIN = 12;
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const list = window.matchMedia(query);
+    const update = () => setMatches(list.matches);
+    update();
+    list.addEventListener("change", update);
+    return () => list.removeEventListener("change", update);
+  }, [query]);
+  return matches;
+}
 
 export function ScheduleDetailPanel({
   days,
@@ -45,8 +64,76 @@ export function ScheduleDetailPanel({
     setDescription(item.description ?? "");
   }, [item]);
 
-  // Delete/Backspace removes the selected schedule, unless the user is typing.
   const selectedId = item?.id;
+  const asSidebar = useMediaQuery(SIDEBAR_QUERY);
+  const popoverRef = useRef<HTMLElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Pin the popover beside the block it belongs to, flipping and clamping so it
+  // always lands fully on screen.
+  useLayoutEffect(() => {
+    if (asSidebar || !selectedId) {
+      setPopoverPos(null);
+      return;
+    }
+
+    function place() {
+      const el = popoverRef.current;
+      if (!el) return;
+      const { offsetWidth: width, offsetHeight: height } = el;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const anchor = document.querySelector(`[data-schedule-id="${selectedId}"]`);
+
+      if (!anchor) {
+        setPopoverPos({ left: (vw - width) / 2, top: (vh - height) / 2 });
+        return;
+      }
+
+      const rect = anchor.getBoundingClientRect();
+      let left = rect.right + POPOVER_GAP;
+      // No room on the right → flip to the left of the block.
+      if (left + width > vw - VIEWPORT_MARGIN) left = rect.left - POPOVER_GAP - width;
+      // No room on either side → overlay the block, kept inside the viewport.
+      if (left < VIEWPORT_MARGIN) {
+        left = Math.min(Math.max(VIEWPORT_MARGIN, rect.left), vw - width - VIEWPORT_MARGIN);
+      }
+
+      let top = rect.top;
+      if (top + height > vh - VIEWPORT_MARGIN) top = vh - height - VIEWPORT_MARGIN;
+      if (top < VIEWPORT_MARGIN) top = VIEWPORT_MARGIN;
+
+      setPopoverPos({ left, top });
+    }
+
+    place();
+    window.addEventListener("resize", place);
+    // Capture phase so scrolling the timetable container repositions too.
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [asSidebar, selectedId, item?.day_id, item?.start_time, item?.all_day]);
+
+  // Clicking away closes the popover, the way Google Calendar's does. Clicks on
+  // another schedule are left alone so they can just switch the selection.
+  useEffect(() => {
+    if (asSidebar || !selectedId) return;
+
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (popoverRef.current?.contains(target)) return;
+      if (target.closest("[data-schedule-id]")) return;
+      setSelectedSchedule(null);
+    }
+
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, [asSidebar, selectedId, setSelectedSchedule]);
+
+  // Delete/Backspace removes the selected schedule, unless the user is typing.
   useEffect(() => {
     if (!selectedId || !canEdit) return;
 
@@ -112,7 +199,23 @@ export function ScheduleDetailPanel({
 
   return (
     <aside
-      className="fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-auto border-t border-border bg-surface p-5 xl:static xl:z-auto xl:max-h-none xl:w-80 xl:shrink-0 xl:border-l xl:border-t-0"
+      ref={popoverRef}
+      className={cn(
+        "overflow-auto border-border bg-surface",
+        asSidebar
+          ? "w-80 shrink-0 border-l p-5"
+          : "fixed z-50 max-h-[78vh] w-[min(340px,calc(100vw-24px))] rounded-xl border p-4 shadow-xl"
+      )}
+      style={
+        asSidebar
+          ? undefined
+          : {
+              top: popoverPos?.top ?? 0,
+              left: popoverPos?.left ?? 0,
+              // Hidden for the one frame before it has been measured and placed.
+              visibility: popoverPos ? "visible" : "hidden"
+            }
+      }
     >
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">일정 상세</h2>
