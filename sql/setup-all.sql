@@ -253,6 +253,8 @@ as $$
   )
 $$;
 
+-- The owner column is trusted alongside membership so a project's contents can
+-- always be edited by its owner, even if the project_members row is missing.
 create or replace function public.can_edit_project(project_uuid uuid)
 returns boolean
 language sql
@@ -260,7 +262,14 @@ security definer
 set search_path = public
 stable
 as $$
-  select public.project_role(project_uuid) in ('owner', 'editor')
+  select
+    exists (
+      select 1
+      from public.projects p
+      where p.id = project_uuid
+        and p.owner_id = auth.uid()
+    )
+    or public.project_role(project_uuid) in ('owner', 'editor')
 $$;
 
 create or replace function public.can_manage_project(project_uuid uuid)

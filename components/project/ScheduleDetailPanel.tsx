@@ -157,7 +157,7 @@ export function ScheduleDetailPanel({
         })
         .catch((error) => {
           console.error(error);
-          toast.error("일정을 삭제하지 못했어요.");
+          toast.error(error instanceof Error ? error.message : "일정을 삭제하지 못했어요.");
         });
     }
 
@@ -369,7 +369,7 @@ export function ScheduleDetailPanel({
               })
               .catch((error) => {
                 console.error(error);
-                toast.error("일정을 삭제하지 못했어요.");
+                toast.error(error instanceof Error ? error.message : "일정을 삭제하지 못했어요.");
               });
           }}
         >

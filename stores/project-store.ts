@@ -339,7 +339,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const supabase = requireClient();
     const { data, error } = await supabase.from("schedule_items").delete().eq("id", itemId).select("id");
     if (error) throw error;
-    if (!data?.length) throw new Error("삭제 권한이 없어요.");
+    // RLS refusals come back as success with zero rows, not as an error — so
+    // does deleting something a collaborator already removed.
+    if (!data?.length) {
+      throw new Error("이 일정을 삭제할 권한이 없거나, 이미 삭제된 일정이에요.");
+    }
     set((state) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),
       attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)
