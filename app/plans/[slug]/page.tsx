@@ -52,7 +52,7 @@ export default function ProjectPage() {
           <h1 className="text-2xl font-semibold">{notFound ? "시간표를 찾을 수 없어요" : "불러오는 중..."}</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
             {notFound
-              ? "이 시간표가 없거나 접근 권한이 없어요."
+              ? "이 시간표가 없거나 아직 참여자가 아니에요. 이 주소 대신 초대 링크(/invite/…)를 받아서 열어주세요."
               : "시간표를 불러오고 있어요."}
           </p>
           {notFound ? (
