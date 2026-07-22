@@ -145,18 +145,22 @@ function packTimedItems(items: ExportItem[]) {
   const lanes: number[] = [];
   return items
     .slice()
-    .sort((a, b) => toMinutes(a.start_time) - toMinutes(b.start_time) || toMinutes(a.end_time) - toMinutes(b.end_time))
+    .sort(
+      (a, b) =>
+        floorToHalfHour(toMinutes(a.start_time)) - floorToHalfHour(toMinutes(b.start_time)) ||
+        ceilToHalfHour(toMinutes(a.end_time)) - ceilToHalfHour(toMinutes(b.end_time))
+    )
     .map((item) => {
-      const start = toMinutes(item.start_time);
-      const end = Math.max(start + HALF_HOUR, toMinutes(item.end_time));
-      let lane = lanes.findIndex((laneEnd) => laneEnd <= start);
+      const visualStart = floorToHalfHour(toMinutes(item.start_time));
+      const visualEnd = Math.max(visualStart + HALF_HOUR, ceilToHalfHour(toMinutes(item.end_time)));
+      let lane = lanes.findIndex((laneEnd) => laneEnd <= visualStart);
       if (lane === -1) {
         lane = lanes.length;
-        lanes.push(end);
+        lanes.push(visualEnd);
       } else {
-        lanes[lane] = end;
+        lanes[lane] = visualEnd;
       }
-      return { item, lane, start, end };
+      return { item, lane, start: visualStart, end: visualEnd };
     });
 }
 
