@@ -55,8 +55,6 @@ export function TimetableGrid({
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
-  const [allDayExpanded, setAllDayExpanded] = useState(false);
-  const [, setAllDayLaneCount] = useState(0);
   const allDayItems = schedules.filter((item) => item.all_day);
   const currentUserId = useProjectStore((state) => state.currentUserId);
   const me = members.find((member) => member.user_id === currentUserId);
@@ -280,9 +278,10 @@ export function TimetableGrid({
             </div>
           </div>
 
-          {/* All-day band: one row across every column, fixed height so the
-              timed grid below never shifts as items are added. */}
-          <div className="sticky top-12 z-30 flex bg-surface">
+          {/* All-day band: one row across every column. It grows to fit every
+              lane, pushing the timed grid below it down. Not sticky — a tall
+              band would otherwise pin itself over most of the viewport. */}
+          <div className="z-30 flex bg-surface">
             <div className="sticky left-0 z-40 w-16 shrink-0 border-b border-r border-border bg-surface pr-2 pt-1 text-right text-[11px] text-muted">
               종일
             </div>
@@ -297,9 +296,6 @@ export function TimetableGrid({
                 items={allDayItems}
                 canEdit={canEdit}
                 selectedScheduleId={selectedScheduleId}
-                expanded={allDayExpanded}
-                onExpandedChange={setAllDayExpanded}
-                onLaneCount={setAllDayLaneCount}
                 onCreate={createAllDay}
                 onSelect={setSelectedSchedule}
                 onDelete={removeSchedule}

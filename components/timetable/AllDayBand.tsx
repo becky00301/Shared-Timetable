@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useContextMenu } from "@/components/ui/context-menu";
 import type { ProjectDay } from "@/types/project";
@@ -9,7 +8,6 @@ import type { ScheduleItem } from "@/types/schedule";
 
 const LANE_HEIGHT = 22;
 const BAND_PADDING = 8;
-const COLLAPSED_LANES = 2;
 
 type Placed = { item: ScheduleItem; start: number; end: number; lane: number };
 
@@ -54,9 +52,6 @@ export function AllDayBand({
   items,
   canEdit,
   selectedScheduleId,
-  expanded,
-  onExpandedChange,
-  onLaneCount,
   onCreate,
   onSelect,
   onDelete
@@ -65,9 +60,6 @@ export function AllDayBand({
   items: ScheduleItem[];
   canEdit: boolean;
   selectedScheduleId: string | null;
-  expanded: boolean;
-  onExpandedChange: (expanded: boolean) => void;
-  onLaneCount: (count: number) => void;
   onCreate: (startDayId: string, endDayId: string, title: string) => void;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
@@ -83,22 +75,10 @@ export function AllDayBand({
   const placed = useMemo(() => packLanes(items, indexByDayId), [items, indexByDayId]);
   const laneCount = placed.reduce((max, span) => Math.max(max, span.lane + 1), 0);
 
-  const reportedLanes = useRef(-1);
-  if (reportedLanes.current !== laneCount) {
-    reportedLanes.current = laneCount;
-    onLaneCount(laneCount);
-  }
-
-  // While drafting, reveal down to the lane the new bar will occupy so it
-  // appears exactly where it will be placed.
+  // Every lane is always shown; the band grows and the timed grid below moves
+  // down with it.
   const draftLane = draft ? firstFreeLane(placed, draft.start, draft.end) : null;
-  const visibleLanes =
-    draftLane !== null
-      ? Math.max(expanded ? laneCount : Math.min(laneCount, COLLAPSED_LANES), draftLane + 1)
-      : expanded
-        ? laneCount
-        : Math.min(laneCount, COLLAPSED_LANES);
-  const hiddenCount = placed.filter((span) => span.lane >= visibleLanes).length;
+  const visibleLanes = draftLane !== null ? Math.max(laneCount, draftLane + 1) : laneCount;
   const pct = (value: number) => `${(value / Math.max(1, days.length)) * 100}%`;
 
   function columnAt(clientX: number) {
@@ -148,20 +128,18 @@ export function AllDayBand({
         className={cn("absolute inset-0", canEdit && !draft && "cursor-cell")}
         onPointerDown={startDrag}
       >
-        {placed
-          .filter((span) => span.lane < visibleLanes)
-          .map((span) => (
-            <AllDayBar
-              key={span.item.id}
-              span={span}
-              canEdit={canEdit}
-              isSelected={selectedScheduleId === span.item.id}
-              left={pct(span.start)}
-              width={pct(span.end - span.start + 1)}
-              onSelect={() => onSelect(span.item.id)}
-              onDelete={() => onDelete(span.item.id)}
-            />
-          ))}
+        {placed.map((span) => (
+          <AllDayBar
+            key={span.item.id}
+            span={span}
+            canEdit={canEdit}
+            isSelected={selectedScheduleId === span.item.id}
+            left={pct(span.start)}
+            width={pct(span.end - span.start + 1)}
+            onSelect={() => onSelect(span.item.id)}
+            onDelete={() => onDelete(span.item.id)}
+          />
+        ))}
 
         {draft ? (
           <div
@@ -198,24 +176,6 @@ export function AllDayBand({
           </div>
         ) : null}
       </div>
-
-      {laneCount > COLLAPSED_LANES ? (
-        <button
-          type="button"
-          onClick={() => onExpandedChange(!expanded)}
-          className="absolute bottom-0 right-1 z-10 flex items-center gap-0.5 rounded bg-background/90 px-1.5 py-0.5 text-[11px] text-muted transition hover:text-foreground"
-        >
-          {expanded ? (
-            <>
-              접기 <ChevronUp size={12} />
-            </>
-          ) : (
-            <>
-              +{hiddenCount}개 <ChevronDown size={12} />
-            </>
-          )}
-        </button>
-      ) : null}
     </div>
   );
 }
