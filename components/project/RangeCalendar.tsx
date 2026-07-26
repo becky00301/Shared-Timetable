@@ -5,8 +5,8 @@ import { addMonths, endOfMonth, format, getDay, startOfMonth } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
-
-const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+import { useT } from "@/lib/i18n/locale";
+import { useDateFormat } from "@/lib/i18n/dates";
 
 export const MAX_RANGE_DAYS = 31;
 
@@ -20,6 +20,8 @@ export function RangeCalendar({
   onChange: (start: Date | null, end: Date | null) => void;
 }) {
   const [calMonth, setCalMonth] = useState(() => startOfMonth(new Date()));
+  const t = useT();
+  const fmt = useDateFormat();
 
   const calendarCells = useMemo(() => {
     const first = startOfMonth(calMonth);
@@ -42,7 +44,7 @@ export function RangeCalendar({
     }
     const dayCount = Math.round((date.getTime() - rangeStart.getTime()) / 86400000) + 1;
     if (dayCount > MAX_RANGE_DAYS) {
-      toast.error(`최대 ${MAX_RANGE_DAYS}일까지 선택할 수 있어요.`);
+      toast.error(t("cal.maxRange", { count: MAX_RANGE_DAYS }));
       return;
     }
     onChange(rangeStart, date);
@@ -59,13 +61,13 @@ export function RangeCalendar({
           <Button type="button" variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, -1))}>
             ‹
           </Button>
-          <span className="text-sm font-medium text-foreground">{format(calMonth, "yyyy년 M월")}</span>
+          <span className="text-sm font-medium text-foreground">{fmt.yearMonth(calMonth)}</span>
           <Button type="button" variant="ghost" size="sm" onClick={() => setCalMonth((month) => addMonths(month, 1))}>
             ›
           </Button>
         </div>
         <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs text-muted">
-          {WEEKDAY_LABELS.map((label) => (
+          {fmt.weekdays().map((label) => (
             <span key={label} className="py-1">
               {label}
             </span>
@@ -94,10 +96,14 @@ export function RangeCalendar({
       </div>
       <p className="mt-4 text-center text-sm text-muted">
         {rangeStart && rangeEnd
-          ? `${format(rangeStart, "M월 d일")} ~ ${format(rangeEnd, "M월 d일")} (${Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000) + 1}일)`
+          ? t("cal.rangeSummary", {
+              start: fmt.monthDay(rangeStart),
+              end: fmt.monthDay(rangeEnd),
+              count: Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000) + 1
+            })
           : rangeStart
-            ? `${format(rangeStart, "M월 d일")} ~ 종료일을 클릭하세요`
-            : "시작일을 클릭하세요"}
+            ? t("cal.clickEnd", { start: fmt.monthDay(rangeStart) })
+            : t("cal.clickStart")}
       </p>
     </>
   );

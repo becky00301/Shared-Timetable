@@ -12,6 +12,7 @@ import { RoleBadge } from "@/components/project/RoleBadge";
 import { SelectedDatesCalendar } from "@/components/project/SelectedDatesCalendar";
 import { SidebarNotes } from "@/components/project/SidebarNotes";
 import { SidebarScheduleMemos } from "@/components/project/SidebarScheduleMemos";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import type { Project, ProjectDay, ProjectMember, ProjectRole } from "@/types/project";
 
@@ -29,6 +30,7 @@ export function ProjectSidebar({
   canEdit: boolean;
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
+  const t = useT();
   const canRename = currentRole === "owner" || currentRole === "editor";
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(project.title);
@@ -42,7 +44,7 @@ export function ProjectSidebar({
     }
     updateProject(project.id, { title: next }).catch((error) => {
       console.error(error);
-      toast.error("이름을 변경하지 못했어요.");
+      toast.error(t("card.renameFailed"));
       setTitleDraft(project.title);
     });
   }
@@ -54,11 +56,11 @@ export function ProjectSidebar({
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-foreground"
       >
         <ArrowLeft size={15} />
-        대시보드
+        {t("common.dashboard")}
       </Link>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wide text-muted">공유 시간표</p>
+          <p className="text-xs uppercase tracking-wide text-muted">{t("sidebar.sharedTimetable")}</p>
           {editingTitle ? (
             <Input
               autoFocus
@@ -83,7 +85,7 @@ export function ProjectSidebar({
                 setEditingTitle(true);
               }}
               className="group mt-2 flex items-center gap-1.5 text-left disabled:cursor-default"
-              title={canRename ? "클릭해서 이름 수정" : undefined}
+              title={canRename ? t("sidebar.renameHint") : undefined}
             >
               <span className="truncate text-2xl font-semibold text-foreground">{project.title}</span>
               {canRename ? (
@@ -107,29 +109,29 @@ export function ProjectSidebar({
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">참여자</h2>
-        <span className="text-xs text-muted">{members.length}명</span>
+        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.participants")}</h2>
+        <span className="text-xs text-muted">{t("common.peopleCount", { count: members.length })}</span>
       </div>
       <div className="mt-3">
         <ParticipantList members={members} canManage={currentRole === "owner"} />
       </div>
 
       <div className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground">선택한 날짜</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.selectedDates")}</h2>
       </div>
       <div className="mt-3">
         <SelectedDatesCalendar days={days} />
       </div>
 
       <div className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground">메모</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.notes")}</h2>
       </div>
       <div className="mt-3">
         <SidebarNotes projectId={project.id} canEdit={canEdit} />
       </div>
 
       <div className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground">일정에 적은 메모</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.scheduleMemos")}</h2>
       </div>
       <div className="mt-3 pb-2">
         <SidebarScheduleMemos projectId={project.id} days={days} />

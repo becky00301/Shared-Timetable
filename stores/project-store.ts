@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { translate } from "@/lib/i18n/messages";
 import type { Project, ProjectDay, ProjectKind, ProjectMember, ProjectNote } from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
@@ -205,7 +206,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     // actually went away instead of trusting the missing error.
     const { data, error } = await supabase.from("projects").delete().eq("id", projectId).select("id");
     if (error) throw error;
-    if (!data?.length) throw new Error("삭제 권한이 없어요. 소유자만 삭제할 수 있어요.");
+    if (!data?.length) throw new Error(translate("error.projectDeleteDenied"));
     set((state) => ({
       projects: state.projects.filter((project) => project.id !== projectId),
       days: state.days.filter((day) => day.project_id !== projectId),
@@ -278,7 +279,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const supabase = requireClient();
     const { data, error } = await supabase.from("project_notes").delete().eq("id", noteId).select("id");
     if (error) throw error;
-    if (!data?.length) throw new Error("삭제 권한이 없어요.");
+    if (!data?.length) throw new Error(translate("error.deleteDenied"));
     set((state) => ({ notes: state.notes.filter((note) => note.id !== noteId) }));
   },
 
@@ -286,7 +287,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const supabase = requireClient();
     const { data, error } = await supabase.from("project_days").delete().eq("id", dayId).select("id");
     if (error) throw error;
-    if (!data?.length) throw new Error("삭제 권한이 없어요.");
+    if (!data?.length) throw new Error(translate("error.deleteDenied"));
     set((state) => ({
       days: state.days.filter((day) => day.id !== dayId),
       schedules: state.schedules.filter((item) => item.day_id !== dayId),
@@ -342,7 +343,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     // RLS refusals come back as success with zero rows, not as an error — so
     // does deleting something a collaborator already removed.
     if (!data?.length) {
-      throw new Error("이 일정을 삭제할 권한이 없거나, 이미 삭제된 일정이에요.");
+      throw new Error(translate("error.scheduleDeleteDenied"));
     }
     set((state) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),

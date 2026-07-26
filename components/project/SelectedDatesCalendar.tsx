@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, getDay, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils/cn";
+import { useT } from "@/lib/i18n/locale";
+import { useDateFormat } from "@/lib/i18n/dates";
 import type { ProjectDay } from "@/types/project";
-
-const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export function SelectedDatesCalendar({ days }: { days: ProjectDay[] }) {
   const dayByDate = useMemo(() => new Map(days.map((day) => [day.date, day])), [days]);
+  const t = useT();
+  const fmt = useDateFormat();
 
   const sorted = days.map((day) => day.date).sort();
   const [month, setMonth] = useState(() =>
@@ -32,22 +34,22 @@ export function SelectedDatesCalendar({ days }: { days: ProjectDay[] }) {
           type="button"
           onClick={() => setMonth((m) => addMonths(m, -1))}
           className="rounded-md px-2 py-1 text-muted transition hover:bg-black/6 hover:text-foreground"
-          aria-label="이전 달"
+          aria-label={t("cal.prevMonth")}
         >
           ‹
         </button>
-        <span className="text-sm font-medium text-foreground">{format(month, "yyyy년 M월")}</span>
+        <span className="text-sm font-medium text-foreground">{fmt.yearMonth(month)}</span>
         <button
           type="button"
           onClick={() => setMonth((m) => addMonths(m, 1))}
           className="rounded-md px-2 py-1 text-muted transition hover:bg-black/6 hover:text-foreground"
-          aria-label="다음 달"
+          aria-label={t("cal.nextMonth")}
         >
           ›
         </button>
       </div>
       <div className="mt-2 grid grid-cols-7 gap-0.5 text-center text-[11px] text-muted">
-        {WEEKDAY_LABELS.map((label) => (
+        {fmt.weekdays().map((label) => (
           <span key={label} className="py-1">
             {label}
           </span>

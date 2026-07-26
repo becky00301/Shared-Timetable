@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 
 export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdit: boolean }) {
@@ -12,6 +13,7 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
   const addNote = useProjectStore((state) => state.addNote);
   const updateNote = useProjectStore((state) => state.updateNote);
   const deleteNote = useProjectStore((state) => state.deleteNote);
+  const t = useT();
 
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -26,7 +28,7 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
       setDraft("");
     } catch (error) {
       console.error(error);
-      toast.error("메모를 추가하지 못했어요.");
+      toast.error(t("notes.addFailed"));
     } finally {
       setSaving(false);
     }
@@ -39,12 +41,12 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="준비물, 예산, 링크 등"
+            placeholder={t("notes.placeholder")}
             className="min-h-16 text-sm"
           />
           <Button type="submit" size="sm" variant="outline" disabled={!draft.trim() || saving}>
             <Plus size={15} />
-            {saving ? "추가 중..." : "메모 추가"}
+            {saving ? t("notes.adding") : t("notes.add")}
           </Button>
         </form>
       ) : null}
@@ -59,15 +61,15 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
               onSave={(body) =>
                 updateNote(note.id, body).catch((error) => {
                   console.error(error);
-                  toast.error("메모를 저장하지 못했어요.");
+                  toast.error(t("notes.saveFailed"));
                 })
               }
               onDelete={() =>
                 deleteNote(note.id)
-                  .then(() => toast.success("메모를 삭제했어요."))
+                  .then(() => toast.success(t("notes.deleted")))
                   .catch((error) => {
                     console.error(error);
-                    toast.error("메모를 삭제하지 못했어요.");
+                    toast.error(t("notes.deleteFailed"));
                   })
               }
             />
@@ -75,7 +77,7 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
         </div>
       ) : (
         <p className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted">
-          아직 메모가 없어요.
+          {t("notes.empty")}
         </p>
       )}
     </div>
@@ -95,6 +97,7 @@ function SidebarNoteRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(body);
+  const t = useT();
 
   if (editing && canEdit) {
     return (
@@ -126,7 +129,7 @@ function SidebarNoteRow({
           setEditing(true);
         }}
         className="flex-1 whitespace-pre-wrap break-words text-left text-xs leading-5 text-foreground disabled:cursor-default"
-        title={canEdit ? "클릭해서 수정" : undefined}
+        title={canEdit ? t("notes.editHint") : undefined}
       >
         {body}
       </button>
@@ -134,7 +137,7 @@ function SidebarNoteRow({
         <button
           type="button"
           onClick={onDelete}
-          aria-label="메모 삭제"
+          aria-label={t("notes.deleteLabel")}
           className="shrink-0 rounded p-1 text-muted opacity-0 transition hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100"
         >
           <Trash2 size={13} />

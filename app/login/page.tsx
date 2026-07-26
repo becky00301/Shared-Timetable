@@ -6,7 +6,9 @@ import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale";
 
 export default function LoginPage() {
   return (
@@ -21,6 +23,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
   const supabase = createSupabaseBrowserClient();
+  const t = useT();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -31,16 +34,16 @@ function LoginForm() {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!supabase) {
-      toast.info("Supabase 환경변수를 설정해주세요.");
+      toast.info(t("auth.error.notConfigured"));
       return;
     }
     if (!email || !password) return;
     if (password.length < 6) {
-      toast.error("비밀번호는 6자 이상이어야 해요.");
+      toast.error(t("auth.error.shortPassword"));
       return;
     }
     if (mode === "signup" && !agreed) {
-      toast.error("개인정보 수집·이용에 동의해주세요.");
+      toast.error(t("auth.error.consent"));
       return;
     }
     setLoading(true);
@@ -49,7 +52,7 @@ function LoginForm() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         if (!data.session) {
-          toast.info("가입이 완료됐어요. 이제 로그인해주세요.");
+          toast.info(t("auth.signupComplete"));
           setMode("signin");
           return;
         }
@@ -62,13 +65,13 @@ function LoginForm() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       if (/invalid login credentials/i.test(message)) {
-        toast.error("이메일 또는 비밀번호가 올바르지 않아요.");
+        toast.error(t("auth.error.badCredentials"));
       } else if (/already registered/i.test(message)) {
-        toast.error("이미 가입된 이메일이에요. 로그인해주세요.");
+        toast.error(t("auth.error.alreadyRegistered"));
         setMode("signin");
       } else {
         console.error(error);
-        toast.error(message || "문제가 생겼어요. 다시 시도해주세요.");
+        toast.error(t("auth.error.generic"));
       }
     } finally {
       setLoading(false);
@@ -78,21 +81,22 @@ function LoginForm() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-5">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
-        <Link href="/" className="text-sm text-muted transition hover:text-foreground">
-          PlanTogether
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-sm text-muted transition hover:text-foreground">
+            PlanTogether
+          </Link>
+          <LocaleToggle />
+        </div>
         <h1 className="mt-6 text-3xl font-semibold text-foreground">
-          {mode === "signin" ? "로그인" : "회원가입"}
+          {mode === "signin" ? t("auth.signin.title") : t("auth.signup.title")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          {mode === "signin"
-            ? "이메일과 비밀번호로 로그인하세요."
-            : "이메일과 비밀번호로 계정을 만들어요."}
+          {mode === "signin" ? t("auth.signin.subtitle") : t("auth.signup.subtitle")}
         </p>
 
         <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
-            이메일
+            {t("auth.email")}
             <Input
               type="email"
               value={email}
@@ -103,12 +107,12 @@ function LoginForm() {
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
-            비밀번호
+            {t("auth.password")}
             <Input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="6자 이상"
+              placeholder={t("auth.password.placeholder")}
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
             />
           </label>
@@ -122,33 +126,33 @@ function LoginForm() {
                 className="mt-1 size-4 shrink-0 accent-[color:var(--primary)]"
               />
               <span>
-                <span className="text-foreground">개인정보 수집·이용에 동의합니다.</span> (필수)
+                <span className="text-foreground">{t("auth.consent.label")}</span> {t("auth.consent.required")}
                 <br />
-                이메일과 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.{" "}
+                {t("auth.consent.body")}{" "}
                 <Link
                   href="/privacy"
                   target="_blank"
                   className="font-medium text-primary underline underline-offset-2"
                 >
-                  개인정보처리방침
+                  {t("common.privacy")}
                 </Link>
               </span>
             </label>
           ) : null}
 
           <Button type="submit" disabled={loading}>
-            {loading ? "처리 중..." : mode === "signin" ? "로그인" : "가입하기"}
+            {loading ? t("auth.submitting") : mode === "signin" ? t("auth.signin.title") : t("auth.signup.submit")}
           </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-muted">
-          {mode === "signin" ? "계정이 없으신가요? " : "이미 계정이 있으신가요? "}
+          {mode === "signin" ? t("auth.toSignup") : t("auth.toSignin")}
           <button
             type="button"
             className="font-medium text-primary transition hover:underline"
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           >
-            {mode === "signin" ? "회원가입" : "로그인"}
+            {mode === "signin" ? t("auth.signup.title") : t("auth.signin.title")}
           </button>
         </p>
       </div>

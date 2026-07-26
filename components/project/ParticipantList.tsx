@@ -2,6 +2,7 @@
 
 import { toast } from "sonner";
 import { RoleBadge } from "@/components/project/RoleBadge";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import type { ProjectMember } from "@/types/project";
 
@@ -13,14 +14,15 @@ export function ParticipantList({
   canManage?: boolean;
 }) {
   const updateMemberRole = useProjectStore((state) => state.updateMemberRole);
+  const t = useT();
 
   function changeRole(member: ProjectMember, role: "editor" | "viewer") {
     if (role === member.role) return;
     updateMemberRole(member.id, role)
-      .then(() => toast.success("권한을 변경했어요."))
+      .then(() => toast.success(t("members.roleChanged")))
       .catch((error) => {
         console.error(error);
-        toast.error("권한을 변경하지 못했어요.");
+        toast.error(t("members.roleChangeFailed"));
       });
   }
 
@@ -45,10 +47,10 @@ export function ParticipantList({
               className="h-7 shrink-0 rounded-md border border-border bg-background px-1.5 text-xs text-foreground outline-none"
               value={member.role}
               onChange={(event) => changeRole(member, event.target.value as "editor" | "viewer")}
-              aria-label="멤버 권한 변경"
+              aria-label={t("members.changeRoleLabel")}
             >
-              <option value="editor">편집자</option>
-              <option value="viewer">뷰어</option>
+              <option value="editor">{t("role.editor")}</option>
+              <option value="viewer">{t("role.viewer")}</option>
             </select>
           ) : (
             <RoleBadge role={member.role} />

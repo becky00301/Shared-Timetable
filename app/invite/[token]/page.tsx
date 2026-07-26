@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 
 type Status = "checking" | "needs-login" | "joining" | "error";
@@ -14,6 +15,7 @@ export default function InvitePage() {
   const router = useRouter();
   const joinByInviteToken = useProjectStore((state) => state.joinByInviteToken);
   const [status, setStatus] = useState<Status>("checking");
+  const t = useT();
 
   useEffect(() => {
     let cancelled = false;
@@ -50,30 +52,26 @@ export default function InvitePage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-5">
       <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 text-center shadow-glow">
-        <p className="text-sm text-muted">PlanTogether 초대</p>
+        <p className="text-sm text-muted">{t("invite.eyebrow")}</p>
         {status === "checking" || status === "joining" ? (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-foreground">참여하는 중...</h1>
-            <p className="mt-3 text-sm leading-6 text-muted">잠시만요, 시간표에 참여자로 등록하고 있어요.</p>
+            <h1 className="mt-4 text-3xl font-semibold text-foreground">{t("invite.joining")}</h1>
+            <p className="mt-3 text-sm leading-6 text-muted">{t("invite.joiningBody")}</p>
           </>
         ) : status === "needs-login" ? (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-foreground">로그인하고 참여하기</h1>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              참여하려면 계정이 필요해요. 로그인하거나 회원가입을 마치면 이 시간표에 자동으로 참여됩니다.
-            </p>
+            <h1 className="mt-4 text-3xl font-semibold text-foreground">{t("invite.needLogin")}</h1>
+            <p className="mt-3 text-sm leading-6 text-muted">{t("invite.needLoginBody")}</p>
             <Button className="mt-6" asChild>
-              <Link href={loginHref}>로그인 · 회원가입</Link>
+              <Link href={loginHref}>{t("invite.loginOrSignup")}</Link>
             </Button>
           </>
         ) : (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-foreground">참여하지 못했어요</h1>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              초대 링크가 올바르지 않거나 만료됐어요. 초대한 분에게 링크를 다시 받아주세요.
-            </p>
+            <h1 className="mt-4 text-3xl font-semibold text-foreground">{t("invite.failed")}</h1>
+            <p className="mt-3 text-sm leading-6 text-muted">{t("invite.failedBody")}</p>
             <Button className="mt-6" asChild>
-              <Link href="/dashboard">대시보드로 이동</Link>
+              <Link href="/dashboard">{t("invite.goDashboard")}</Link>
             </Button>
           </>
         )}

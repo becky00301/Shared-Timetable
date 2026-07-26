@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarCheck, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/lib/i18n/locale";
 
 type Status = { configured: boolean; connected: boolean; email: string | null };
 
@@ -14,6 +15,7 @@ export function GoogleCalendarSync({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const { t, locale } = useLocale();
 
   const loadStatus = useCallback(async () => {
     try {
@@ -33,15 +35,15 @@ export function GoogleCalendarSync({ projectId }: { projectId: string }) {
   useEffect(() => {
     if (!googleParam) return;
     if (googleParam === "connected") {
-      toast.success("구글 캘린더를 연결했어요.");
+      toast.success(t("google.connected"));
       loadStatus();
     } else if (googleParam === "not-configured") {
-      toast.error("서버에 구글 설정이 없어요.");
+      toast.error(t("google.noServerConfig"));
     } else {
-      toast.error(`구글 연결에 실패했어요: ${googleParam}`);
+      toast.error(t("google.connectFailed", { reason: googleParam }));
     }
     router.replace(pathname);
-  }, [googleParam, loadStatus, pathname, router]);
+  }, [googleParam, loadStatus, pathname, router, t]);
 
   if (!status?.configured) return null;
 
@@ -51,18 +53,18 @@ export function GoogleCalendarSync({ projectId }: { projectId: string }) {
       const response = await fetch("/api/google/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId })
+        body: JSON.stringify({ projectId, locale })
       });
       const data = (await response.json()) as {
         error?: string;
         created?: number;
         updated?: number;
       };
-      if (!response.ok) throw new Error(data.error || "동기화에 실패했어요.");
-      toast.success(`구글 캘린더에 반영했어요. (추가 ${data.created ?? 0} · 수정 ${data.updated ?? 0})`);
+      if (!response.ok) throw new Error(data.error || t("google.syncFailed"));
+      toast.success(t("google.syncDone", { created: data.created ?? 0, updated: data.updated ?? 0 }));
     } catch (error) {
       console.error(error);
-      toast.error(error instanceof Error ? error.message : "동기화에 실패했어요.");
+      toast.error(error instanceof Error ? error.message : t("google.syncFailed"));
     } finally {
       setSyncing(false);
     }
@@ -71,11 +73,11 @@ export function GoogleCalendarSync({ projectId }: { projectId: string }) {
   async function disconnect() {
     try {
       await fetch("/api/google/status", { method: "DELETE" });
-      toast.success("구글 캘린더 연결을 해제했어요.");
+      toast.success(t("google.disconnected"));
       loadStatus();
     } catch (error) {
       console.error(error);
-      toast.error("연결 해제에 실패했어요.");
+      toast.error(t("google.disconnectFailed"));
     }
   }
 
@@ -90,7 +92,7 @@ export function GoogleCalendarSync({ projectId }: { projectId: string }) {
         }}
       >
         <CalendarCheck size={15} />
-        구글 캘린더 연결
+        {t("google.connect")}
       </Button>
     );
   }
@@ -99,12 +101,12 @@ export function GoogleCalendarSync({ projectId }: { projectId: string }) {
     <div className="flex flex-col gap-2">
       <Button variant="outline" size="sm" className="w-full" disabled={syncing} onClick={sync}>
         <RefreshCw size={15} className={syncing ? "animate-spin" : undefined} />
-        {syncing ? "동기화 중..." : "구글 캘린더로 보내기"}
+        {syncing ? t("google.syncing") : t("google.push")}
       </Button>
       <p className="text-xs leading-5 text-muted">
-        {status.email ?? "구글 계정"}에 연결됨 ·{" "}
+        {t("google.connectedTo", { email: status.email ?? t("google.account") })} ·{" "}
         <button type="button" onClick={disconnect} className="underline transition hover:text-foreground">
-          해제
+          {t("google.disconnect")}
         </button>
       </p>
     </div>

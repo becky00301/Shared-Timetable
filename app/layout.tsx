@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { Toaster } from "sonner";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
+import { LocaleProvider } from "@/lib/i18n/locale";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,8 +30,10 @@ export default function RootLayout({
             />
           </noscript>
         ) : null}
-        {children}
-        <FeedbackButton />
+        <LocaleProvider>
+          {children}
+          <FeedbackButton />
+        </LocaleProvider>
         <Toaster richColors position="top-right" />
       </body>
       {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}

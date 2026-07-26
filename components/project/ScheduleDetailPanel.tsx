@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
+import { useT } from "@/lib/i18n/locale";
 import { timeToMinutes } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -44,6 +45,7 @@ export function ScheduleDetailPanel({
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const schedules = useProjectStore((state) => state.schedules);
   const item = schedules.find((schedule) => schedule.id === selectedScheduleId);
+  const t = useT();
 
   const [title, setTitle] = useState("");
   const [dayId, setDayId] = useState("");
@@ -153,24 +155,24 @@ export function ScheduleDetailPanel({
       deleteSchedule(selectedId!)
         .then(() => {
           setSelectedSchedule(null);
-          toast.success("일정을 삭제했어요.");
+          toast.success(t("detail.deleted"));
         })
         .catch((error) => {
           console.error(error);
-          toast.error(error instanceof Error ? error.message : "일정을 삭제하지 못했어요.");
+          toast.error(error instanceof Error ? error.message : t("detail.deleteFailed"));
         });
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedId, canEdit, deleteSchedule, setSelectedSchedule]);
+  }, [selectedId, canEdit, deleteSchedule, setSelectedSchedule, t]);
 
   if (!item) {
     return (
       <aside className="hidden w-80 shrink-0 border-l border-border bg-surface p-5 xl:block">
-        <h2 className="text-sm font-semibold text-foreground">일정 상세</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("detail.title")}</h2>
         <div className="mt-6 rounded-xl border border-dashed border-border bg-black/[0.02] p-5 text-sm leading-6 text-muted">
-          일정을 클릭하면 여기에서 바로 수정할 수 있어요.
+          {t("detail.empty")}
         </div>
       </aside>
     );
@@ -180,18 +182,18 @@ export function ScheduleDetailPanel({
     if (!item || !canEdit) return;
     upsertSchedule({ ...item, ...patch }).catch((error) => {
       console.error(error);
-      toast.error("변경사항을 저장하지 못했어요.");
+      toast.error(t("detail.saveFailed"));
     });
   }
 
   function saveTitle() {
-    const next = title.trim() || "새 일정";
+    const next = title.trim() || t("grid.newSchedule");
     if (next !== item!.title) save({ title: next });
   }
 
   function saveTimes(nextStart: string, nextEnd: string) {
     if (timeToMinutes(nextEnd) <= timeToMinutes(nextStart)) {
-      toast.error("종료 시간은 시작 시간보다 뒤여야 해요.");
+      toast.error(t("detail.endBeforeStart"));
       return;
     }
     save({ start_time: nextStart, end_time: nextEnd });
@@ -218,12 +220,12 @@ export function ScheduleDetailPanel({
       }
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">일정 상세</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("detail.title")}</h2>
         <button
           type="button"
           onClick={() => setSelectedSchedule(null)}
           className="rounded-md p-1 text-muted transition hover:bg-black/8 hover:text-foreground"
-          aria-label="닫기"
+          aria-label={t("common.close")}
         >
           <X size={16} />
         </button>
@@ -231,7 +233,7 @@ export function ScheduleDetailPanel({
 
       <div className="mt-4 flex flex-col gap-4 text-sm">
         <label className="flex flex-col gap-1.5 text-muted">
-          이름
+          {t("common.name")}
           <Input
             value={title}
             disabled={!canEdit}
@@ -244,7 +246,7 @@ export function ScheduleDetailPanel({
         </label>
 
         <label className="flex flex-col gap-1.5 text-muted">
-          {item.all_day ? "시작 날짜" : "날짜"}
+          {item.all_day ? t("detail.startDate") : t("detail.date")}
           <select
             className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
             value={dayId}
@@ -264,7 +266,7 @@ export function ScheduleDetailPanel({
 
         {item.all_day ? (
           <label className="flex flex-col gap-1.5 text-muted">
-            종료 날짜
+            {t("detail.endDate")}
             <select
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
               value={endDayId}
@@ -288,7 +290,7 @@ export function ScheduleDetailPanel({
         ) : (
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5 text-muted">
-            시작
+            {t("detail.start")}
             <Input
               type="time"
               step={300}
@@ -301,7 +303,7 @@ export function ScheduleDetailPanel({
             />
           </label>
           <label className="flex flex-col gap-1.5 text-muted">
-            종료
+            {t("detail.end")}
             <Input
               type="time"
               step={300}
@@ -317,29 +319,29 @@ export function ScheduleDetailPanel({
         )}
 
         <label className="flex flex-col gap-1.5 text-muted">
-          장소
+          {t("detail.location")}
           <Input
             value={location}
             disabled={!canEdit}
-            placeholder="선택 입력"
+            placeholder={t("common.optional")}
             onChange={(event) => setLocation(event.target.value)}
             onBlur={() => save({ location: location.trim() })}
           />
         </label>
 
         <label className="flex flex-col gap-1.5 text-muted">
-          메모
+          {t("detail.memo")}
           <Textarea
             value={description}
             disabled={!canEdit}
-            placeholder="선택 입력"
+            placeholder={t("common.optional")}
             onChange={(event) => setDescription(event.target.value)}
             onBlur={() => save({ description: description.trim() })}
           />
         </label>
 
         <div className="flex flex-col gap-1.5 text-muted">
-          색상
+          {t("detail.color")}
           <div className="flex gap-2">
             {COLORS.map((color) => (
               <button
@@ -349,7 +351,7 @@ export function ScheduleDetailPanel({
                 onClick={() => save({ color })}
                 className="size-8 rounded-full border border-black/20 transition"
                 style={{ backgroundColor: color, outline: item.color === color ? "2px solid white" : "none" }}
-                aria-label={`색상 ${color}`}
+                aria-label={t("detail.colorLabel", { color })}
               />
             ))}
           </div>
@@ -365,19 +367,19 @@ export function ScheduleDetailPanel({
             deleteSchedule(item.id)
               .then(() => {
                 setSelectedSchedule(null);
-                toast.success("일정을 삭제했어요.");
+                toast.success(t("detail.deleted"));
               })
               .catch((error) => {
                 console.error(error);
-                toast.error(error instanceof Error ? error.message : "일정을 삭제하지 못했어요.");
+                toast.error(error instanceof Error ? error.message : t("detail.deleteFailed"));
               });
           }}
         >
           <Trash2 size={16} />
-          삭제
+          {t("common.delete")}
         </Button>
         {canEdit ? (
-          <p className="mt-2 text-center text-xs text-muted">Delete 키로도 삭제할 수 있어요.</p>
+          <p className="mt-2 text-center text-xs text-muted">{t("detail.deleteHint")}</p>
         ) : null}
       </div>
     </aside>

@@ -1,11 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import type { Metadata } from "next";
+import { useLocale } from "@/lib/i18n/locale";
 
-export const metadata: Metadata = {
-  title: "개인정보처리방침 · PlanTogether"
-};
+type Section = { title: string; body: string[] };
 
-const SECTIONS = [
+const SECTIONS_KO: Section[] = [
   {
     title: "1. 수집하는 개인정보 항목",
     body: [
@@ -17,11 +17,7 @@ const SECTIONS = [
   },
   {
     title: "2. 수집·이용 목적",
-    body: [
-      "회원 식별 및 로그인 유지",
-      "시간표 작성·공유·협업 기능 제공",
-      "서비스 오류 파악 및 개선"
-    ]
+    body: ["회원 식별 및 로그인 유지", "시간표 작성·공유·협업 기능 제공", "서비스 오류 파악 및 개선"]
   },
   {
     title: "3. 보유 및 이용 기간",
@@ -64,20 +60,104 @@ const SECTIONS = [
   }
 ];
 
+const SECTIONS_EN: Section[] = [
+  {
+    title: "1. Personal data we collect",
+    body: [
+      "At sign-up: your email address and password (stored one-way encrypted; even the operator cannot read the original).",
+      "While using the service: the timetables you create (name and description, selected dates, schedule titles, times, locations and notes, free-form notes) and member and role information.",
+      "If you use Google Calendar sync: your Google account email and a calendar access token. This runs only when you click to connect, and you can disconnect at any time.",
+      "Access logs, cookies, and device/browser information may be generated and collected automatically while you use the service."
+    ]
+  },
+  {
+    title: "2. Why we use it",
+    body: [
+      "To identify members and keep you logged in",
+      "To provide timetable creation, sharing, and collaboration",
+      "To detect and fix errors and improve the service"
+    ]
+  },
+  {
+    title: "3. Retention period",
+    body: [
+      "When you delete your account or request deletion, the data is destroyed without delay.",
+      "Deleting a timetable also deletes its dates, schedules, and notes.",
+      "Where a law requires separate retention, the data is kept for that period."
+    ]
+  },
+  {
+    title: "4. Processing entrusted to others",
+    body: [
+      "Supabase — database and authentication",
+      "Vercel — hosting and deployment",
+      "Google — sending schedule data when you use Google Calendar sync",
+      "These processors handle data only as needed to provide the service, and data may be stored and processed on overseas servers."
+    ]
+  },
+  {
+    title: "5. Sharing with third parties",
+    body: [
+      "We do not sell or provide your personal data to third parties.",
+      "However, if you share a timetable or invite others with an invite link, that timetable's contents and members' emails are visible to its participants.",
+      "Where lawfully required by investigative authorities, data may be provided following the applicable procedures."
+    ]
+  },
+  {
+    title: "6. Cookies and analytics",
+    body: [
+      "We use essential cookies to keep you logged in.",
+      "Analytics based on Google Tag Manager may be used to understand usage; you can refuse cookie storage in your browser settings."
+    ]
+  },
+  {
+    title: "7. Your rights",
+    body: [
+      "You can view, correct, delete, or request a halt to the processing of your personal data at any time.",
+      "For account deletion or questions, contact us at the address below."
+    ]
+  }
+];
+
+const COPY = {
+  ko: {
+    back: "← PlanTogether",
+    title: "개인정보처리방침",
+    intro:
+      "PlanTogether(이하 “서비스”)는 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수합니다.",
+    contactTitle: "8. 문의처",
+    contact: "개인정보 관련 문의: becky00301@gmail.com",
+    footer: "본 방침은 서비스 운영 상황에 따라 변경될 수 있으며, 변경 시 이 페이지를 통해 공지합니다.",
+    sections: SECTIONS_KO
+  },
+  en: {
+    back: "← PlanTogether",
+    title: "Privacy Policy",
+    intro:
+      "PlanTogether (the “Service”) treats your personal data with care and complies with applicable law.",
+    contactTitle: "8. Contact",
+    contact: "Privacy inquiries: becky00301@gmail.com",
+    footer:
+      "This policy may change as the service evolves; any changes will be announced on this page.",
+    sections: SECTIONS_EN
+  }
+} as const;
+
 export default function PrivacyPage() {
+  const { locale } = useLocale();
+  const copy = COPY[locale];
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-3xl px-5 py-12">
         <Link href="/" className="text-sm text-muted transition hover:text-foreground">
-          ← PlanTogether
+          {copy.back}
         </Link>
-        <h1 className="mt-6 text-3xl font-semibold">개인정보처리방침</h1>
-        <p className="mt-3 text-sm leading-6 text-muted">
-          PlanTogether(이하 &ldquo;서비스&rdquo;)는 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수합니다.
-        </p>
+        <h1 className="mt-6 text-3xl font-semibold">{copy.title}</h1>
+        <p className="mt-3 text-sm leading-6 text-muted">{copy.intro}</p>
 
         <div className="mt-10 flex flex-col gap-8">
-          {SECTIONS.map((section) => (
+          {copy.sections.map((section) => (
             <section key={section.title}>
               <h2 className="text-lg font-semibold">{section.title}</h2>
               <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-sm leading-7 text-muted">
@@ -89,16 +169,12 @@ export default function PrivacyPage() {
           ))}
 
           <section>
-            <h2 className="text-lg font-semibold">8. 문의처</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">
-              개인정보 관련 문의: becky00301@gmail.com
-            </p>
+            <h2 className="text-lg font-semibold">{copy.contactTitle}</h2>
+            <p className="mt-3 text-sm leading-7 text-muted">{copy.contact}</p>
           </section>
         </div>
 
-        <p className="mt-12 border-t border-border pt-6 text-xs leading-6 text-muted">
-          본 방침은 서비스 운영 상황에 따라 변경될 수 있으며, 변경 시 이 페이지를 통해 공지합니다.
-        </p>
+        <p className="mt-12 border-t border-border pt-6 text-xs leading-6 text-muted">{copy.footer}</p>
       </div>
     </main>
   );

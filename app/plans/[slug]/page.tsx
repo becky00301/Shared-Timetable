@@ -13,6 +13,7 @@ import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
 import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 import { TimetableHeader } from "@/components/timetable/TimetableHeader";
 import { useProjectRealtime } from "@/lib/supabase/realtime";
+import { useT } from "@/lib/i18n/locale";
 import { canEdit as roleCanEdit } from "@/lib/permissions/roles";
 import { orderDays } from "@/lib/utils/days";
 import { useProjectStore } from "@/stores/project-store";
@@ -28,6 +29,7 @@ export default function ProjectPage() {
   const viewMode = useUiStore((state) => state.viewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const [notFound, setNotFound] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     setNotFound(false);
@@ -35,10 +37,10 @@ export default function ProjectPage() {
       if (!result) setNotFound(true);
     }).catch((error) => {
       console.error(error);
-      toast.error("이 시간표를 불러오지 못했어요.");
+      toast.error(t("project.loadFailed"));
       setNotFound(true);
     });
-  }, [params.slug, loadProject]);
+  }, [params.slug, loadProject, t]);
 
   const onSync = useCallback(() => {
     loadProject(params.slug).catch((error) => console.error(error));
@@ -49,15 +51,13 @@ export default function ProjectPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-5 text-foreground">
         <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center">
-          <h1 className="text-2xl font-semibold">{notFound ? "시간표를 찾을 수 없어요" : "불러오는 중..."}</h1>
+          <h1 className="text-2xl font-semibold">{notFound ? t("project.notFound") : t("common.loading")}</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
-            {notFound
-              ? "이 시간표가 없거나 아직 참여자가 아니에요. 이 주소 대신 초대 링크(/invite/…)를 받아서 열어주세요."
-              : "시간표를 불러오고 있어요."}
+            {notFound ? t("project.notFoundBody") : t("project.loadingBody")}
           </p>
           {notFound ? (
             <Link className="mt-5 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white" href="/dashboard">
-              대시보드로 돌아가기
+              {t("project.backToDashboard")}
             </Link>
           ) : null}
         </div>
@@ -88,16 +88,14 @@ export default function ProjectPage() {
         <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
           <Link
             href="/dashboard"
-            aria-label="대시보드로 이동"
+            aria-label={t("project.goDashboard")}
             className="rounded-md p-1.5 text-muted transition hover:bg-black/8 hover:text-foreground"
           >
             <ArrowLeft size={18} />
           </Link>
           <div className="min-w-0">
             <h1 className="truncate font-semibold text-foreground">{project.title}</h1>
-            <p className="text-xs text-muted">
-              {currentRole === "owner" ? "소유자" : currentRole === "editor" ? "편집자" : "뷰어"}
-            </p>
+            <p className="text-xs text-muted">{t(`role.${currentRole}`)}</p>
           </div>
         </div>
         {days.length === 0 ? (

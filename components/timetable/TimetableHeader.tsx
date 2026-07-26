@@ -2,6 +2,7 @@
 
 import { CalendarDays, Clock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useT } from "@/lib/i18n/locale";
 import { useUiStore } from "@/stores/ui-store";
 
 export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
@@ -9,6 +10,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
   const setViewMode = useUiStore((state) => state.setViewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const setWeekStartsOnSunday = useUiStore((state) => state.setWeekStartsOnSunday);
+  const t = useT();
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2">
@@ -22,7 +24,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
           )}
         >
           <Clock size={14} />
-          시간 그리드
+          {t("grid.tabGrid")}
         </button>
         <button
           type="button"
@@ -33,13 +35,13 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
           )}
         >
           <CalendarDays size={14} />
-          월간 달력
+          {t("grid.tabMonth")}
         </button>
       </div>
 
       {isWeekly ? (
         <div className="flex items-center gap-2 text-sm text-muted">
-          <span>주 시작</span>
+          <span>{t("grid.weekStart")}</span>
           <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
             <button
               type="button"
@@ -49,7 +51,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
                 !weekStartsOnSunday ? "bg-primary text-white" : "text-muted hover:bg-black/6"
               )}
             >
-              월
+              {t("grid.mon")}
             </button>
             <button
               type="button"
@@ -59,7 +61,7 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
                 weekStartsOnSunday ? "bg-primary text-white" : "text-muted hover:bg-black/6"
               )}
             >
-              일
+              {t("grid.sun")}
             </button>
           </div>
         </div>

@@ -4,7 +4,66 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
+type Locale = "ko" | "en";
+
+const LABELS = {
+  ko: {
+    weekdays: ["일", "월", "화", "수", "목", "금", "토"],
+    colDate: "날짜",
+    colWeekday: "요일",
+    colKind: "구분",
+    colStart: "시작",
+    colEnd: "종료",
+    colTitle: "일정",
+    colLocation: "장소",
+    colMemo: "메모",
+    noteBody: "메모",
+    noteCreatedAt: "작성일",
+    kindAllDay: "종일",
+    kindTimed: "시간",
+    allDay: "종일",
+    timetableSuffix: "시간표",
+    exportedOn: "내보낸 날짜",
+    sheetTimetable: "시간표",
+    sheetSchedules: "일정",
+    sheetNotes: "메모",
+    errNoProjectId: "projectId가 필요해요.",
+    errNoServerConfig: "서버 설정이 필요해요.",
+    errNeedLogin: "로그인이 필요해요.",
+    errNotFound: "시간표를 찾을 수 없어요."
+  },
+  en: {
+    weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    colDate: "Date",
+    colWeekday: "Day",
+    colKind: "Type",
+    colStart: "Start",
+    colEnd: "End",
+    colTitle: "Schedule",
+    colLocation: "Location",
+    colMemo: "Notes",
+    noteBody: "Note",
+    noteCreatedAt: "Created",
+    kindAllDay: "All-day",
+    kindTimed: "Timed",
+    allDay: "All-day",
+    timetableSuffix: "timetable",
+    exportedOn: "Exported",
+    sheetTimetable: "Timetable",
+    sheetSchedules: "Schedules",
+    sheetNotes: "Notes",
+    errNoProjectId: "projectId is required.",
+    errNoServerConfig: "Server configuration is missing.",
+    errNeedLogin: "You need to be logged in.",
+    errNotFound: "Timetable not found."
+  }
+} as const;
+
+type Labels = (typeof LABELS)[Locale];
+
+function resolveLocale(value: string | null): Locale {
+  return value === "en" ? "en" : "ko";
+}
 
 type Row = {
   date: string;
@@ -50,21 +109,25 @@ function textColumn<T>(header: string, width: number, pick: (row: T) => string):
   };
 }
 
-const scheduleColumns: Column<Row>[] = [
-  textColumn("날짜", 14, (row) => row.date),
-  textColumn("요일", 6, (row) => row.weekday),
-  textColumn("구분", 8, (row) => row.kind),
-  textColumn("시작", 8, (row) => row.start),
-  textColumn("종료", 8, (row) => row.end),
-  textColumn("일정", 28, (row) => row.title),
-  textColumn("장소", 22, (row) => row.location),
-  textColumn("메모", 40, (row) => row.memo)
-];
+function scheduleColumnsFor(labels: Labels): Column<Row>[] {
+  return [
+    textColumn(labels.colDate, 14, (row) => row.date),
+    textColumn(labels.colWeekday, 6, (row) => row.weekday),
+    textColumn(labels.colKind, 8, (row) => row.kind),
+    textColumn(labels.colStart, 8, (row) => row.start),
+    textColumn(labels.colEnd, 8, (row) => row.end),
+    textColumn(labels.colTitle, 28, (row) => row.title),
+    textColumn(labels.colLocation, 22, (row) => row.location),
+    textColumn(labels.colMemo, 40, (row) => row.memo)
+  ];
+}
 
-const noteColumns: Column<NoteRow>[] = [
-  textColumn("메모", 60, (row) => row.body),
-  textColumn("작성일", 14, (row) => row.createdAt)
-];
+function noteColumnsFor(labels: Labels): Column<NoteRow>[] {
+  return [
+    textColumn(labels.noteBody, 60, (row) => row.body),
+    textColumn(labels.noteCreatedAt, 14, (row) => row.createdAt)
+  ];
+}
 
 const HALF_HOUR = 30;
 const DEFAULT_START_MINUTES = 9 * 60;
@@ -89,9 +152,14 @@ function ceilToHalfHour(minutes: number) {
   return Math.ceil(minutes / HALF_HOUR) * HALF_HOUR;
 }
 
-function formatKoreanDate(date: string) {
+function formatDateCell(date: string, labels: Labels, locale: Locale) {
   const value = new Date(`${date}T00:00:00`);
-  return `${value.getMonth() + 1}월 ${value.getDate()}일\n${WEEKDAY_KO[value.getDay()] ?? ""}`;
+  const weekday = labels.weekdays[value.getDay()] ?? "";
+  const dayLabel =
+    locale === "ko"
+      ? `${value.getMonth() + 1}월 ${value.getDate()}일`
+      : value.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `${dayLabel}\n${weekday}`;
 }
 
 function normalizeHex(color: string | null | undefined) {
@@ -164,7 +232,13 @@ function packTimedItems(items: ExportItem[]) {
     });
 }
 
-function buildTimetableSheet(projectTitle: string, daysInput: ExportDay[], itemsInput: ExportItem[]): VisualSheet {
+function buildTimetableSheet(
+  projectTitle: string,
+  daysInput: ExportDay[],
+  itemsInput: ExportItem[],
+  labels: Labels,
+  locale: Locale
+): VisualSheet {
   const days = daysInput
     .slice()
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.date.localeCompare(b.date));
@@ -195,7 +269,7 @@ function buildTimetableSheet(projectTitle: string, daysInput: ExportDay[], items
 
   const data: SheetData = [
     [
-      spanCell(`${projectTitle} 시간표`, columnCount, {
+      spanCell(`${projectTitle} ${labels.timetableSuffix}`, columnCount, {
         height: 26,
         fontSize: 16,
         fontWeight: "bold",
@@ -206,7 +280,7 @@ function buildTimetableSheet(projectTitle: string, daysInput: ExportDay[], items
       ...Array.from({ length: columnCount - 1 }, () => null)
     ],
     [
-      spanCell(`내보낸 날짜 ${new Date().toISOString().slice(0, 10)}`, columnCount, {
+      spanCell(`${labels.exportedOn} ${new Date().toISOString().slice(0, 10)}`, columnCount, {
         height: 22,
         align: "right",
         backgroundColor: "#E9D5FF",
@@ -221,7 +295,7 @@ function buildTimetableSheet(projectTitle: string, daysInput: ExportDay[], items
   header[0] = cell("", { backgroundColor: "#F5F5F5", borderColor: "#404040", borderStyle: "medium" });
   days.forEach((day, dayIndex) => {
     const startCol = dayColumnStarts[dayIndex];
-    header[startCol] = spanCell(formatKoreanDate(day.date), laneCounts[dayIndex], {
+    header[startCol] = spanCell(formatDateCell(day.date, labels, locale), laneCounts[dayIndex], {
       fontSize: 12,
       fontWeight: "bold",
       backgroundColor: "#FEFCE8",
@@ -237,8 +311,8 @@ function buildTimetableSheet(projectTitle: string, daysInput: ExportDay[], items
 
   if (allDayItems.length) {
     const allDayRow = createEmptyRow(columnCount, 24);
-    allDayRow[0] = cell("종일", { backgroundColor: "#BAE6FD", borderColor: "#404040", borderStyle: "medium" });
-    allDayRow[columnCount - 1] = cell("종일", { backgroundColor: "#BAE6FD", borderColor: "#404040", borderStyle: "medium" });
+    allDayRow[0] = cell(labels.allDay, { backgroundColor: "#BAE6FD", borderColor: "#404040", borderStyle: "medium" });
+    allDayRow[columnCount - 1] = cell(labels.allDay, { backgroundColor: "#BAE6FD", borderColor: "#404040", borderStyle: "medium" });
     days.forEach((day, dayIndex) => {
       const labels = allDayItems
         .filter((item) => {
@@ -311,15 +385,17 @@ function buildTimetableSheet(projectTitle: string, daysInput: ExportDay[], items
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const locale = resolveLocale(searchParams.get("locale"));
+  const labels = LABELS[locale];
   const projectId = searchParams.get("projectId");
-  if (!projectId) return NextResponse.json({ error: "projectId가 필요해요." }, { status: 400 });
+  if (!projectId) return NextResponse.json({ error: labels.errNoProjectId }, { status: 400 });
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return NextResponse.json({ error: "서버 설정이 필요해요." }, { status: 500 });
+  if (!supabase) return NextResponse.json({ error: labels.errNoServerConfig }, { status: 500 });
   const {
     data: { user }
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: labels.errNeedLogin }, { status: 401 });
 
   // RLS makes sure the caller is a member of this project.
   const { data: project } = await supabase
@@ -327,7 +403,7 @@ export async function GET(request: Request) {
     .select("id, title")
     .eq("id", projectId)
     .maybeSingle();
-  if (!project) return NextResponse.json({ error: "시간표를 찾을 수 없어요." }, { status: 404 });
+  if (!project) return NextResponse.json({ error: labels.errNotFound }, { status: 404 });
 
   const [{ data: days }, { data: items }, { data: notes }] = await Promise.all([
     supabase.from("project_days").select("id, date, sort_order").eq("project_id", projectId),
@@ -343,7 +419,13 @@ export async function GET(request: Request) {
   ]);
 
   const dayById = new Map((days ?? []).map((day) => [day.id, day]));
-  const visualSheet = buildTimetableSheet(project.title, (days ?? []) as ExportDay[], (items ?? []) as ExportItem[]);
+  const visualSheet = buildTimetableSheet(
+    project.title,
+    (days ?? []) as ExportDay[],
+    (items ?? []) as ExportItem[],
+    labels,
+    locale
+  );
 
   const rows: Row[] = (items ?? [])
     .map((item) => {
@@ -362,8 +444,8 @@ export async function GET(request: Request) {
       const endDate = item.end_day_id ? dayById.get(item.end_day_id)?.date : undefined;
       return {
         date: endDate && endDate !== date ? `${date} ~ ${endDate}` : date,
-        weekday: WEEKDAY_KO[new Date(`${date}T00:00:00`).getDay()] ?? "",
-        kind: item.all_day ? "종일" : "시간",
+        weekday: labels.weekdays[new Date(`${date}T00:00:00`).getDay()] ?? "",
+        kind: item.all_day ? labels.kindAllDay : labels.kindTimed,
         start: item.all_day ? "" : item.start_time.slice(0, 5),
         end: item.all_day ? "" : item.end_time.slice(0, 5),
         title: item.title,
@@ -377,9 +459,11 @@ export async function GET(request: Request) {
     createdAt: note.created_at.slice(0, 10)
   }));
 
+  const scheduleColumns = scheduleColumnsFor(labels);
+  const noteColumns = noteColumnsFor(labels);
   const file = await writeXlsxFile([
     {
-      sheet: "시간표",
+      sheet: labels.sheetTimetable,
       data: visualSheet.data,
       columns: visualSheet.columns,
       orientation: "landscape",
@@ -389,12 +473,12 @@ export async function GET(request: Request) {
       zoomScale: 0.9
     },
     {
-      sheet: "일정",
+      sheet: labels.sheetSchedules,
       data: getSheetData(rows, scheduleColumns),
       columns: scheduleColumns.map((column) => ({ width: column.width }))
     },
     {
-      sheet: "메모",
+      sheet: labels.sheetNotes,
       data: getSheetData(noteRows, noteColumns),
       columns: noteColumns.map((column) => ({ width: column.width }))
     }

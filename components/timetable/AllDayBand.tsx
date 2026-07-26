@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
 import type { ProjectDay } from "@/types/project";
 import type { ScheduleItem } from "@/types/schedule";
@@ -67,6 +68,7 @@ export function AllDayBand({
   const areaRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<{ start: number; end: number; naming: boolean } | null>(null);
   const [title, setTitle] = useState("");
+  const t = useT();
 
   const indexByDayId = useMemo(
     () => new Map(days.map((day, index) => [day.id, index])),
@@ -167,7 +169,7 @@ export function AllDayBand({
                     setTitle("");
                   }
                 }}
-                placeholder="종일 일정 (비우면 취소)"
+                placeholder={t("grid.allDayPlaceholder")}
                 className="pointer-events-auto h-full w-full rounded bg-primary px-1.5 text-xs font-medium text-white outline-none placeholder:text-white/70"
               />
             ) : (
@@ -197,8 +199,9 @@ function AllDayBar({
   onSelect: () => void;
   onDelete: () => void;
 }) {
+  const t = useT();
   const { onContextMenu, menu } = useContextMenu(
-    canEdit ? [{ label: "삭제", onSelect: onDelete, danger: true }] : []
+    canEdit ? [{ label: t("common.delete"), onSelect: onDelete, danger: true }] : []
   );
 
   return (

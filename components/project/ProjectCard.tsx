@@ -7,6 +7,7 @@ import { CalendarDays, MousePointer2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useContextMenu } from "@/components/ui/context-menu";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import type { Project } from "@/types/project";
 import type { ProjectDay } from "@/types/project";
@@ -23,27 +24,28 @@ export function ProjectCard({
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
   const deleteProject = useProjectStore((state) => state.deleteProject);
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(project.title);
 
   const { onContextMenu, menu } = useContextMenu([
     {
-      label: "이름 수정",
+      label: t("common.rename"),
       onSelect: () => {
         setDraft(project.title);
         setEditing(true);
       }
     },
     {
-      label: "삭제",
+      label: t("common.delete"),
       danger: true,
       onSelect: () => {
-        if (!window.confirm(`"${project.title}" 시간표를 삭제할까요? 되돌릴 수 없어요.`)) return;
+        if (!window.confirm(t("card.confirmDelete", { title: project.title }))) return;
         deleteProject(project.id)
-          .then(() => toast.success("시간표를 삭제했어요."))
+          .then(() => toast.success(t("card.deleted")))
           .catch((error) => {
             console.error(error);
-            toast.error("삭제하지 못했어요. 소유자만 삭제할 수 있어요.");
+            toast.error(t("card.deleteFailed"));
           });
       }
     }
@@ -52,12 +54,13 @@ export function ProjectCard({
   const sortedDates = days.map((day) => day.date).sort();
   const first = sortedDates[0];
   const last = sortedDates[sortedDates.length - 1];
-  const fmt = (iso: string) => format(new Date(iso), "yyyy.M.d");
+  const fmtDate = (iso: string) => format(new Date(iso), "yyyy.M.d");
+  const dayCount = t("common.days", { count: sortedDates.length });
   const dateRange = !first
     ? null
     : first === last
-      ? `${fmt(first)} (${sortedDates.length}일)`
-      : `${fmt(first)} ~ ${fmt(last)} (${sortedDates.length}일)`;
+      ? `${fmtDate(first)} (${dayCount})`
+      : `${fmtDate(first)} ~ ${fmtDate(last)} (${dayCount})`;
 
   function saveTitle() {
     setEditing(false);
@@ -68,7 +71,7 @@ export function ProjectCard({
     }
     updateProject(project.id, { title: next }).catch((error) => {
       console.error(error);
-      toast.error("이름을 변경하지 못했어요.");
+      toast.error(t("card.renameFailed"));
       setDraft(project.title);
     });
   }
@@ -94,7 +97,7 @@ export function ProjectCard({
               }
             }}
           />
-          <p className="text-xs text-muted">Enter로 저장 · Esc로 취소</p>
+          <p className="text-xs text-muted">{t("card.renameHint")}</p>
         </div>
       ) : (
         <Link href={`/plans/${project.slug}`} className="flex flex-col gap-3">
@@ -113,16 +116,16 @@ export function ProjectCard({
                 {dateRange}
               </span>
             ) : (
-              <span className="text-xs text-muted">아직 날짜가 없어요</span>
+              <span className="text-xs text-muted">{t("card.noDates")}</span>
             )}
           </div>
         </Link>
       )}
       <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted">
-        <span>일정 {schedules.length}개</span>
+        <span>{t("card.scheduleCount", { count: schedules.length })}</span>
         <span className="inline-flex items-center gap-1">
           <MousePointer2 size={14} />
-          우클릭 메뉴
+          {t("card.contextHint")}
         </span>
       </div>
     </div>

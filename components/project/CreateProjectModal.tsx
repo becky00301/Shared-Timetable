@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input, Textarea } from "@/components/ui/input";
 import { RangeCalendar } from "@/components/project/RangeCalendar";
 import { cn } from "@/lib/utils/cn";
+import { useT } from "@/lib/i18n/locale";
+import { useDateFormat } from "@/lib/i18n/dates";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -21,6 +23,8 @@ export function CreateProjectModal() {
   const setOpen = useUiStore((state) => state.setCreateProjectOpen);
   const createProject = useProjectStore((state) => state.createProject);
   const addDays = useProjectStore((state) => state.addDays);
+  const t = useT();
+  const fmt = useDateFormat();
 
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<"weekly" | "daterange">("weekly");
@@ -56,7 +60,7 @@ export function CreateProjectModal() {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!title.trim()) {
-      toast.error("시간표 이름을 입력해주세요.");
+      toast.error(t("setup.nameRequired"));
       return;
     }
     setSaving(true);
@@ -64,11 +68,11 @@ export function CreateProjectModal() {
       const project = await createProject(title.trim(), description.trim(), mode === "weekly" ? "weekly" : "daterange");
       await addDays(project.id, buildDates());
       setOpen(false);
-      toast.success("시간표를 만들었어요.");
+      toast.success(t("setup.created"));
       router.push(`/plans/${project.slug}`);
     } catch (error) {
       console.error(error);
-      toast.error("시간표를 만들지 못했어요. 다시 시도해주세요.");
+      toast.error(t("setup.createFailed"));
     } finally {
       setSaving(false);
     }
@@ -80,9 +84,9 @@ export function CreateProjectModal() {
         {step === "mode" ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-foreground">어떤 시간표를 만들까요?</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">{t("setup.chooseKind")}</DialogTitle>
               <DialogDescription className="text-sm text-muted">
-                드래그로 만들고 링크 하나로 공유하는 시간표
+                {t("setup.chooseKindSub")}
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2">
@@ -95,17 +99,17 @@ export function CreateProjectModal() {
                 className="flex flex-col rounded-xl border border-border bg-black/[0.03] p-4 text-left transition hover:border-primary"
               >
                 <CalendarRange className="shrink-0 text-primary" size={20} />
-                <h3 className="mt-3 font-semibold text-foreground">날짜 직접 선택</h3>
+                <h3 className="mt-3 font-semibold text-foreground">{t("setup.pickDates")}</h3>
                 <p className="mt-1 text-sm leading-6 text-muted">
-                  기간을 골라 여행·MT·행사 일정에 맞는 날짜만 추가
+                  {t("setup.pickDatesBody")}
                 </p>
-                <span className="mt-auto pt-4 text-sm font-medium text-primary">기간 선택하기 →</span>
+                <span className="mt-auto pt-4 text-sm font-medium text-primary">{t("setup.pickDatesCta")}</span>
               </button>
 
               <div className="flex flex-col rounded-xl border border-border bg-black/[0.03] p-4">
                 <CalendarDays className="shrink-0 text-primary" size={20} />
-                <h3 className="mt-3 font-semibold text-foreground">일주일 시간표 만들기</h3>
-                <p className="mt-1 text-sm leading-6 text-muted">날짜 입력 없이 기본 틀로 즉시 시작</p>
+                <h3 className="mt-3 font-semibold text-foreground">{t("setup.weekly")}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted">{t("setup.weeklyBody")}</p>
                 <div className="mt-auto pt-4">
                   <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
                     <button
@@ -116,7 +120,7 @@ export function CreateProjectModal() {
                         weekStart === "mon" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
                       )}
                     >
-                      월요일 시작
+                      {t("setup.startMonday")}
                     </button>
                     <button
                       type="button"
@@ -126,7 +130,7 @@ export function CreateProjectModal() {
                         weekStart === "sun" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
                       )}
                     >
-                      일요일 시작
+                      {t("setup.startSunday")}
                     </button>
                   </div>
                   <Button
@@ -136,7 +140,7 @@ export function CreateProjectModal() {
                       setStep("name");
                     }}
                   >
-                    이대로 시작하기
+                    {t("setup.startAsIs")}
                   </Button>
                 </div>
               </div>
@@ -145,9 +149,9 @@ export function CreateProjectModal() {
         ) : step === "datepick" ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-foreground">기간을 선택하세요</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">{t("setup.chooseRange")}</DialogTitle>
               <DialogDescription className="text-sm text-muted">
-                시작일과 종료일을 차례로 클릭하세요.
+                {t("setup.chooseRangeSub")}
               </DialogDescription>
             </DialogHeader>
             <RangeCalendar
@@ -160,7 +164,7 @@ export function CreateProjectModal() {
             />
             <div className="mt-4 flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("mode")}>
-                뒤로
+                {t("common.back")}
               </Button>
               <Button
                 type="button"
@@ -168,40 +172,40 @@ export function CreateProjectModal() {
                 disabled={!rangeStart || !rangeEnd}
                 onClick={() => setStep("name")}
               >
-                다음
+                {t("common.next")}
               </Button>
             </div>
           </>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-foreground">시간표 이름을 정해주세요</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">{t("setup.nameIt")}</DialogTitle>
               <DialogDescription className="text-sm text-muted">
                 {mode === "weekly"
                   ? weekStart === "mon"
-                    ? "이번 주 월~일 일주일 시간표"
-                    : "이번 주 일~토 일주일 시간표"
+                    ? t("setup.defaultNameWeeklyMon")
+                    : t("setup.defaultNameWeeklySun")
                   : rangeStart && rangeEnd
-                    ? `${format(rangeStart, "M월 d일")} ~ ${format(rangeEnd, "M월 d일")} 시간표`
+                    ? t("setup.defaultNameRange", { start: fmt.monthDay(rangeStart), end: fmt.monthDay(rangeEnd) })
                     : ""}
               </DialogDescription>
             </DialogHeader>
             <form className="flex flex-col gap-4" onSubmit={submit}>
               <label className="flex flex-col gap-2 text-sm text-muted">
-                이름
+                {t("common.name")}
                 <Input
                   autoFocus
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="예: 유럽 여행, 동아리 MT"
+                  placeholder={t("setup.namePlaceholder")}
                 />
               </label>
               <label className="flex flex-col gap-2 text-sm text-muted">
-                설명 (선택)
+                {t("setup.description")}
                 <Textarea
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  placeholder="함께 보는 사람들을 위한 간단한 설명"
+                  placeholder={t("setup.descriptionPlaceholder")}
                 />
               </label>
               <div className="flex gap-2">
@@ -212,10 +216,10 @@ export function CreateProjectModal() {
                   disabled={saving}
                   onClick={() => setStep(mode === "daterange" ? "datepick" : "mode")}
                 >
-                  뒤로
+                  {t("common.back")}
                 </Button>
                 <Button type="submit" className="flex-1" disabled={saving}>
-                  {saving ? "만드는 중..." : "시간표 만들기"}
+                  {saving ? t("setup.creating") : t("setup.create")}
                 </Button>
               </div>
             </form>

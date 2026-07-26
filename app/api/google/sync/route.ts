@@ -13,19 +13,40 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+const SYNC_LABELS = {
+  ko: {
+    needLogin: "로그인이 필요해요.",
+    needProjectId: "projectId가 필요해요.",
+    connectFirst: "구글 계정을 먼저 연결해주세요.",
+    notFound: "시간표를 찾을 수 없어요.",
+    serverConfig: "서버 설정이 필요해요.",
+    syncFailed: "동기화에 실패했어요."
+  },
+  en: {
+    needLogin: "You need to be logged in.",
+    needProjectId: "projectId is required.",
+    connectFirst: "Connect your Google account first.",
+    notFound: "Timetable not found.",
+    serverConfig: "Server configuration is missing.",
+    syncFailed: "Sync failed."
+  }
+} as const;
+
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user }
   } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
-  if (!user || !supabase) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  const body = (await request.json().catch(() => ({}))) as { projectId?: string; locale?: string };
+  const labels = SYNC_LABELS[body.locale === "en" ? "en" : "ko"];
+  if (!user || !supabase) return NextResponse.json({ error: labels.needLogin }, { status: 401 });
 
-  const { projectId } = (await request.json().catch(() => ({}))) as { projectId?: string };
-  if (!projectId) return NextResponse.json({ error: "projectId가 필요해요." }, { status: 400 });
+  const projectId = body.projectId;
+  if (!projectId) return NextResponse.json({ error: labels.needProjectId }, { status: 400 });
 
   const accessToken = await getAccessToken(user.id);
   if (!accessToken) {
-    return NextResponse.json({ error: "구글 계정을 먼저 연결해주세요." }, { status: 400 });
+    return NextResponse.json({ error: labels.connectFirst }, { status: 400 });
   }
 
   // Read through the user's own session so RLS confirms they can see this project.
@@ -35,7 +56,7 @@ export async function POST(request: Request) {
     .eq("id", projectId)
     .maybeSingle();
   if (projectError || !project) {
-    return NextResponse.json({ error: "시간표를 찾을 수 없어요." }, { status: 404 });
+    return NextResponse.json({ error: labels.notFound }, { status: 404 });
   }
 
   const [{ data: days }, { data: items }] = await Promise.all([
@@ -48,7 +69,7 @@ export async function POST(request: Request) {
 
   const dateByDayId = new Map((days ?? []).map((day) => [day.id, day.date]));
   const admin = createSupabaseAdminClient();
-  if (!admin) return NextResponse.json({ error: "서버 설정이 필요해요." }, { status: 500 });
+  if (!admin) return NextResponse.json({ error: labels.serverConfig }, { status: 500 });
 
   try {
     // Reuse the project's calendar, recreating it if the user deleted it in Google.
@@ -108,7 +129,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "동기화에 실패했어요." },
+      { error: error instanceof Error ? error.message : labels.syncFailed },
       { status: 500 }
     );
   }

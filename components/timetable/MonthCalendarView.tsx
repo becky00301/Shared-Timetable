@@ -4,11 +4,10 @@ import { useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, getDay, startOfMonth } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
+import { useDateFormat } from "@/lib/i18n/dates";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
-
-const WEEKDAY_LABELS_SUN = ["일", "월", "화", "수", "목", "금", "토"];
 
 export function MonthCalendarView({ projectId, days }: { projectId: string; days: ProjectDay[] }) {
   const schedules = useProjectStore((state) => state.schedules).filter(
@@ -16,6 +15,7 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
   );
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
+  const fmt = useDateFormat();
 
   const dayByDate = useMemo(() => new Map(days.map((day) => [day.date, day])), [days]);
   const [month, setMonth] = useState(() =>
@@ -24,8 +24,8 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
 
   const weekStart = weekStartsOnSunday ? 0 : 1;
   const weekdayLabels = useMemo(
-    () => Array.from({ length: 7 }, (_, index) => WEEKDAY_LABELS_SUN[(weekStart + index) % 7]),
-    [weekStart]
+    () => Array.from({ length: 7 }, (_, index) => fmt.weekday((weekStart + index) % 7)),
+    [weekStart, fmt]
   );
 
   const cells = useMemo(() => {
@@ -49,7 +49,7 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
           ‹
         </Button>
         <span className="min-w-28 text-center text-sm font-medium text-foreground">
-          {format(month, "yyyy년 M월")}
+          {fmt.yearMonth(month)}
         </span>
         <Button variant="ghost" size="sm" onClick={() => setMonth((current) => addMonths(current, 1))}>
           ›

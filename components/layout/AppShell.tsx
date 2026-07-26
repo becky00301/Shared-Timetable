@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const t = useT();
   const [email, setEmail] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
   const signedIn = Boolean(email);
@@ -45,33 +48,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <Link href="/dashboard" className="transition hover:text-foreground">
-              대시보드
+              {t("common.dashboard")}
             </Link>
             {!signedIn ? (
               <Link href="/login" className="transition hover:text-foreground">
-                로그인
+                {t("common.login")}
               </Link>
             ) : null}
           </nav>
-          {signedIn ? (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
-                  {email?.slice(0, 1)}
+          <div className="flex items-center gap-2">
+            <LocaleToggle />
+            {signedIn ? (
+              <>
+                <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
+                    {email?.slice(0, 1)}
+                  </span>
+                  <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={email ?? undefined}>
+                    {email}
+                  </span>
                 </span>
-                <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={email ?? undefined}>
-                  {email}
-                </span>
-              </span>
-              <Button size="sm" variant="outline" onClick={signOut}>
-                로그아웃
+                <Button size="sm" variant="outline" onClick={signOut}>
+                  {t("common.logout")}
+                </Button>
+              </>
+            ) : (
+              <Button asChild size="sm">
+                <Link href="/dashboard">{t("common.openApp")}</Link>
               </Button>
-            </div>
-          ) : (
-            <Button asChild size="sm">
-              <Link href="/dashboard">앱 열기</Link>
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </header>
       {children}

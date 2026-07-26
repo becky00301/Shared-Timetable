@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
@@ -13,6 +14,7 @@ export function SidebarScheduleMemos({ projectId, days }: { projectId: string; d
   );
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const setViewMode = useUiStore((state) => state.setViewMode);
+  const t = useT();
 
   const byDay = useMemo(
     () =>
@@ -32,7 +34,7 @@ export function SidebarScheduleMemos({ projectId, days }: { projectId: string; d
   if (!byDay.length) {
     return (
       <p className="rounded-lg border border-dashed border-border p-3 text-center text-xs leading-5 text-muted">
-        일정 상세에 메모를 적으면 여기에 모여요.
+        {t("sidebar.memoEmpty")}
       </p>
     );
   }
@@ -60,7 +62,7 @@ export function SidebarScheduleMemos({ projectId, days }: { projectId: string; d
                   />
                   <span className="truncate text-xs font-medium text-foreground">{item.title}</span>
                   <span className="shrink-0 text-[11px] text-muted">
-                    {item.all_day ? "종일" : item.start_time.slice(0, 5)}
+                    {item.all_day ? t("grid.allDay") : item.start_time.slice(0, 5)}
                   </span>
                 </span>
                 {item.location?.trim() ? (

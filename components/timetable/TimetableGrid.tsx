@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { AllDayBand } from "@/components/timetable/AllDayBand";
 import { DateColumn } from "@/components/timetable/DateColumn";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
+import { useT } from "@/lib/i18n/locale";
+import { useDateFormat } from "@/lib/i18n/dates";
 import { cn } from "@/lib/utils/cn";
 import {
   DAY_END_MINUTES,
@@ -42,6 +44,7 @@ export function TimetableGrid({
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const activeMode = useUiStore((state) => state.activeMode);
+  const t = useT();
   const [draft, setDraft] = useState<{
     dayId: string;
     startMinutes: number;
@@ -149,7 +152,7 @@ export function TimetableGrid({
       .then((item) => setSelectedSchedule(item.id))
       .catch((error) => {
         console.error(error);
-        toast.error("종일 일정을 저장하지 못했어요.");
+        toast.error(t("grid.allDaySaveFailed"));
       });
   }
 
@@ -157,11 +160,11 @@ export function TimetableGrid({
     deleteSchedule(id)
       .then(() => {
         if (selectedScheduleId === id) setSelectedSchedule(null);
-        toast.success("일정을 삭제했어요.");
+        toast.success(t("detail.deleted"));
       })
       .catch((error) => {
         console.error(error);
-        toast.error(error instanceof Error ? error.message : "일정을 삭제하지 못했어요.");
+        toast.error(error instanceof Error ? error.message : t("detail.deleteFailed"));
       });
   }
 
@@ -183,7 +186,7 @@ export function TimetableGrid({
       .then((item) => setSelectedSchedule(item.id))
       .catch((error) => {
         console.error(error);
-        toast.error("일정을 저장하지 못했어요.");
+        toast.error(t("grid.scheduleSaveFailed"));
       });
     setDraft(null);
   }
@@ -206,7 +209,7 @@ export function TimetableGrid({
       end_time: minutesToTime(Math.min(DAY_END_MINUTES, start + duration))
     }).catch((error) => {
       console.error(error);
-      toast.error(`일정을 옮기지 못했어요: ${error instanceof Error ? error.message : ""}`);
+      toast.error(`${t("grid.moveFailed")}: ${error instanceof Error ? error.message : ""}`);
     });
   }
 
@@ -224,7 +227,7 @@ export function TimetableGrid({
       end_time: minutesToTime(nextEnd)
     }).catch((error) => {
       console.error(error);
-      toast.error(`길이를 바꾸지 못했어요: ${error instanceof Error ? error.message : ""}`);
+      toast.error(`${t("grid.resizeFailed")}: ${error instanceof Error ? error.message : ""}`);
     });
   }
 
@@ -232,10 +235,7 @@ export function TimetableGrid({
     return (
       <div className="flex min-h-[540px] flex-1 items-center justify-center p-6">
         <div className="max-w-sm rounded-xl border border-dashed border-border bg-card p-8 text-center">
-          <h2 className="text-lg font-semibold text-foreground">원하는 날짜를 추가해서 시간표를 시작하세요.</h2>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            This document is built from selected dates, not a full monthly calendar.
-          </p>
+          <h2 className="text-lg font-semibold text-foreground">{t("grid.emptyTitle")}</h2>
         </div>
       </div>
     );
@@ -271,7 +271,7 @@ export function TimetableGrid({
               band would otherwise pin itself over most of the viewport. */}
           <div className="z-30 flex bg-surface">
             <div className="sticky left-0 z-40 w-16 shrink-0 border-b border-r border-border bg-surface pr-2 pt-1 text-right text-[11px] text-muted">
-              종일
+              {t("grid.allDay")}
             </div>
             {/* Bars are positioned as a percentage of this element, so with
                 fixed-width columns it must span their combined width. */}
@@ -333,8 +333,6 @@ export function TimetableGrid({
   );
 }
 
-const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
-
 function DayHeaderCell({
   day,
   weekdayOnly,
@@ -344,8 +342,9 @@ function DayHeaderCell({
   weekdayOnly?: boolean;
   width?: number;
 }) {
+  const fmt = useDateFormat();
   const date = new Date(day.date);
-  const weekdayKo = WEEKDAY_KO[date.getDay()];
+  const weekday = fmt.weekday(date.getDay());
   return (
     <div
       className={cn(
@@ -356,13 +355,11 @@ function DayHeaderCell({
     >
       <div className="text-center">
         {weekdayOnly ? (
-          <p className="text-sm font-semibold text-foreground">{weekdayKo}</p>
+          <p className="text-sm font-semibold text-foreground">{weekday}</p>
         ) : (
           <>
-            <p className="text-sm font-semibold text-foreground">
-              {date.getMonth() + 1}월 {date.getDate()}일
-            </p>
-            <p className="text-[11px] text-muted">{weekdayKo}</p>
+            <p className="text-sm font-semibold text-foreground">{fmt.monthDay(date)}</p>
+            <p className="text-[11px] text-muted">{weekday}</p>
           </>
         )}
       </div>
