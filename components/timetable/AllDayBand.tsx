@@ -7,7 +7,7 @@ import { useContextMenu } from "@/components/ui/context-menu";
 import type { ProjectDay } from "@/types/project";
 import type { ScheduleItem } from "@/types/schedule";
 
-const LANE_HEIGHT = 22;
+const LANE_HEIGHT = 26;
 const BAND_PADDING = 8;
 
 type Placed = { item: ScheduleItem; start: number; end: number; lane: number };
@@ -215,7 +215,7 @@ function AllDayBar({
         onPointerDown={(event) => event.stopPropagation()}
         title={span.item.title}
         className={cn(
-          "absolute truncate rounded-[6px] px-1.5 text-left text-xs font-medium leading-[18px] text-white",
+          "absolute flex items-center rounded-[6px] px-1.5 text-left text-xs font-medium text-white",
           isSelected && "ring-2 ring-black/30"
         )}
         style={{
@@ -227,7 +227,7 @@ function AllDayBar({
           backgroundColor: span.item.color ?? "#2383e2"
         }}
       >
-        {span.item.title}
+        <span className="truncate">{span.item.title}</span>
       </button>
     </>
   );
