@@ -16,7 +16,16 @@
   --color-primary: #2383e2;
   --color-border: #e6e5e1;
   --color-muted: #787774;
+  /* Restore the standard radius scale. Appica derives its own (larger) scale
+     from --radius: 0.875rem, which otherwise inflates every rounded-* in the
+     app into pills and clips text on short elements like the all-day bars. */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
   --shadow-glow: 0 1px 2px rgba(15, 15, 15, 0.06), 0 10px 30px rgba(15, 15, 15, 0.08);
 }
 
@@ -42,6 +51,17 @@
   --text: #37352f;
   --muted: #787774;
   --border: #e6e5e1;
+
+  /* Appica declares the radius scale in its own (unlayered) :root, which
+     outranks Tailwind's @theme layer — so pin the values here too, where this
+     later unlayered :root wins the cascade and rounded-* renders as designed. */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
 }
 
 * {
