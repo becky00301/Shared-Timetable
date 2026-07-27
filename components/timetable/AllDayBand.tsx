@@ -170,10 +170,10 @@ export function AllDayBand({
                   }
                 }}
                 placeholder={t("grid.allDayPlaceholder")}
-                className="pointer-events-auto h-full w-full rounded-sm bg-primary px-1.5 text-xs font-medium text-white outline-none placeholder:text-white/70"
+                className="pointer-events-auto h-full w-full rounded-[6px] bg-primary px-1.5 text-xs font-medium text-white outline-none placeholder:text-white/70"
               />
             ) : (
-              <div className="h-full w-full rounded-sm bg-primary/60" />
+              <div className="h-full w-full rounded-[6px] bg-primary/60" />
             )}
           </div>
         ) : null}
@@ -215,7 +215,7 @@ function AllDayBar({
         onPointerDown={(event) => event.stopPropagation()}
         title={span.item.title}
         className={cn(
-          "absolute truncate rounded-sm px-1.5 text-left text-xs font-medium leading-[18px] text-white",
+          "absolute truncate rounded-[6px] px-1.5 text-left text-xs font-medium leading-[18px] text-white",
           isSelected && "ring-2 ring-black/30"
         )}
         style={{
