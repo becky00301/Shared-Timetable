@@ -100,7 +100,14 @@ export function ProjectCard({
           <p className="text-xs text-muted">{t("card.renameHint")}</p>
         </div>
       ) : (
-        <Link href={`/plans/${project.slug}`} className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
+          {/* Stretched link: covers the whole card so clicking anywhere opens
+              it, while right-click (context menu) still bubbles to the card. */}
+          <Link
+            href={`/plans/${project.slug}`}
+            aria-label={project.title}
+            className="absolute inset-0 z-0 rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+          />
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold text-foreground">{project.title}</h3>
@@ -119,7 +126,7 @@ export function ProjectCard({
               <span className="text-xs text-muted">{t("card.noDates")}</span>
             )}
           </div>
-        </Link>
+        </div>
       )}
       <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted">
         <span>{t("card.scheduleCount", { count: schedules.length })}</span>
