@@ -1,6 +1,37 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "@appica/ui-react/styles.css";
+
+/* Appica ships pre-built classes in dist; it's under node_modules (ignored by
+   default), so point Tailwind's scanner at it explicitly. */
+@source "../node_modules/@appica/ui-react/dist";
+
+/* Theme tokens (migrated from the old tailwind.config.ts). These generate the
+   bg-background / text-foreground / border-border / shadow-glow utilities the
+   app already uses. */
+@theme {
+  --color-background: #ffffff;
+  --color-surface: #f7f6f3;
+  --color-card: #f7f7f5;
+  --color-foreground: #37352f;
+  --color-primary: #2383e2;
+  --color-border: #e6e5e1;
+  --color-muted: #787774;
+  --radius-xl: 0.75rem;
+  --shadow-glow: 0 1px 2px rgba(15, 15, 15, 0.06), 0 10px 30px rgba(15, 15, 15, 0.08);
+}
+
+/* Tailwind v4 defaults `border`/`divide` to currentColor. The app relies on a
+   light default border in many places (bare `border`, `border-b`, …), so pin
+   it back to the design's border token. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+}
 
 :root {
   color-scheme: light;

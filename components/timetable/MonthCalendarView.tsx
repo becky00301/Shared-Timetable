@@ -102,7 +102,7 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
                     type="button"
                     onClick={() => setSelectedSchedule(item.id)}
                     title={item.title}
-                    className="truncate rounded px-1.5 py-0.5 text-left text-xs text-foreground transition hover:opacity-80"
+                    className="truncate rounded-sm px-1.5 py-0.5 text-left text-xs text-foreground transition hover:opacity-80"
                     style={{ backgroundColor: `${item.color ?? "#1972F7"}55` }}
                   >
                     {item.all_day ? item.title : `${item.start_time.slice(0, 5)} ${item.title}`}

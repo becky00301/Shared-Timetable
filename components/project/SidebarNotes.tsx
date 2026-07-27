@@ -138,7 +138,7 @@ function SidebarNoteRow({
           type="button"
           onClick={onDelete}
           aria-label={t("notes.deleteLabel")}
-          className="shrink-0 rounded p-1 text-muted opacity-0 transition hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100"
+          className="shrink-0 rounded-sm p-1 text-muted opacity-0 transition hover:bg-red-500/10 hover:text-red-600 group-hover:opacity-100"
         >
           <Trash2 size={13} />
         </button>
