@@ -16,8 +16,27 @@ export type LiveCursor = {
 
 type CursorPayload = Omit<LiveCursor, "at">;
 
+/** A block someone is dragging out but hasn't named/saved yet. */
+export type PeerDraft = {
+  userId: string;
+  name: string;
+  color: string;
+  dayId: string;
+  startMinutes: number;
+  endMinutes: number;
+  at: number;
+};
+
+/** What the local grid reports about its own in-progress drag. */
+export type LocalDraft = { dayId: string; startMinutes: number; endMinutes: number } | null;
+
+type DraftPayload = Omit<PeerDraft, "at"> | { userId: string; clear: true };
+
 const SEND_INTERVAL_MS = 60;
 const STALE_AFTER_MS = 8000;
+// Re-announce an open draft well inside STALE_AFTER_MS: while someone types a
+// name their pointer stops, so without this their block would be pruned.
+const DRAFT_HEARTBEAT_MS = 2500;
 
 const CURSOR_COLORS = ["#E5484D", "#F76B15", "#E2A400", "#30A46C", "#0091FF", "#8E4EC6", "#E93D82"];
 
@@ -30,8 +49,8 @@ export function cursorColor(userId: string) {
 }
 
 /**
- * Broadcasts this user's pointer position over the project's realtime channel
- * and returns everyone else's.
+ * Broadcasts this user's pointer position and in-progress draft block over the
+ * project's realtime channel, and returns everyone else's.
  *
  * Sends are held until the channel reports SUBSCRIBED — Supabase drops
  * broadcasts published on a channel that hasn't finished joining.
@@ -40,18 +59,23 @@ export function useLiveCursors({
   projectId,
   userId,
   name,
-  contentRef
+  contentRef,
+  draft = null
 }: {
   projectId: string;
   userId: string | null;
   name: string;
   contentRef: RefObject<HTMLElement | null>;
+  draft?: LocalDraft;
 }) {
   const [cursors, setCursors] = useState<LiveCursor[]>([]);
-  // Keep the label out of the effect deps: it arrives a beat after the user id
-  // and would otherwise tear down and rebuild the channel.
+  const [peerDrafts, setPeerDrafts] = useState<PeerDraft[]>([]);
+  // Keep the label and draft out of the effect deps: they change while the
+  // channel is live and would otherwise tear it down and rebuild it.
   const nameRef = useRef(name);
   nameRef.current = name;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -68,6 +92,15 @@ export function useLiveCursors({
         ...prev.filter((item) => item.userId !== cursor.userId),
         { ...cursor, at: Date.now() }
       ]);
+    });
+
+    channel.on("broadcast", { event: "draft" }, ({ payload }) => {
+      const next = payload as DraftPayload;
+      if (!next?.userId || next.userId === userId) return;
+      setPeerDrafts((prev) => {
+        const others = prev.filter((item) => item.userId !== next.userId);
+        return "clear" in next ? others : [...others, { ...next, at: Date.now() }];
+      });
     });
 
     channel.on("broadcast", { event: "cursor-leave" }, ({ payload }) => {
@@ -109,21 +142,51 @@ export function useLiveCursors({
 
     window.addEventListener("pointermove", onPointerMove);
 
+    let lastDraftKey = "";
+    let lastDraftAt = 0;
+    const draftKey = (d: LocalDraft) =>
+      d ? `${d.dayId}:${d.startMinutes}:${d.endMinutes}` : "";
+
     const sendTimer = window.setInterval(() => {
-      if (!joined || !pending) return;
-      if (lastSent && lastSent.x === pending.x && lastSent.y === pending.y) return;
-      lastSent = pending;
-      channel.send({
-        type: "broadcast",
-        event: "cursor",
-        payload: { userId, name: nameRef.current, color, x: pending.x, y: pending.y }
-      });
+      if (!joined) return;
+
+      if (pending && (!lastSent || lastSent.x !== pending.x || lastSent.y !== pending.y)) {
+        lastSent = pending;
+        channel.send({
+          type: "broadcast",
+          event: "cursor",
+          payload: { userId, name: nameRef.current, color, x: pending.x, y: pending.y }
+        });
+      }
+
+      // Drafts change on every drag frame, then sit still while the name is
+      // typed — so send on change, and keep re-announcing an open one.
+      const current = draftRef.current;
+      const key = draftKey(current);
+      const now = Date.now();
+      const changed = key !== lastDraftKey;
+      const due = key !== "" && now - lastDraftAt > DRAFT_HEARTBEAT_MS;
+      if (changed || due) {
+        lastDraftKey = key;
+        lastDraftAt = now;
+        channel.send({
+          type: "broadcast",
+          event: "draft",
+          payload: current
+            ? { userId, name: nameRef.current, color, ...current }
+            : { userId, clear: true }
+        });
+      }
     }, SEND_INTERVAL_MS);
 
-    // Drop cursors from people who closed the tab without a clean leave.
+    // Drop cursors and drafts from people who closed the tab without a clean
+    // leave.
     const pruneTimer = window.setInterval(() => {
       const cutoff = Date.now() - STALE_AFTER_MS;
       setCursors((prev) =>
+        prev.some((item) => item.at < cutoff) ? prev.filter((item) => item.at >= cutoff) : prev
+      );
+      setPeerDrafts((prev) =>
         prev.some((item) => item.at < cutoff) ? prev.filter((item) => item.at >= cutoff) : prev
       );
     }, 2000);
@@ -132,11 +195,15 @@ export function useLiveCursors({
       window.removeEventListener("pointermove", onPointerMove);
       window.clearInterval(sendTimer);
       window.clearInterval(pruneTimer);
-      if (joined) channel.send({ type: "broadcast", event: "cursor-leave", payload: { userId } });
+      if (joined) {
+        channel.send({ type: "broadcast", event: "cursor-leave", payload: { userId } });
+        channel.send({ type: "broadcast", event: "draft", payload: { userId, clear: true } });
+      }
       supabase.removeChannel(channel);
       setCursors([]);
+      setPeerDrafts([]);
     };
   }, [projectId, userId, contentRef]);
 
-  return cursors;
+  return { cursors, peerDrafts };
 }

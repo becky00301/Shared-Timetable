@@ -60,14 +60,18 @@ export function TimetableGrid({
   const [viewportWidth, setViewportWidth] = useState(0);
   const allDayItems = schedules.filter((item) => item.all_day);
 
-  // Live pointers of everyone else editing this timetable.
+  // Live pointers and in-progress draft blocks of everyone else editing this
+  // timetable.
   const currentUserId = useProjectStore((state) => state.currentUserId);
   const me = members.find((member) => member.user_id === currentUserId);
-  const cursors = useLiveCursors({
+  const { cursors, peerDrafts } = useLiveCursors({
     projectId,
     userId: currentUserId,
     name: me?.user?.name || me?.user?.email?.split("@")[0] || t("role.viewer"),
-    contentRef
+    contentRef,
+    draft: draft
+      ? { dayId: draft.dayId, startMinutes: draft.startMinutes, endMinutes: draft.endMinutes }
+      : null
   });
   // A small activation distance keeps clicks from registering as drags, so a
   // real drag starts crisply instead of being swallowed by the click handler.
@@ -331,6 +335,7 @@ export function TimetableGrid({
                         }
                       : null
                   }
+                  peerDrafts={peerDrafts.filter((peer) => peer.dayId === day.id)}
                   onDraftCommit={commitDraft}
                   onDraftCancel={() => setDraft(null)}
                   onSelectSchedule={setSelectedSchedule}

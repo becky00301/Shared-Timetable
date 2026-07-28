@@ -2,8 +2,10 @@
 
 import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
 import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
+import { PeerDraftBlock } from "@/components/timetable/PeerDraftBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
 import { cn } from "@/lib/utils/cn";
+import type { PeerDraft } from "@/lib/supabase/cursors";
 import type { ProjectDay } from "@/types/project";
 import type { AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
@@ -19,6 +21,7 @@ export function DateColumn({
   canEdit,
   width,
   draft,
+  peerDrafts,
   onDraftCommit,
   onDraftCancel,
   onSelectSchedule,
@@ -35,6 +38,7 @@ export function DateColumn({
   canEdit: boolean;
   width?: number;
   draft: { start_time: string; end_time: string; naming: boolean } | null;
+  peerDrafts: PeerDraft[];
   onDraftCommit: (title: string) => void;
   onDraftCancel: () => void;
   onSelectSchedule: (id: string) => void;
@@ -65,6 +69,15 @@ export function DateColumn({
             onSelect={() => onSelectSchedule(item.id)}
             onResize={(edge, deltaY) => onResize(item, edge, deltaY)}
             onDelete={() => onDeleteSchedule(item.id)}
+          />
+        ))}
+        {peerDrafts.map((peer) => (
+          <PeerDraftBlock
+            key={peer.userId}
+            startMinutes={peer.startMinutes}
+            endMinutes={peer.endMinutes}
+            name={peer.name}
+            color={peer.color}
           />
         ))}
         {draft ? (
