@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarRange, MousePointerClick, Share2, Users } from "lucide-react";
+import {
+  CalendarRange,
+  FileDown,
+  ImageDown,
+  MousePointer2,
+  MousePointerClick,
+  Share2,
+  Sheet,
+  Users
+} from "lucide-react";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
+import { cn } from "@/lib/utils/cn";
 import { useLocale, useT } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
 
@@ -87,19 +97,44 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
 
       {/* ------------------------------------------------------------- features */}
       <section className="mx-auto max-w-5xl px-5 py-20 sm:py-28">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {FEATURES.map((feature) => (
-            <div
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-wide text-muted">{t("landing.how.eyebrow")}</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            {t("landing.how.title")}
+          </h2>
+        </div>
+
+        {/* overview cards — the table of contents */}
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((feature, i) => (
+            <a
               key={feature.title}
-              className="rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-0.5 hover:shadow-glow"
+              href={`#feature-${i}`}
+              className="rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
             >
-              <span className="flex size-11 items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground">
-                <feature.icon size={20} />
+              <span className="flex size-10 items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground">
+                <feature.icon size={18} />
               </span>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">{t(feature.title)}</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">{t(feature.body)}</p>
-            </div>
+              <h3 className="mt-3 font-semibold text-foreground">{t(feature.title)}</h3>
+              <p className="mt-1 text-sm leading-6 text-muted">{t(feature.body)}</p>
+            </a>
           ))}
+        </div>
+
+        {/* detailed sections with animated mockups */}
+        <div className="mt-24 flex flex-col gap-24 sm:mt-32 sm:gap-32">
+          <DetailSection id="feature-0" n={1} title={t("landing.feature.drag.title")} body={t("landing.detail.drag.body")}>
+            <DragMockup />
+          </DetailSection>
+          <DetailSection id="feature-1" n={2} reverse title={t("landing.feature.dates.title")} body={t("landing.detail.dates.body")}>
+            <DatesMockup />
+          </DetailSection>
+          <DetailSection id="feature-2" n={3} title={t("landing.feature.collab.title")} body={t("landing.detail.collab.body")}>
+            <CollabMockup />
+          </DetailSection>
+          <DetailSection id="feature-3" n={4} reverse title={t("landing.feature.share.title")} body={t("landing.detail.share.body")}>
+            <ShareMockup />
+          </DetailSection>
         </div>
       </section>
 
@@ -118,6 +153,198 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         </div>
       </footer>
     </main>
+  );
+}
+
+/** One feature: number + copy on one side, an animated mockup on the other. */
+function DetailSection({
+  id,
+  n,
+  title,
+  body,
+  reverse,
+  children
+}: {
+  id: string;
+  n: number;
+  title: string;
+  body: string;
+  reverse?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      id={id}
+      className={cn(
+        "flex scroll-mt-24 flex-col gap-8 lg:flex-row lg:items-center lg:gap-16",
+        reverse && "lg:flex-row-reverse"
+      )}
+    >
+      <div className="flex-1">
+        <span className="text-sm font-semibold text-muted">{`0${n}`}</span>
+        <h3 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h3>
+        <p className="mt-3 max-w-md text-base leading-7 text-muted">{body}</p>
+      </div>
+      <div className="flex-1">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-glow sm:p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+const EASE = "cubic-bezier(0.23,1,0.32,1)";
+
+/** 01 — drag to draw a schedule block down a column. */
+function DragMockup() {
+  const { locale } = useLocale();
+  const label = locale === "ko" ? "저녁 식사" : "Dinner";
+  return (
+    <div className="relative h-44 overflow-hidden rounded-xl border border-neutral-100 bg-white">
+      <div className="grid h-full grid-cols-3">
+        {[0, 1, 2].map((c) => (
+          <div key={c} className="border-r border-neutral-100 last:border-r-0">
+            {[0, 1, 2, 3].map((r) => (
+              <div key={r} className="h-1/4 border-b border-neutral-50 last:border-b-0" />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="absolute left-[37%] top-4 w-[26%]">
+        <div
+          className="flex h-24 origin-top items-start rounded-md bg-[#2383e2] px-2 py-1.5 text-[11px] font-semibold text-white shadow-sm"
+          style={{ animation: `lp-draw 4s ${EASE} infinite` }}
+        >
+          {label}
+        </div>
+      </div>
+      <MousePointer2
+        size={18}
+        className="absolute left-[59%] top-4 fill-neutral-800 text-neutral-800 drop-shadow"
+        style={{ animation: `lp-cursor-down 4s ${EASE} infinite` }}
+      />
+    </div>
+  );
+}
+
+/** 02 — pick a date range on a mini calendar. */
+function DatesMockup() {
+  const { locale } = useLocale();
+  const dows = locale === "ko" ? ["일", "월", "화", "수", "목", "금", "토"] : ["S", "M", "T", "W", "T", "F", "S"];
+  const range = [16, 17, 18, 19, 20]; // grid indices to select in sequence
+  const start = 3; // first cell shows day 1 at index 3
+  return (
+    <div className="rounded-xl border border-neutral-100 bg-white p-4">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium text-neutral-400">
+        {dows.map((d, i) => (
+          <div key={i} className="py-1">
+            {d}
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 grid grid-cols-7 gap-1 text-center text-xs">
+        {Array.from({ length: 35 }, (_, i) => {
+          const day = i - start + 1;
+          const show = day >= 1 && day <= 30;
+          const sel = range.includes(i);
+          return (
+            <div key={i} className="relative flex aspect-square items-center justify-center">
+              {sel ? (
+                <span
+                  className="absolute inset-0.5 rounded-md bg-[#2383e2]"
+                  style={{ animation: `lp-cell-on 4s ${EASE} infinite`, animationDelay: `${range.indexOf(i) * 130}ms` }}
+                />
+              ) : null}
+              <span className={cn("relative", sel ? "font-semibold text-white" : "text-neutral-500")}>
+                {show ? day : ""}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** 03 — two collaborators editing the same grid live. */
+function CollabMockup() {
+  const { locale } = useLocale();
+  const [meA, meB] = locale === "ko" ? ["민지", "나"] : ["Minji", "You"];
+  const b1 = locale === "ko" ? "회의" : "Meeting";
+  const b2 = locale === "ko" ? "점심" : "Lunch";
+  return (
+    <div className="relative h-44 overflow-hidden rounded-xl border border-neutral-100 bg-white">
+      <div className="grid h-full grid-cols-3">
+        {[0, 1, 2].map((c) => (
+          <div key={c} className="border-r border-neutral-100 last:border-r-0">
+            {[0, 1, 2, 3].map((r) => (
+              <div key={r} className="h-1/4 border-b border-neutral-50 last:border-b-0" />
+            ))}
+          </div>
+        ))}
+      </div>
+      {/* blocks the two people drop in */}
+      <div
+        className="absolute left-[6%] top-6 w-[26%] rounded-md bg-[#e93d82] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
+        style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "200ms" }}
+      >
+        {b1}
+      </div>
+      <div
+        className="absolute left-[68%] top-16 w-[26%] rounded-md bg-[#2383e2] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
+        style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "1400ms" }}
+      >
+        {b2}
+      </div>
+      {/* live cursors */}
+      <div className="absolute left-[10%] top-2" style={{ animation: `lp-cursor-a 4s ${EASE} infinite` }}>
+        <MousePointer2 size={16} className="fill-[#e93d82] text-[#e93d82]" />
+        <span className="ml-2 rounded bg-[#e93d82] px-1.5 py-0.5 text-[9px] font-medium text-white">{meA}</span>
+      </div>
+      <div className="absolute right-[10%] top-4" style={{ animation: `lp-cursor-b 4s ${EASE} infinite` }}>
+        <MousePointer2 size={16} className="fill-[#2383e2] text-[#2383e2]" />
+        <span className="ml-2 rounded bg-[#2383e2] px-1.5 py-0.5 text-[9px] font-medium text-white">{meB}</span>
+      </div>
+    </div>
+  );
+}
+
+/** 04 — copy the link / export to a file. */
+function ShareMockup() {
+  const { locale } = useLocale();
+  const ko = locale === "ko";
+  const copy = ko ? "복사" : "Copy";
+  const copied = ko ? "복사됨!" : "Copied!";
+  const tiles = [
+    { icon: ImageDown, label: "PNG" },
+    { icon: FileDown, label: "PDF" },
+    { icon: Sheet, label: ko ? "엑셀" : "Excel" }
+  ];
+  return (
+    <div className="relative rounded-xl border border-neutral-100 bg-white p-4">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 truncate rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[11px] text-neutral-400">
+          plantogether.app/invite/8f2a…
+        </div>
+        <span className="rounded-lg bg-[#14161c] px-3 py-2 text-xs font-medium text-white">{copy}</span>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {tiles.map(({ icon: Icon, label }) => (
+          <div
+            key={label}
+            className="flex flex-col items-center gap-1 rounded-lg bg-neutral-100 py-3 text-[11px] font-medium text-neutral-600"
+          >
+            <Icon size={18} className="text-neutral-500" />
+            {label}
+          </div>
+        ))}
+      </div>
+      <div
+        className="absolute right-4 top-12 rounded-md bg-[#22c55e] px-2 py-1 text-[10px] font-semibold text-white shadow-md"
+        style={{ animation: `lp-copied 4s ${EASE} infinite` }}
+      >
+        {copied}
+      </div>
+    </div>
   );
 }
 

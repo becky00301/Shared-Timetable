@@ -56,6 +56,27 @@ export const messages = {
   },
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
   "landing.cta.mine": { ko: "내 시간표로 이동", en: "Go to my timetables" },
+  "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
+  "landing.how.title": {
+    ko: "네 가지만 알면 끝이에요",
+    en: "Four things, that's it"
+  },
+  "landing.detail.drag.body": {
+    ko: "시간표 위에서 마우스를 끌면 그 자리에 바로 일정이 생겨요. 시작·종료 시간을 따로 입력할 필요 없이, 끌어서 놓기만 하면 됩니다.",
+    en: "Drag across the grid and a schedule appears right there. No typing start and end times — just drag and drop."
+  },
+  "landing.detail.dates.body": {
+    ko: "일주일 기본 틀로 바로 시작하거나, 달력에서 여행·행사 기간을 골라 필요한 날짜만 담아요. 빈 날짜로 지저분해지지 않아요.",
+    en: "Start from a weekly template, or pick a trip's dates on the calendar — only the days you need, no empty clutter."
+  },
+  "landing.detail.collab.body": {
+    ko: "초대 링크 하나로 친구를 부르면 같은 시간표를 실시간으로 함께 채워요. 누가 무엇을 바꿔도 모두의 화면에 바로 반영됩니다.",
+    en: "Invite friends with one link and fill the same timetable together, live. Every change shows up for everyone instantly."
+  },
+  "landing.detail.share.body": {
+    ko: "완성한 시간표는 링크로 보내거나 PNG·PDF·엑셀로 내보낼 수 있어요. 계정이 없는 사람에게도 보여줄 수 있습니다.",
+    en: "Send the finished timetable as a link, or export it to PNG, PDF, or Excel. Even people without an account can view it."
+  },
 
   // ---------------------------------------------------------------- auth
   "auth.signin.title": { ko: "로그인", en: "Log in" },
