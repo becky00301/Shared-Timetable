@@ -6,7 +6,9 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
 import { AllDayBand } from "@/components/timetable/AllDayBand";
 import { DateColumn } from "@/components/timetable/DateColumn";
+import { LiveCursors } from "@/components/timetable/LiveCursors";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
+import { useLiveCursors } from "@/lib/supabase/cursors";
 import { useT } from "@/lib/i18n/locale";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { cn } from "@/lib/utils/cn";
@@ -54,8 +56,19 @@ export function TimetableGrid({
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
   const allDayItems = schedules.filter((item) => item.all_day);
+
+  // Live pointers of everyone else editing this timetable.
+  const currentUserId = useProjectStore((state) => state.currentUserId);
+  const me = members.find((member) => member.user_id === currentUserId);
+  const cursors = useLiveCursors({
+    projectId,
+    userId: currentUserId,
+    name: me?.user?.name || me?.user?.email?.split("@")[0] || t("role.viewer"),
+    contentRef
+  });
   // A small activation distance keeps clicks from registering as drags, so a
   // real drag starts crisply instead of being swallowed by the click handler.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -255,7 +268,8 @@ export function TimetableGrid({
         id="timetable-export"
         className="min-h-0 flex-1 overflow-auto bg-background"
       >
-        <div className={manyDays ? "w-max min-w-full" : "min-w-full"}>
+        <div ref={contentRef} className={cn("relative", manyDays ? "w-max min-w-full" : "min-w-full")}>
+          <LiveCursors cursors={cursors} />
           {/* Date headers */}
           <div className="sticky top-0 z-30 flex bg-surface">
             <div className="sticky left-0 z-40 h-12 w-16 shrink-0 border-b border-r border-border bg-surface" />
