@@ -284,6 +284,16 @@ export const messages = {
   "share.button": { ko: "공유", en: "Share" },
   "export.excel": { ko: "엑셀", en: "Excel" },
   "export.notReady": { ko: "아직 내보낼 준비가 안 됐어요.", en: "Nothing to export yet." },
+  "export.open": { ko: "내보내기", en: "Export" },
+  "export.title": { ko: "시간표 내보내기", en: "Export timetable" },
+  "export.subtitle": {
+    ko: "원하는 형식을 골라주세요.",
+    en: "Pick a format to export."
+  },
+  "export.tile.share": { ko: "링크 공유", en: "Share link" },
+  "export.tile.png": { ko: "이미지", en: "Image" },
+  "export.tile.pdf": { ko: "PDF", en: "PDF" },
+  "export.tile.excel": { ko: "엑셀", en: "Excel" },
 
   // ---------------------------------------------------------------- invite
   "invite.eyebrow": { ko: "PlanTogether 초대", en: "PlanTogether invitation" },
