@@ -48,6 +48,7 @@ export const messages = {
     ko: "PNG·PDF로 내보내거나 링크만 보내 누구에게나 보여줄 수 있어요.",
     en: "Export to PNG or PDF, or just send a link anyone can open."
   },
+  "landing.hero.brand": { ko: "플래너 투게더", en: "Planner Together" },
   "landing.hero.line1": { ko: "함께 만드는", en: "Timetables you" },
   "landing.hero.line2": { ko: "공유 시간표", en: "build together" },
   "landing.hero.body": {

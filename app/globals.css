@@ -169,6 +169,35 @@ select {
   }
 }
 
+/* Hero: three people filling in the timetable together. Each cursor glides
+   from its own offset (--from-x/--from-y) to the block it is about to make,
+   then that block pops in. Both end on the finished state so the
+   reduced-motion rule below leaves a complete, readable timetable. */
+@keyframes hero-cursor {
+  0% {
+    opacity: 0;
+    transform: translate(var(--from-x), var(--from-y));
+  }
+  8% {
+    opacity: 1;
+    transform: translate(var(--from-x), var(--from-y));
+  }
+  30%, 100% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+@keyframes hero-block {
+  0%, 30% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  42%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Respect reduced-motion: drop movement/animation, keep the UI usable. */
 @media (prefers-reduced-motion: reduce) {
   *,

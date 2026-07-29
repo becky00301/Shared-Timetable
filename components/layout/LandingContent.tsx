@@ -100,6 +100,9 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
           </header>
 
           <div className="mx-auto max-w-3xl px-5 pb-20 pt-16 text-center sm:pt-24">
+            <p className="mb-4 text-sm font-semibold tracking-[0.12em] text-white/75 sm:text-base">
+              {t("landing.hero.brand")}
+            </p>
             <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-7xl">
               {t("landing.hero.line1")}
               <br />
@@ -383,33 +386,51 @@ function ShareMockup() {
 }
 
 /** A soft, floating timetable preview — the landing's product visual. */
+/** One 9s loop shared by every cursor and block; each peer is offset within it
+    so the three of them take turns rather than moving in unison. */
+const HERO_LOOP = "9s";
+
 function HeroMockup() {
   const { locale } = useLocale();
   const ko = locale === "ko";
   const days = ko ? ["월", "화", "수"] : ["Mon", "Tue", "Wed"];
-  const allDay = ko ? "종일" : "All-day";
-  const blocks = [
-    { col: 0, top: 14, height: 40, color: "#2383e2", label: ko ? "출발" : "Depart" },
-    { col: 1, top: 30, height: 56, color: "#8b5cf6", label: ko ? "로마 구경" : "Rome tour" },
-    { col: 2, top: 8, height: 32, color: "#22c55e", label: ko ? "체크인" : "Check-in" },
-    { col: 2, top: 52, height: 44, color: "#f59e0b", label: ko ? "저녁" : "Dinner" }
+
+  // The first block is already on the grid; the rest get drawn by a peer, so
+  // each peer's colour matches the block they leave behind.
+  const settled = { col: 0, top: 14, height: 40, color: "#2383e2", label: ko ? "출발" : "Depart" };
+  const peers = [
+    {
+      name: ko ? "민지" : "Minji",
+      color: "#8b5cf6",
+      from: ["-70px", "-46px"],
+      delay: "0s",
+      block: { col: 1, top: 30, height: 56, label: ko ? "로마 구경" : "Rome tour" }
+    },
+    {
+      name: ko ? "지훈" : "Jihun",
+      color: "#22c55e",
+      from: ["84px", "-34px"],
+      delay: "1.2s",
+      block: { col: 2, top: 8, height: 32, label: ko ? "체크인" : "Check-in" }
+    },
+    {
+      name: ko ? "나" : "Me",
+      color: "#f59e0b",
+      from: ["48px", "72px"],
+      delay: "2.4s",
+      block: { col: 2, top: 52, height: 44, label: ko ? "저녁" : "Dinner" }
+    }
   ];
-  const chipA = ko ? "칼리아리" : "Cagliari";
-  const chipB = ko ? "윤아랑" : "Meet Yuna";
+
+  const blockBox = (b: { col: number; top: number; height: number }) => ({
+    left: `calc(${(b.col / 3) * 100}% + 4px)`,
+    width: `calc(${100 / 3}% - 8px)`,
+    top: `${b.top}%`,
+    height: `${b.height}%`
+  });
 
   return (
     <div className="relative mx-auto mt-14 max-w-lg">
-      {/* floating chips (above the card so they read as detached) */}
-      <div className="absolute -left-5 -top-5 z-20 hidden rotate-[-6deg] rounded-xl bg-white px-3 py-2 shadow-xl sm:block">
-        <p className="text-xs font-semibold text-[#2383e2]">{chipA}</p>
-        <p className="text-[10px] text-neutral-400">{allDay}</p>
-      </div>
-      <div className="absolute -right-10 top-8 z-20 hidden rotate-[7deg] rounded-xl bg-white px-3 py-2 shadow-xl sm:block">
-        <p className="text-xs font-semibold text-[#8b5cf6]">{chipB}</p>
-        <p className="text-[10px] text-neutral-400">14:00</p>
-      </div>
-
-      {/* the timetable card */}
       <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-white text-left shadow-2xl">
         <div className="grid grid-cols-3 border-b border-neutral-100 bg-neutral-50/70 text-center text-xs font-medium text-neutral-500">
           {days.map((d) => (
@@ -426,19 +447,57 @@ function HeroMockup() {
               ))}
             </div>
           ))}
-          {blocks.map((b, i) => (
+
+          <div
+            className="absolute rounded-md px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
+            style={{ ...blockBox(settled), backgroundColor: settled.color }}
+          >
+            {settled.label}
+          </div>
+
+          {peers.map((peer) => (
             <div
-              key={i}
+              key={peer.name}
               className="absolute rounded-md px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
               style={{
-                left: `calc(${(b.col / 3) * 100}% + 4px)`,
-                width: `calc(${100 / 3}% - 8px)`,
-                top: `${b.top}%`,
-                height: `${b.height}%`,
-                backgroundColor: b.color
+                ...blockBox(peer.block),
+                backgroundColor: peer.color,
+                animation: `hero-block ${HERO_LOOP} ease-out ${peer.delay} infinite`
               }}
             >
-              {b.label}
+              {peer.block.label}
+            </div>
+          ))}
+
+          {/* Cursors sit at the corner of the block they just drew. */}
+          {peers.map((peer) => (
+            <div
+              key={peer.name}
+              aria-hidden
+              className="pointer-events-none absolute z-10 flex items-start gap-1"
+              style={
+                {
+                  // Anchored inside the column, not on its edge, so the name
+                  // label has room instead of being clipped by the card.
+                  left: `calc(${((peer.block.col + 0.5) / 3) * 100}% - 8px)`,
+                  // Capped so a cursor on a block that reaches the bottom of
+                  // the grid isn't clipped by the card's overflow-hidden.
+                  top: `${Math.min(peer.block.top + peer.block.height, 82)}%`,
+                  "--from-x": peer.from[0],
+                  "--from-y": peer.from[1],
+                  animation: `hero-cursor ${HERO_LOOP} cubic-bezier(0.23, 1, 0.32, 1) ${peer.delay} infinite`
+                } as React.CSSProperties
+              }
+            >
+              <MousePointer2 size={15} className="shrink-0 drop-shadow" style={{ color: peer.color }} fill={peer.color} />
+              {/* White ring keeps the label legible even when it lands on a
+                  block of the same colour. */}
+              <span
+                className="whitespace-nowrap rounded-full border border-white/80 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm"
+                style={{ backgroundColor: peer.color }}
+              >
+                {peer.name}
+              </span>
             </div>
           ))}
         </div>
