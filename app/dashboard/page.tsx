@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -16,10 +16,17 @@ import { useUiStore } from "@/stores/ui-store";
 export default function DashboardPage() {
   const router = useRouter();
   const t = useT();
-  const projects = useProjectStore((state) => state.projects);
+  const allProjects = useProjectStore((state) => state.projects);
+  const projectsLoaded = useProjectStore((state) => state.projectsLoaded);
   const days = useProjectStore((state) => state.days);
   const schedules = useProjectStore((state) => state.schedules);
-  const loading = useProjectStore((state) => state.loading);
+
+  // Newest first, and stable: the store's array order shifts as individual
+  // projects are refetched, so sort here rather than trusting insertion order.
+  const projects = useMemo(
+    () => [...allProjects].sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [allProjects]
+  );
   const loadDashboard = useProjectStore((state) => state.loadDashboard);
   const setCreateProjectOpen = useUiStore((state) => state.setCreateProjectOpen);
   const [loadError, setLoadError] = useState(false);
@@ -64,7 +71,10 @@ export default function DashboardPage() {
             {t("dashboard.new")}
           </Button>
         </div>
-        {loading && !projects.length ? (
+        {/* Wait for the full list. Opening a single timetable leaves just that
+            project cached, and rendering that would flash a one-card dashboard
+            before the rest arrived. */}
+        {!projectsLoaded && !loadError ? (
           <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("common.loading")}
           </div>

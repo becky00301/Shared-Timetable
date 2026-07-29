@@ -10,6 +10,10 @@ import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedul
 type ProjectStore = {
   currentUserId: string | null;
   loading: boolean;
+  /** True once loadDashboard has fetched the full project list. loadProject
+      only ever adds a single project, so without this the dashboard can't tell
+      a complete list from a one-project cache. */
+  projectsLoaded: boolean;
   projects: Project[];
   days: ProjectDay[];
   members: ProjectMember[];
@@ -56,6 +60,7 @@ function requireClient() {
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   currentUserId: null,
   loading: false,
+  projectsLoaded: false,
   projects: [],
   days: [],
   members: [],
@@ -90,7 +95,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       set({
         projects: (projectsRes.data ?? []) as Project[],
         days: (daysRes.data ?? []) as ProjectDay[],
-        schedules: (schedulesRes.data ?? []) as ScheduleItem[]
+        schedules: (schedulesRes.data ?? []) as ScheduleItem[],
+        projectsLoaded: true
       });
     } finally {
       set({ loading: false });
@@ -131,7 +137,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (notesRes.error) throw notesRes.error;
 
       set((state) => ({
-        projects: [project as Project, ...state.projects.filter((p) => p.id !== project.id)],
+        // Refresh in place. Hoisting the visited project to the front would
+        // silently reshuffle the dashboard every time you opened a timetable.
+        projects: state.projects.some((p) => p.id === project.id)
+          ? state.projects.map((p) => (p.id === project.id ? (project as Project) : p))
+          : [...state.projects, project as Project],
         days: [...state.days.filter((d) => d.project_id !== project.id), ...((daysRes.data ?? []) as ProjectDay[])],
         members: [
           ...state.members.filter((m) => m.project_id !== project.id),
@@ -369,6 +379,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   reset: () =>
     set({
       currentUserId: null,
+      projectsLoaded: false,
       projects: [],
       days: [],
       members: [],
