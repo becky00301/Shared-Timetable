@@ -90,10 +90,17 @@ Run the SQL files in order:
 
 Sign-in uses email + password. Turn **Confirm email** off under Authentication → Sign In / Providers → Email so sign-up completes without a confirmation mail.
 
+### Guest mode
+
+"로그인 없이 시작하기" on the login page uses Supabase anonymous sign-ins, which are **off by default**. Enable **Allow anonymous sign-ins** under Authentication → Sign In / Providers, or the button fails with `Anonymous sign-ins are disabled`.
+
+A guest gets a real `auth.users` row with `is_anonymous: true` and the `authenticated` role, so every existing RLS policy applies to them unchanged. The session lives only in that browser's storage — there is no email to recover it with, so the app warns guests to save each timetable's link.
+
 Incremental migrations live in `sql/migrations/` and are already folded into `sql/schema.sql`; run them on an existing database:
 
 - `001_project_kind.sql` — weekly vs date-range timetables
 - `002_google_calendar.sql` — Google Calendar sync tables/columns
+- `009_anonymous_guest_name.sql` — display name for guests (they have no email)
 
 The standalone shared timetable at `/shared-timetable.html` does not require login. It stores timetable JSON through the RPC functions in `sql/shared_timetables.sql`; the random `tt` URL parameter acts as the share/edit capability token.
 

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
+import { useProjectStore } from "@/stores/project-store";
 
 export default function LoginPage() {
   return (
@@ -29,7 +30,26 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+
+  async function startGuest() {
+    if (!supabase) {
+      toast.info(t("auth.error.notConfigured"));
+      return;
+    }
+    setGuestLoading(true);
+    try {
+      await useProjectStore.getState().signInAsGuest();
+      router.push(next);
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      toast.error(t("auth.guest.failed"));
+    } finally {
+      setGuestLoading(false);
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -155,6 +175,17 @@ function LoginForm() {
             {mode === "signin" ? t("auth.signup.title") : t("auth.signin.title")}
           </button>
         </p>
+
+        <div className="my-5 flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-border" />
+          {t("auth.guest.divider")}
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <Button type="button" variant="outline" className="w-full" disabled={guestLoading} onClick={startGuest}>
+          {guestLoading ? t("auth.guest.starting") : t("auth.guest.cta")}
+        </Button>
+        <p className="mt-2 text-center text-xs leading-5 text-muted">{t("auth.guest.hint")}</p>
       </div>
     </main>
   );

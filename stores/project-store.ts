@@ -9,6 +9,9 @@ import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedul
 
 type ProjectStore = {
   currentUserId: string | null;
+  /** Signed in through anonymous auth: the account exists only as long as this
+      browser keeps its session, so guests are warned to save their link. */
+  isGuest: boolean;
   loading: boolean;
   /** True once loadDashboard has fetched the full project list. loadProject
       only ever adds a single project, so without this the dashboard can't tell
@@ -22,6 +25,7 @@ type ProjectStore = {
   attachments: Attachment[];
   notes: ProjectNote[];
   loadCurrentUser: () => Promise<string | null>;
+  signInAsGuest: () => Promise<string | null>;
   loadDashboard: () => Promise<void>;
   loadProject: (slug: string) => Promise<Project | null>;
   createProject: (title: string, description?: string, kind?: ProjectKind) => Promise<Project>;
@@ -59,6 +63,7 @@ function requireClient() {
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   currentUserId: null,
+  isGuest: false,
   loading: false,
   projectsLoaded: false,
   projects: [],
@@ -74,7 +79,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!supabase) return null;
     const { data } = await supabase.auth.getUser();
     const id = data.user?.id ?? null;
-    set({ currentUserId: id });
+    set({ currentUserId: id, isGuest: Boolean(data.user?.is_anonymous) });
+    return id;
+  },
+
+  signInAsGuest: async () => {
+    const supabase = requireClient();
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) throw error;
+    const id = data.user?.id ?? null;
+    set({ currentUserId: id, isGuest: true });
     return id;
   },
 
@@ -379,6 +393,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   reset: () =>
     set({
       currentUserId: null,
+      isGuest: false,
       projectsLoaded: false,
       projects: [],
       days: [],

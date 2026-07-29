@@ -13,15 +13,19 @@ import { useProjectStore } from "@/stores/project-store";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const t = useT();
-  const [email, setEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<{ email: string | null; isGuest: boolean } | null>(null);
   const supabase = createSupabaseBrowserClient();
-  const signedIn = Boolean(email);
+  const signedIn = Boolean(user);
+  // Guests have no email, so the chip shows a "게스트" label instead.
+  const label = user?.isGuest ? t("guest.badge") : user?.email;
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    const read = (u: { email?: string; is_anonymous?: boolean } | null) =>
+      u ? { email: u.email ?? null, isGuest: Boolean(u.is_anonymous) } : null;
+    supabase.auth.getUser().then(({ data }) => setUser(read(data.user)));
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      setEmail(session?.user?.email ?? null);
+      setUser(read(session?.user ?? null));
     });
     return () => subscription.subscription.unsubscribe();
   }, [supabase]);
@@ -62,10 +66,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <>
                 <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
-                    {email?.slice(0, 1)}
+                    {label?.slice(0, 1)}
                   </span>
-                  <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={email ?? undefined}>
-                    {email}
+                  <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={label ?? undefined}>
+                    {label}
                   </span>
                 </span>
                 <Button size="sm" variant="outline" onClick={signOut}>

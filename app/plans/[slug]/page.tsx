@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProjectSetup } from "@/components/project/ProjectSetup";
+import { GuestLinkBanner } from "@/components/project/GuestLinkBanner";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
@@ -85,6 +86,7 @@ export default function ProjectPage() {
         canEdit={canEdit}
       />
       <section className="flex min-w-0 flex-1 flex-col">
+        <GuestLinkBanner slug={params.slug} />
         {days.length === 0 ? (
           <>
             <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">

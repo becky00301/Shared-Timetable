@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const t = useT();
   const allProjects = useProjectStore((state) => state.projects);
   const projectsLoaded = useProjectStore((state) => state.projectsLoaded);
+  const isGuest = useProjectStore((state) => state.isGuest);
   const days = useProjectStore((state) => state.days);
   const schedules = useProjectStore((state) => state.schedules);
 
@@ -71,6 +72,12 @@ export default function DashboardPage() {
             {t("dashboard.new")}
           </Button>
         </div>
+        {isGuest ? (
+          <div className="mt-6 flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
+            <TriangleAlert size={18} className="mt-0.5 shrink-0 text-amber-600" />
+            <p className="text-xs leading-5 text-amber-800">{t("guest.dashboard.body")}</p>
+          </div>
+        ) : null}
         {/* Wait for the full list. Opening a single timetable leaves just that
             project cached, and rendering that would flash a one-card dashboard
             before the rest arrived. */}
