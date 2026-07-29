@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CalendarRange,
   FileDown,
@@ -12,9 +13,11 @@ import {
   Users
 } from "lucide-react";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { useLocale, useT } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { useProjectStore } from "@/stores/project-store";
 
 const FEATURES: { icon: typeof Share2; title: MessageKey; body: MessageKey }[] = [
   { icon: MousePointerClick, title: "landing.feature.drag.title", body: "landing.feature.drag.body" },
@@ -33,7 +36,19 @@ const DOTS = [
 
 export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   const t = useT();
+  const router = useRouter();
   const appHref = loggedIn ? "/dashboard" : "/login";
+
+  async function signOut() {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    // The store lives in memory across client-side navigations, so it has to be
+    // cleared explicitly or the next page still renders the old account's data.
+    useProjectStore.getState().reset();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <main className="bg-background text-foreground">
@@ -57,12 +72,24 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             </span>
             <nav className="flex items-center gap-2 sm:gap-3">
               <LocaleToggle className="border-white/30 bg-white/10 backdrop-blur" invert />
-              <Link
-                href={appHref}
-                className="hidden px-3 py-2 text-sm font-medium text-white/90 transition hover:text-white sm:block"
-              >
-                {loggedIn ? t("common.dashboard") : t("common.login")}
-              </Link>
+              {loggedIn ? (
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="hidden px-3 py-2 text-white/90 transition hover:text-white sm:block"
+                >
+                  {/* `button { font: inherit }` in globals.css beats any
+                      text-size utility on the button itself. */}
+                  <span className="text-sm font-medium">{t("common.logout")}</span>
+                </button>
+              ) : (
+                <Link
+                  href={appHref}
+                  className="hidden px-3 py-2 text-sm font-medium text-white/90 transition hover:text-white sm:block"
+                >
+                  {t("common.login")}
+                </Link>
+              )}
               <Link
                 href={appHref}
                 className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#2a3348] shadow-sm transition hover:bg-white/90"
