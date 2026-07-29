@@ -176,8 +176,11 @@ function DetailSection({
     <div
       id={id}
       className={cn(
-        "flex scroll-mt-24 flex-col gap-8 lg:flex-row lg:items-center lg:gap-16",
-        reverse && "lg:flex-row-reverse"
+        // Side-by-side from `tablet` up: stacking these until `lg` left the
+        // 800-1023px range with a narrow centered mockup and wide empty
+        // margins on both sides.
+        "flex scroll-mt-24 flex-col gap-8 tablet:flex-row tablet:items-center tablet:gap-10 lg:gap-16",
+        reverse && "tablet:flex-row-reverse"
       )}
     >
       <div className="flex-1">
@@ -186,11 +189,9 @@ function DetailSection({
         <p className="mt-3 max-w-md text-base leading-7 text-muted">{body}</p>
       </div>
       <div className="flex-1">
-        {/* Capped below `lg` so the mockup doesn't stretch edge-to-edge and
-            blow up its contents (the calendar's aspect-square cells especially)
-            on phone-to-tablet widths; the cap lifts once the two-column
-            layout has room to size it naturally. */}
-        <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-glow tablet:max-w-md tablet:p-6 lg:max-w-none">
+        {/* Only capped while stacked — once the row kicks in, the flex column
+            sizes it, which keeps the calendar's aspect-square cells sane. */}
+        <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-glow tablet:mx-0 tablet:max-w-none tablet:p-5 lg:p-6">
           {children}
         </div>
       </div>
