@@ -1,13 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
 import { GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
-import { durationToHeight, formatTimeRange, minutesToTop, timeToMinutes } from "@/lib/utils/time";
+import {
+  HOUR_HEIGHT,
+  durationToHeight,
+  formatTimeRange,
+  minutesToTop,
+  snapMinutes,
+  timeToMinutes
+} from "@/lib/utils/time";
 import type { ScheduleItem } from "@/types/schedule";
+
+/** Pixel delta snapped to the same 5-minute grid the commit will land on. */
+function snapPx(deltaY: number) {
+  return (snapMinutes((deltaY / HOUR_HEIGHT) * 60) / 60) * HOUR_HEIGHT;
+}
 
 export function ScheduleBlock({
   item,
@@ -21,10 +34,15 @@ export function ScheduleBlock({
   isSelected: boolean;
   canEdit: boolean;
   onSelect: () => void;
+  /** Called once, on release — not on every pointer move. */
   onResize: (edge: "top" | "bottom", deltaY: number) => void;
   onDelete: () => void;
 }) {
   const t = useT();
+  // Resizing previews locally and writes once when the pointer is released.
+  // Saving on every move meant a two-second drag fired ~120 identical updates,
+  // and each one made every other client refetch the whole project.
+  const [resize, setResize] = useState<{ edge: "top" | "bottom"; deltaY: number } | null>(null);
   const { onContextMenu, menu } = useContextMenu(
     canEdit ? [{ label: t("common.delete"), onSelect: onDelete, danger: true }] : []
   );
@@ -33,17 +51,32 @@ export function ScheduleBlock({
     disabled: !canEdit,
     data: { dayId: item.day_id, item }
   });
-  const top = minutesToTop(timeToMinutes(item.start_time));
-  const height = Math.max(34, durationToHeight(item.start_time, item.end_time));
+  const baseTop = minutesToTop(timeToMinutes(item.start_time));
+  const baseHeight = Math.max(34, durationToHeight(item.start_time, item.end_time));
+  const preview = resize ? snapPx(resize.deltaY) : 0;
+  const top = resize?.edge === "top" ? baseTop + preview : baseTop;
+  const height = Math.max(
+    34,
+    resize?.edge === "top" ? baseHeight - preview : resize ? baseHeight + preview : baseHeight
+  );
 
   function startResize(edge: "top" | "bottom", event: React.PointerEvent) {
     if (!canEdit) return;
     event.stopPropagation();
     const startY = event.clientY;
-    const onMove = (moveEvent: PointerEvent) => onResize(edge, moveEvent.clientY - startY);
+    let last = 0;
+    setResize({ edge, deltaY: 0 });
+
+    const onMove = (moveEvent: PointerEvent) => {
+      last = moveEvent.clientY - startY;
+      setResize({ edge, deltaY: last });
+    };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      setResize(null);
+      // Only a real drag should write; a stray click on the handle shouldn't.
+      if (snapPx(last) !== 0) onResize(edge, last);
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);

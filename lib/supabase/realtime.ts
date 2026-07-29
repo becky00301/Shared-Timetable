@@ -1,14 +1,32 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const TABLES = ["schedule_items", "project_days", "availability", "project_members"] as const;
 
+// Each callback refetches the whole project, so bursts get collapsed into one
+// pass. A burst is normal: adding a date range inserts a row per day, and every
+// insert arrives as its own event.
+const COALESCE_MS = 300;
+
 export function useProjectRealtime(projectId: string, onSync: () => void) {
+  // Kept in a ref so a new callback identity doesn't tear down the channel.
+  const syncRef = useRef(onSync);
+  syncRef.current = onSync;
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase || !projectId) return;
+
+    let timer: number | undefined;
+    const scheduleSync = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        timer = undefined;
+        syncRef.current();
+      }, COALESCE_MS);
+    };
 
     const channel = supabase.channel(`project:${projectId}`);
     TABLES.forEach((table) => {
@@ -20,14 +38,15 @@ export function useProjectRealtime(projectId: string, onSync: () => void) {
           table,
           filter: `project_id=eq.${projectId}`
         },
-        onSync
+        scheduleSync
       );
     });
 
     channel.subscribe();
 
     return () => {
+      if (timer !== undefined) window.clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [projectId, onSync]);
+  }, [projectId]);
 }
