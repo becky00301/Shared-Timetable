@@ -168,6 +168,47 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         </div>
       </section>
 
+      {/* ------------------------------------------------------------ final cta */}
+      <section className="px-5 pb-20 sm:pb-28">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#5c6fa0] via-[#7286b4] to-[#8fa2ca] px-6 py-16 text-center sm:px-12 sm:py-20">
+          {/* Same starfield as the hero, so the page closes where it opened. */}
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            {DOTS.map(([top, left, size], i) => (
+              <span
+                key={i}
+                className="absolute rounded-full bg-white/40"
+                style={{ top: `${top}%`, left: `${left}%`, width: size, height: size }}
+              />
+            ))}
+          </div>
+
+          <div className="relative">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {t("landing.final.title")}
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/85">
+              {t("landing.final.body")}
+            </p>
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href={appHref}
+                className="w-full rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#2a3348] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:w-auto"
+              >
+                {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+              </Link>
+              {loggedIn ? null : (
+                <Link
+                  href="/login"
+                  className="w-full rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+                >
+                  {t("landing.final.guest")}
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* --------------------------------------------------------------- footer */}
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">

@@ -57,6 +57,15 @@ export const messages = {
   },
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
   "landing.cta.mine": { ko: "내 시간표로 이동", en: "Go to my timetables" },
+  "landing.final.title": {
+    ko: "이제 같이 짜볼까요?",
+    en: "Ready to plan it together?"
+  },
+  "landing.final.body": {
+    ko: "필요한 날짜만 골라 드래그로 채우고, 링크 하나로 공유하세요. 계정 없이 먼저 만들어볼 수도 있어요.",
+    en: "Pick just the dates you need, drag to fill them in, and share with one link. You can try it without an account first."
+  },
+  "landing.final.guest": { ko: "로그인 없이 체험하기", en: "Try it without an account" },
   "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
   "landing.how.title": {
     ko: "네 가지만 알면 끝이에요",
