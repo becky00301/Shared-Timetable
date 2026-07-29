@@ -38,6 +38,9 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   const t = useT();
   const router = useRouter();
   const appHref = loggedIn ? "/dashboard" : "/login";
+  const finalBodySentences = t("landing.final.body").match(/[^.!?。！？]+[.!?。！？]+/g) ?? [
+    t("landing.final.body")
+  ];
 
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
@@ -187,7 +190,11 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
               {t("landing.final.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/85">
-              {t("landing.final.body")}
+              {finalBodySentences.map((sentence) => (
+                <span key={sentence} className="block sm:whitespace-nowrap">
+                  {sentence.trim()}
+                </span>
+              ))}
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link

@@ -58,7 +58,7 @@ export const messages = {
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
   "landing.cta.mine": { ko: "내 시간표로 이동", en: "Go to my timetables" },
   "landing.final.title": {
-    ko: "이제 같이 짜볼까요?",
+    ko: "이제 같이 계획해볼까요?",
     en: "Ready to plan it together?"
   },
   "landing.final.body": {
