@@ -85,24 +85,26 @@ export default function ProjectPage() {
         canEdit={canEdit}
       />
       <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
-          <Link
-            href="/dashboard"
-            aria-label={t("project.goDashboard")}
-            className="rounded-md p-1.5 text-muted transition hover:bg-black/8 hover:text-foreground"
-          >
-            <ArrowLeft size={18} />
-          </Link>
-          <div className="min-w-0">
-            <h1 className="truncate font-semibold text-foreground">{project.title}</h1>
-            <p className="text-xs text-muted">{t(`role.${currentRole}`)}</p>
-          </div>
-        </div>
         {days.length === 0 ? (
-          <ProjectSetup projectId={project.id} canEdit={canEdit} />
+          <>
+            <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
+              <Link
+                href="/dashboard"
+                aria-label={t("project.goDashboard")}
+                className="rounded-md p-1.5 text-muted transition hover:bg-black/8 hover:text-foreground"
+              >
+                <ArrowLeft size={18} />
+              </Link>
+              <div className="min-w-0">
+                <h1 className="truncate font-semibold text-foreground">{project.title}</h1>
+                <p className="text-xs text-muted">{t(`role.${currentRole}`)}</p>
+              </div>
+            </div>
+            <ProjectSetup projectId={project.id} canEdit={canEdit} />
+          </>
         ) : (
           <>
-            <TimetableHeader isWeekly={isWeekly} />
+            <TimetableHeader isWeekly={isWeekly} mobileTitle={project.title} />
             {viewMode === "month" ? (
               <MonthCalendarView projectId={project.id} days={days} />
             ) : (

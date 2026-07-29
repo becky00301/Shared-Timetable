@@ -1,11 +1,21 @@
 "use client";
 
-import { CalendarDays, Clock } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { useUiStore } from "@/stores/ui-store";
 
-export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
+export function TimetableHeader({
+  isWeekly = false,
+  mobileTitle
+}: {
+  isWeekly?: boolean;
+  /** Rendered only below `lg`, next to the view toggle. The desktop sidebar
+      already shows the project title, so this folds the separate mobile
+      title bar into this row instead of stacking a second fixed bar above it. */
+  mobileTitle?: string;
+}) {
   const viewMode = useUiStore((state) => state.viewMode);
   const setViewMode = useUiStore((state) => state.setViewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
@@ -13,30 +23,46 @@ export function TimetableHeader({ isWeekly = false }: { isWeekly?: boolean }) {
   const t = useT();
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2">
-      <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
-        <button
-          type="button"
-          onClick={() => setViewMode("grid")}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition",
-            viewMode === "grid" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
-          )}
-        >
-          <Clock size={14} />
-          {t("grid.tabGrid")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode("month")}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition",
-            viewMode === "month" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
-          )}
-        >
-          <CalendarDays size={14} />
-          {t("grid.tabMonth")}
-        </button>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {mobileTitle ? (
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 lg:hidden">
+            <Link
+              href="/dashboard"
+              aria-label={t("project.goDashboard")}
+              className="shrink-0 rounded-md p-1 text-muted transition hover:bg-black/8 hover:text-foreground"
+            >
+              <ArrowLeft size={18} />
+            </Link>
+            <span className="truncate text-sm font-semibold text-foreground">{mobileTitle}</span>
+          </div>
+        ) : null}
+        {/* Icon-only below sm: with a title sharing this row, the full labels
+            leave almost no width for the title on phone-sized screens. */}
+        <div className="grid shrink-0 grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition sm:px-3",
+              viewMode === "grid" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+            )}
+          >
+            <Clock size={14} />
+            <span className="hidden sm:inline">{t("grid.tabGrid")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("month")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition sm:px-3",
+              viewMode === "month" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+            )}
+          >
+            <CalendarDays size={14} />
+            <span className="hidden sm:inline">{t("grid.tabMonth")}</span>
+          </button>
+        </div>
       </div>
 
       {isWeekly ? (
