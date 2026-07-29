@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExportToolbar } from "@/components/export/ExportToolbar";
 import { GoogleCalendarSync } from "@/components/project/GoogleCalendarSync";
@@ -14,6 +15,7 @@ import { SidebarNotes } from "@/components/project/SidebarNotes";
 import { SidebarScheduleMemos } from "@/components/project/SidebarScheduleMemos";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
+import { useUiStore } from "@/stores/ui-store";
 import type { Project, ProjectDay, ProjectMember, ProjectRole } from "@/types/project";
 
 export function ProjectSidebar({
@@ -31,6 +33,7 @@ export function ProjectSidebar({
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
   const isGuest = useProjectStore((state) => state.isGuest);
+  const setShareOpen = useUiStore((state) => state.setShareOpen);
   const t = useT();
   const canRename = currentRole === "owner" || currentRole === "editor";
   const [editingTitle, setEditingTitle] = useState(false);
@@ -104,7 +107,11 @@ export function ProjectSidebar({
         <RoleBadge role={currentRole} />
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 flex flex-col gap-2">
+        <Button size="sm" className="w-full" onClick={() => setShareOpen(true)}>
+          <Share2 size={15} />
+          {t("share.openCta")}
+        </Button>
         <ExportToolbar project={project} targetId="timetable-export" />
       </div>
 
@@ -121,10 +128,7 @@ export function ProjectSidebar({
       </div>
 
       <div className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.selectedDates")}</h2>
-      </div>
-      <div className="mt-3">
-        <SelectedDatesCalendar days={days} />
+        <SelectedDatesCalendar days={days} projectId={project.id} canEdit={canEdit} />
       </div>
 
       <div className="mt-6">

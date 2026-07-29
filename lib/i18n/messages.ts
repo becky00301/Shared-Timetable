@@ -283,6 +283,27 @@ export const messages = {
   "sidebar.sharedTimetable": { ko: "공유 시간표", en: "Shared timetable" },
   "sidebar.participants": { ko: "참여자", en: "Members" },
   "sidebar.selectedDates": { ko: "선택한 날짜", en: "Selected dates" },
+  "dates.edit": { ko: "날짜 수정", en: "Edit dates" },
+  "dates.editTitle": { ko: "날짜 수정", en: "Edit dates" },
+  "dates.editSubtitle": {
+    ko: "시작일과 종료일을 다시 골라주세요. 그대로 남는 날짜의 일정은 유지돼요.",
+    en: "Pick a new start and end date. Schedules on dates that stay are kept."
+  },
+  "dates.save": { ko: "날짜 변경", en: "Update dates" },
+  "dates.saving": { ko: "변경하는 중...", en: "Updating…" },
+  "dates.updated": { ko: "날짜를 변경했어요.", en: "Dates updated." },
+  "dates.updateFailed": {
+    ko: "날짜를 변경하지 못했어요.",
+    en: "Couldn't update the dates."
+  },
+  "dates.dropWarning": {
+    ko: "{days}일이 범위에서 빠지고, 거기 있던 일정 {items}개가 함께 삭제돼요.",
+    en: "{days} date(s) fall outside the new range; {items} schedule(s) on them will be deleted."
+  },
+  "dates.dropWarningEmpty": {
+    ko: "{days}일이 범위에서 빠져요. 해당 날짜에는 일정이 없어요.",
+    en: "{days} date(s) fall outside the new range. Nothing is scheduled on them."
+  },
   "sidebar.notes": { ko: "메모", en: "Notes" },
   "sidebar.scheduleMemos": { ko: "일정에 적은 메모", en: "Notes on schedules" },
   "sidebar.renameHint": { ko: "클릭해서 이름 수정", en: "Click to rename" },
@@ -328,6 +349,7 @@ export const messages = {
   },
   "share.copied": { ko: "링크를 복사했어요.", en: "Link copied." },
   "share.button": { ko: "공유", en: "Share" },
+  "share.openCta": { ko: "프로젝트 공유하기", en: "Share project" },
   "export.excel": { ko: "엑셀", en: "Excel" },
   "export.notReady": { ko: "아직 내보낼 준비가 안 됐어요.", en: "Nothing to export yet." },
   "export.open": { ko: "내보내기", en: "Export" },
@@ -336,7 +358,6 @@ export const messages = {
     ko: "원하는 형식을 골라주세요.",
     en: "Pick a format to export."
   },
-  "export.tile.share": { ko: "링크 공유", en: "Share link" },
   "export.tile.png": { ko: "이미지", en: "Image" },
   "export.tile.pdf": { ko: "PDF", en: "PDF" },
   "export.tile.excel": { ko: "엑셀", en: "Excel" },

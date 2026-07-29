@@ -13,13 +13,17 @@ export const MAX_RANGE_DAYS = 31;
 export function RangeCalendar({
   rangeStart,
   rangeEnd,
+  initialMonth,
   onChange
 }: {
   rangeStart: Date | null;
   rangeEnd: Date | null;
+  /** Month to open on. Editing an existing range needs to start where those
+      dates are, not on today, or the selection is off-screen. */
+  initialMonth?: Date;
   onChange: (start: Date | null, end: Date | null) => void;
 }) {
-  const [calMonth, setCalMonth] = useState(() => startOfMonth(new Date()));
+  const [calMonth, setCalMonth] = useState(() => startOfMonth(initialMonth ?? new Date()));
   const t = useT();
   const fmt = useDateFormat();
 

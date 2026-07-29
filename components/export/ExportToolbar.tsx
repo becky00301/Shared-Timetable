@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown, ImageDown, Share2, Sheet, Upload, type LucideIcon } from "lucide-react";
+import { FileDown, ImageDown, Sheet, Upload, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,10 +9,8 @@ import { exportTimetablePdf, exportTimetablePng } from "@/lib/export/timetable-e
 import { useLocale } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { Project } from "@/types/project";
-import { useUiStore } from "@/stores/ui-store";
 
 export function ExportToolbar({ project, targetId }: { project: Project; targetId: string }) {
-  const setShareOpen = useUiStore((state) => state.setShareOpen);
   const { t, locale } = useLocale();
   const [open, setOpen] = useState(false);
 
@@ -23,11 +21,6 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
   }
 
   const tiles: { key: MessageKey; icon: LucideIcon; run: () => void }[] = [
-    {
-      key: "export.tile.share",
-      icon: Share2,
-      run: () => setShareOpen(true)
-    },
     {
       key: "export.tile.png",
       icon: ImageDown,
@@ -68,7 +61,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
             <DialogDescription className="text-sm text-muted">{t("export.subtitle")}</DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-3">
             {tiles.map(({ key, icon: Icon, run }) => (
               <button
                 key={key}

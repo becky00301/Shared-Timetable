@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
+import { diffDays, sortOrderFor } from "@/lib/utils/days";
 import type { Project, ProjectDay, ProjectKind, ProjectMember, ProjectNote } from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
@@ -42,6 +43,9 @@ type ProjectStore = {
   updateNote: (noteId: string, body: string) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
   removeDay: (dayId: string) => Promise<void>;
+  /** Moves a timetable onto a new set of dates. Dates that survive the change
+      keep their id, so their schedules and notes are untouched. */
+  replaceDays: (projectId: string, dates: string[]) => Promise<void>;
   upsertSchedule: (
     item: Partial<ScheduleItem> & Pick<ScheduleItem, "project_id" | "day_id" | "title" | "start_time" | "end_time">
   ) => Promise<ScheduleItem>;
@@ -338,6 +342,52 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       schedules: state.schedules.filter((item) => item.day_id !== dayId),
       availability: state.availability.filter((slot) => slot.day_id !== dayId)
     }));
+  },
+
+  replaceDays: async (projectId, dates) => {
+    const supabase = requireClient();
+    const current = get().days.filter((day) => day.project_id === projectId);
+    // Only the dates falling outside the new range are deleted, so anything
+    // scheduled on a date the range still covers survives untouched.
+    const { dropped, added } = diffDays(current, dates);
+
+    if (dropped.length) {
+      const ids = dropped.map((day) => day.id);
+      const { data, error } = await supabase.from("project_days").delete().in("id", ids).select("id");
+      if (error) throw error;
+      if (!data?.length) throw new Error(translate("error.deleteDenied"));
+    }
+
+    let inserted: ProjectDay[] = [];
+    if (added.length) {
+      const { data, error } = await supabase
+        .from("project_days")
+        .insert(added.map((date) => ({ project_id: projectId, date })))
+        .select("*");
+      if (error) throw error;
+      inserted = (data ?? []) as ProjectDay[];
+    }
+
+    const droppedIds = new Set(dropped.map((day) => day.id));
+    // Renumber against the final date list so the grid stays chronological.
+    const order = sortOrderFor(dates);
+    const survivors = [...current.filter((day) => !droppedIds.has(day.id)), ...inserted].map((day) => ({
+      ...day,
+      sort_order: order.get(day.date) ?? day.sort_order
+    }));
+
+    set((state) => ({
+      days: [...state.days.filter((day) => day.project_id !== projectId), ...survivors],
+      schedules: state.schedules.filter((item) => !droppedIds.has(item.day_id)),
+      availability: state.availability.filter((slot) => !droppedIds.has(slot.day_id))
+    }));
+
+    if (survivors.length) {
+      const { error } = await supabase.from("project_days").upsert(
+        survivors.map((day) => ({ id: day.id, project_id: projectId, date: day.date, sort_order: day.sort_order }))
+      );
+      if (error) throw error;
+    }
   },
 
   upsertSchedule: async (item) => {
