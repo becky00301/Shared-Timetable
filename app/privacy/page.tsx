@@ -121,20 +121,20 @@ const SECTIONS_EN: Section[] = [
 
 const COPY = {
   ko: {
-    back: "← PlanTogether",
+    back: "← 플래너 투게더",
     title: "개인정보처리방침",
     intro:
-      "PlanTogether(이하 “서비스”)는 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수합니다.",
+      "플래너 투게더(이하 “서비스”)는 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수합니다.",
     contactTitle: "8. 문의처",
     contact: "개인정보 관련 문의: becky00301@gmail.com",
     footer: "본 방침은 서비스 운영 상황에 따라 변경될 수 있으며, 변경 시 이 페이지를 통해 공지합니다.",
     sections: SECTIONS_KO
   },
   en: {
-    back: "← PlanTogether",
+    back: "← Planner Together",
     title: "Privacy Policy",
     intro:
-      "PlanTogether (the “Service”) treats your personal data with care and complies with applicable law.",
+      "Planner Together (the “Service”) treats your personal data with care and complies with applicable law.",
     contactTitle: "8. Contact",
     contact: "Privacy inquiries: becky00301@gmail.com",
     footer:

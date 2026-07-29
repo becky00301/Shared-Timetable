@@ -7,7 +7,7 @@ import { LocaleProvider } from "@/lib/i18n/locale";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PlanTogether",
+  title: "Planner Together",
   description: "Collaborative schedule documents for selected dates."
 };
 

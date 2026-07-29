@@ -83,7 +83,7 @@ function LoginForm() {
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
         <div className="flex items-center justify-between">
           <Link href="/" className="text-sm text-muted transition hover:text-foreground">
-            PlanTogether
+            Planner Together
           </Link>
           <LocaleToggle />
         </div>

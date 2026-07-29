@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     // Reuse the project's calendar, recreating it if the user deleted it in Google.
     let calendarId = project.google_calendar_id;
     if (!calendarId || !(await calendarExists(accessToken, calendarId))) {
-      calendarId = await createCalendar(accessToken, `PlanTogether · ${project.title}`);
+      calendarId = await createCalendar(accessToken, `Planner Together · ${project.title}`);
       const { error } = await admin
         .from("projects")
         .update({ google_calendar_id: calendarId })

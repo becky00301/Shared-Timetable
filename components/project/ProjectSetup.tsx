@@ -67,7 +67,7 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
   return (
     <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-8">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
-        <p className="text-sm text-muted">PlanTogether</p>
+        <p className="text-sm text-muted">Planner Together</p>
         {step === "mode" ? (
           <>
             <h2 className="mt-6 text-3xl font-semibold text-foreground">{t("setup.chooseKind")}</h2>

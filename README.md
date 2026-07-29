@@ -1,6 +1,6 @@
-# PlanTogether
+# Planner Together
 
-PlanTogether is a collaborative schedule document built with Next.js 15, TypeScript, Tailwind CSS, Zustand, dnd-kit, and Supabase.
+Planner Together is a collaborative schedule document built with Next.js 15, TypeScript, Tailwind CSS, Zustand, dnd-kit, and Supabase.
 
 The product is intentionally not a normal monthly calendar. Users create a project, add only the dates they need, then build a shareable timetable across those selected dates.
 
@@ -99,7 +99,7 @@ The standalone shared timetable at `/shared-timetable.html` does not require log
 
 ## Google Calendar sync
 
-Each project syncs into its own Google calendar named `PlanTogether · {title}`. Schedules are pushed one way (app → Google) and re-syncs update existing events rather than duplicating them.
+Each project syncs into its own Google calendar named `Planner Together · {title}`. Schedules are pushed one way (app → Google) and re-syncs update existing events rather than duplicating them.
 
 Setup:
 

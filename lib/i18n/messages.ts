@@ -317,7 +317,7 @@ export const messages = {
   "export.tile.excel": { ko: "엑셀", en: "Excel" },
 
   // ---------------------------------------------------------------- invite
-  "invite.eyebrow": { ko: "PlanTogether 초대", en: "PlanTogether invitation" },
+  "invite.eyebrow": { ko: "플래너 투게더 초대", en: "Planner Together invitation" },
   "invite.joining": { ko: "참여하는 중...", en: "Joining…" },
   "invite.joiningBody": {
     ko: "잠시만요, 시간표에 참여자로 등록하고 있어요.",

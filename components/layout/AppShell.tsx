@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
               <CalendarClock size={18} />
             </span>
-            PlanTogether
+            Planner Together
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <Link href="/dashboard" className="transition hover:text-foreground">

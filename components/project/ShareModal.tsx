@@ -13,7 +13,7 @@ export function ShareModal({ project }: { project: Project }) {
   const open = useUiStore((state) => state.isShareOpen);
   const setOpen = useUiStore((state) => state.setShareOpen);
   const t = useT();
-  const origin = typeof window === "undefined" ? "https://plantogether.app" : window.location.origin;
+  const origin = typeof window === "undefined" ? "https://plannertogether.app" : window.location.origin;
   const projectUrl = `${origin}/plans/${project.slug}`;
   const inviteUrl = `${origin}/invite/${project.invite_token}`;
 

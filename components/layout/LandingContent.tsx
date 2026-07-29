@@ -53,7 +53,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         <div className="relative">
           <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
             <span className="flex items-center gap-1.5 text-lg font-semibold text-white">
-              📅 PlanTogether
+              📅 Planner Together
             </span>
             <nav className="flex items-center gap-2 sm:gap-3">
               <LocaleToggle className="border-white/30 bg-white/10 backdrop-blur" invert />
@@ -141,7 +141,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
       {/* --------------------------------------------------------------- footer */}
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">
-          <span>© PlanTogether</span>
+          <span>© Planner Together</span>
           <div className="flex gap-4">
             <Link href="/privacy" className="transition hover:text-foreground">
               {t("common.privacy")}
@@ -330,7 +330,7 @@ function ShareMockup() {
     <div className="relative rounded-xl border border-neutral-100 bg-white p-4">
       <div className="flex items-center gap-2">
         <div className="flex-1 truncate rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[11px] text-neutral-400">
-          plantogether.app/invite/8f2a…
+          plannertogether.app/invite/8f2a…
         </div>
         <span className="rounded-lg bg-[#14161c] px-3 py-2 text-xs font-medium text-white">{copy}</span>
       </div>
