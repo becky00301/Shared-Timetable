@@ -14,6 +14,10 @@
   --color-card: var(--background-subtle);
   --color-muted: var(--foreground-muted);
   --shadow-glow: 0 1px 2px oklch(0 0 0 / 6%), 0 10px 30px oklch(0 0 0 / 8%);
+  /* Between phone widths and the desktop (lg) two-column layouts, content
+     sized for mobile stretches edge-to-edge and looks oversized. `tablet:`
+     gives that in-between range (800px+) its own step. */
+  --breakpoint-tablet: 50rem;
 }
 
 :root {

@@ -56,7 +56,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
               📅 PlanTogether
             </span>
             <nav className="flex items-center gap-2 sm:gap-3">
-              <LocaleToggle className="border-white/30 bg-white/10 text-white backdrop-blur" />
+              <LocaleToggle className="border-white/30 bg-white/10 backdrop-blur" invert />
               <Link
                 href={appHref}
                 className="hidden px-3 py-2 text-sm font-medium text-white/90 transition hover:text-white sm:block"
@@ -186,7 +186,13 @@ function DetailSection({
         <p className="mt-3 max-w-md text-base leading-7 text-muted">{body}</p>
       </div>
       <div className="flex-1">
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-glow sm:p-6">{children}</div>
+        {/* Capped below `lg` so the mockup doesn't stretch edge-to-edge and
+            blow up its contents (the calendar's aspect-square cells especially)
+            on phone-to-tablet widths; the cap lifts once the two-column
+            layout has room to size it naturally. */}
+        <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-glow tablet:max-w-md tablet:p-6 lg:max-w-none">
+          {children}
+        </div>
       </div>
     </div>
   );

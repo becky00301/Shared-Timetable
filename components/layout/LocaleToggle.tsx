@@ -8,7 +8,16 @@ const OPTIONS = [
   { value: "en", label: "EN" }
 ] as const;
 
-export function LocaleToggle({ className }: { className?: string }) {
+export function LocaleToggle({
+  className,
+  invert
+}: {
+  className?: string;
+  /** For placement over photos/gradients: the unselected label blends against
+      whatever's behind it instead of using the fixed muted-gray tone, which
+      washes out on colored backgrounds. */
+  invert?: boolean;
+}) {
   const { locale, setLocale } = useLocale();
 
   return (
@@ -30,7 +39,9 @@ export function LocaleToggle({ className }: { className?: string }) {
             "rounded-full px-2.5 py-1 font-medium transition-colors",
             locale === option.value
               ? "bg-primary text-white"
-              : "text-muted hover:text-foreground"
+              : invert
+                ? "text-white mix-blend-difference hover:bg-white/15"
+                : "text-muted hover:text-foreground"
           )}
         >
           {option.label}
