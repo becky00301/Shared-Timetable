@@ -83,24 +83,30 @@ select {
     opacity: 0;
   }
 }
+/* Only `scale` is animated, never `transform`. Tailwind v4 centres the dialog
+   with the standalone `translate` property, so a keyframe that also set
+   `transform: translate(-50%,-50%)` stacked a second -50% on top of it: the
+   dialog animated in half its own width off-centre and snapped into place when
+   the animation ended. `scale` composes with `translate` instead of replacing
+   it, so the centring survives the animation. */
 @keyframes dialog-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
+    scale: 0.96;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    scale: 1;
   }
 }
 @keyframes dialog-out {
   from {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    scale: 1;
   }
   to {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
+    scale: 0.96;
   }
 }
 
