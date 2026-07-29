@@ -56,7 +56,7 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-muted sm:text-xs">
         {weekdayLabels.map((label) => (
           <span key={label} className="py-1">
             {label}
@@ -89,7 +89,7 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
             >
               <span
                 className={cn(
-                  "inline-flex size-6 items-center justify-center rounded-full text-xs",
+                  "inline-flex size-6 items-center justify-center rounded-full text-[10px] sm:text-xs",
                   iso === today ? "bg-primary font-semibold text-white" : "text-foreground"
                 )}
               >
@@ -102,10 +102,15 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
                     type="button"
                     onClick={() => setSelectedSchedule(item.id)}
                     title={item.title}
-                    className="truncate rounded-[4px] px-1.5 py-0.5 text-left text-xs text-foreground transition hover:opacity-80"
+                    className="block w-full rounded-[4px] px-1 py-0.5 text-left transition hover:opacity-80 sm:px-1.5"
                     style={{ backgroundColor: `${item.color ?? "#1972F7"}55` }}
                   >
-                    {item.all_day ? item.title : `${item.start_time.slice(0, 5)} ${item.title}`}
+                    {/* `button { font: inherit }` in globals.css beats any
+                        text-size utility on the button itself, so the size
+                        has to live on this span instead. */}
+                    <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                      {item.all_day ? item.title : `${item.start_time.slice(0, 5)} ${item.title}`}
+                    </span>
                   </button>
                 ))}
               </div>
