@@ -75,6 +75,23 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
               {t("setup.chooseKindSub")}
             </p>
             <div className="mt-6 flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setStep("datepick")}
+                className="rounded-xl border border-border bg-black/[0.03] p-4 text-left transition hover:border-primary disabled:opacity-60"
+              >
+                <div className="flex items-start gap-3">
+                  <CalendarRange className="mt-0.5 shrink-0 text-primary" size={20} />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-foreground">{t("setup.pickDates")}</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      {t("setup.pickDatesBody")}
+                    </p>
+                  </div>
+                </div>
+              </button>
+
               <div className="rounded-xl border border-border bg-black/[0.03] p-4">
                 <div className="flex items-start gap-3">
                   <CalendarDays className="mt-0.5 shrink-0 text-primary" size={20} />
@@ -109,23 +126,6 @@ export function ProjectSetup({ projectId, canEdit }: { projectId: string; canEdi
                   {saving ? t("setup.creating") : t("setup.startAsIs")}
                 </Button>
               </div>
-
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() => setStep("datepick")}
-                className="rounded-xl border border-border bg-black/[0.03] p-4 text-left transition hover:border-primary disabled:opacity-60"
-              >
-                <div className="flex items-start gap-3">
-                  <CalendarRange className="mt-0.5 shrink-0 text-primary" size={20} />
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground">{t("setup.pickDates")}</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted">
-                      {t("setup.pickDatesBody")}
-                    </p>
-                  </div>
-                </div>
-              </button>
             </div>
           </>
         ) : (
