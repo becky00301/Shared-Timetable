@@ -51,9 +51,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Planner Together
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
-            <Link href="/dashboard" className="transition hover:text-foreground">
-              {t("common.dashboard")}
-            </Link>
+            {/* Guests are a single-timetable trial with no dashboard. */}
+            {user?.isGuest ? null : (
+              <Link href="/dashboard" className="transition hover:text-foreground">
+                {t("common.dashboard")}
+              </Link>
+            )}
             {!signedIn ? (
               <Link href="/login" className="transition hover:text-foreground">
                 {t("common.login")}

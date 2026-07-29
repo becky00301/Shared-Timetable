@@ -40,8 +40,10 @@ function LoginForm() {
     }
     setGuestLoading(true);
     try {
-      await useProjectStore.getState().signInAsGuest();
-      router.push(next);
+      // Guests get one timetable and no dashboard, so ignore `next` and go
+      // straight into the timetable that was just created for them.
+      const slug = await useProjectStore.getState().signInAsGuest();
+      router.replace(`/plans/${slug}`);
       router.refresh();
     } catch (error) {
       console.error(error);

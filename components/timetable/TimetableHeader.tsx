@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
+import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
 export function TimetableHeader({
@@ -20,6 +21,7 @@ export function TimetableHeader({
   const setViewMode = useUiStore((state) => state.setViewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const setWeekStartsOnSunday = useUiStore((state) => state.setWeekStartsOnSunday);
+  const isGuest = useProjectStore((state) => state.isGuest);
   const t = useT();
 
   return (
@@ -27,13 +29,16 @@ export function TimetableHeader({
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {mobileTitle ? (
           <div className="flex min-w-0 flex-1 items-center gap-1.5 lg:hidden">
-            <Link
-              href="/dashboard"
-              aria-label={t("project.goDashboard")}
-              className="shrink-0 rounded-md p-1 text-muted transition hover:bg-black/8 hover:text-foreground"
-            >
-              <ArrowLeft size={18} />
-            </Link>
+            {/* Guests have no dashboard to go back to — this is their only page. */}
+            {isGuest ? null : (
+              <Link
+                href="/dashboard"
+                aria-label={t("project.goDashboard")}
+                className="shrink-0 rounded-md p-1 text-muted transition hover:bg-black/8 hover:text-foreground"
+              >
+                <ArrowLeft size={18} />
+              </Link>
+            )}
             <span className="truncate text-sm font-semibold text-foreground">{mobileTitle}</span>
           </div>
         ) : null}

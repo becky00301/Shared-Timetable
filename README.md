@@ -92,9 +92,11 @@ Sign-in uses email + password. Turn **Confirm email** off under Authentication �
 
 ### Guest mode
 
-"로그인 없이 시작하기" on the login page uses Supabase anonymous sign-ins, which are **off by default**. Enable **Allow anonymous sign-ins** under Authentication → Sign In / Providers, or the button fails with `Anonymous sign-ins are disabled`.
+"로그인 없이 체험하기" on the login page uses Supabase anonymous sign-ins, which are **off by default**. Enable **Allow anonymous sign-ins** under Authentication → Sign In / Providers, or the button fails with `Anonymous sign-ins are disabled`.
 
-A guest gets a real `auth.users` row with `is_anonymous: true` and the `authenticated` role, so every existing RLS policy applies to them unchanged. The session lives only in that browser's storage — there is no email to recover it with, so the app warns guests to save each timetable's link.
+Guest mode is a trial, not a full account: signing in immediately creates **one** timetable and drops the guest straight into it. There is no dashboard — `/dashboard` redirects guests back to their timetable, and the links that lead there are hidden for them.
+
+A guest gets a real `auth.users` row with `is_anonymous: true` and the `authenticated` role, so every existing RLS policy applies to them unchanged. The session lives only in that browser's storage — there is no email to recover it with, so the timetable warns guests to save its link.
 
 Incremental migrations live in `sql/migrations/` and are already folded into `sql/schema.sql`; run them on an existing database:
 

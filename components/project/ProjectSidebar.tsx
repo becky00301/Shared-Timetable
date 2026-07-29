@@ -30,6 +30,7 @@ export function ProjectSidebar({
   canEdit: boolean;
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
+  const isGuest = useProjectStore((state) => state.isGuest);
   const t = useT();
   const canRename = currentRole === "owner" || currentRole === "editor";
   const [editingTitle, setEditingTitle] = useState(false);
@@ -51,13 +52,16 @@ export function ProjectSidebar({
 
   return (
     <aside className="hidden w-80 shrink-0 flex-col overflow-y-auto border-r border-border bg-surface p-5 lg:flex">
-      <Link
-        href="/dashboard"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-foreground"
-      >
-        <ArrowLeft size={15} />
-        {t("common.dashboard")}
-      </Link>
+      {/* Guests have no dashboard to go back to — this is their only page. */}
+      {isGuest ? null : (
+        <Link
+          href="/dashboard"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-foreground"
+        >
+          <ArrowLeft size={15} />
+          {t("common.dashboard")}
+        </Link>
+      )}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wide text-muted">{t("sidebar.sharedTimetable")}</p>

@@ -26,6 +26,7 @@ export default function ProjectPage() {
   const allDays = useProjectStore((state) => state.days);
   const allMembers = useProjectStore((state) => state.members);
   const currentUserId = useProjectStore((state) => state.currentUserId);
+  const isGuest = useProjectStore((state) => state.isGuest);
   const loadProject = useProjectStore((state) => state.loadProject);
   const viewMode = useUiStore((state) => state.viewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
@@ -90,13 +91,16 @@ export default function ProjectPage() {
         {days.length === 0 ? (
           <>
             <div className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 lg:hidden">
-              <Link
-                href="/dashboard"
-                aria-label={t("project.goDashboard")}
-                className="rounded-md p-1.5 text-muted transition hover:bg-black/8 hover:text-foreground"
-              >
-                <ArrowLeft size={18} />
-              </Link>
+              {/* Guests have no dashboard to go back to — this is their only page. */}
+              {isGuest ? null : (
+                <Link
+                  href="/dashboard"
+                  aria-label={t("project.goDashboard")}
+                  className="rounded-md p-1.5 text-muted transition hover:bg-black/8 hover:text-foreground"
+                >
+                  <ArrowLeft size={18} />
+                </Link>
+              )}
               <div className="min-w-0">
                 <h1 className="truncate font-semibold text-foreground">{project.title}</h1>
                 <p className="text-xs text-muted">{t(`role.${currentRole}`)}</p>

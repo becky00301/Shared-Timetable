@@ -25,7 +25,12 @@ type ProjectStore = {
   attachments: Attachment[];
   notes: ProjectNote[];
   loadCurrentUser: () => Promise<string | null>;
-  signInAsGuest: () => Promise<string | null>;
+  /** Signs in anonymously, creates the guest's single timetable, and returns
+      its slug to navigate to. */
+  signInAsGuest: () => Promise<string>;
+  /** Slug of the timetable a guest owns, for redirecting them out of pages
+      that assume an account. */
+  findGuestProjectSlug: () => Promise<string | null>;
   loadDashboard: () => Promise<void>;
   loadProject: (slug: string) => Promise<Project | null>;
   createProject: (title: string, description?: string, kind?: ProjectKind) => Promise<Project>;
@@ -83,13 +88,29 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     return id;
   },
 
+  // Guest mode is a trial: one timetable, no dashboard. The project is created
+  // up front so the guest lands straight in the editor, and its slug is the
+  // only handle they have on it — hence the "save your link" warning there.
   signInAsGuest: async () => {
     const supabase = requireClient();
     const { data, error } = await supabase.auth.signInAnonymously();
     if (error) throw error;
     const id = data.user?.id ?? null;
     set({ currentUserId: id, isGuest: true });
-    return id;
+    const project = await get().createProject(translate("guest.projectTitle"));
+    return project.slug;
+  },
+
+  findGuestProjectSlug: async () => {
+    const supabase = requireClient();
+    const { data, error } = await supabase
+      .from("projects")
+      .select("slug")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data?.slug ?? null;
   },
 
   loadDashboard: async () => {

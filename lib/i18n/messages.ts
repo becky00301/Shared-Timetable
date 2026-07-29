@@ -130,31 +130,28 @@ export const messages = {
     en: "Something went wrong. Please try again."
   },
   "auth.guest.divider": { ko: "또는", en: "or" },
-  "auth.guest.cta": { ko: "로그인 없이 시작하기", en: "Continue without an account" },
+  "auth.guest.cta": { ko: "로그인 없이 체험하기", en: "Try it without an account" },
   "auth.guest.hint": {
-    ko: "계정 없이 바로 시간표를 만들 수 있어요. 대신 링크를 꼭 저장해두세요.",
-    en: "Start building right away. Just be sure to save your link."
+    ko: "계정 없이 시간표 하나를 바로 만들어볼 수 있어요. 대신 링크를 꼭 저장해두세요.",
+    en: "Build one timetable right away, no account needed. Just be sure to save your link."
   },
-  "auth.guest.starting": { ko: "게스트로 시작하는 중...", en: "Starting as a guest…" },
+  "auth.guest.starting": { ko: "시간표를 만드는 중...", en: "Creating your timetable…" },
   "auth.guest.failed": {
-    ko: "게스트로 시작하지 못했어요. 다시 시도해주세요.",
-    en: "Couldn't start as a guest. Please try again."
+    ko: "체험을 시작하지 못했어요. 다시 시도해주세요.",
+    en: "Couldn't start the trial. Please try again."
   },
 
   // ---------------------------------------------------------------- guest mode
-  "guest.badge": { ko: "게스트", en: "Guest" },
+  "guest.badge": { ko: "체험 중", en: "Trial" },
+  "guest.projectTitle": { ko: "내 시간표", en: "My timetable" },
   "guest.banner.title": { ko: "링크를 꼭 저장해두세요", en: "Save this link" },
   "guest.banner.body": {
-    ko: "로그인 없이 이용 중이에요. 이 링크가 시간표에 다시 들어올 수 있는 유일한 방법이라, 잃어버리면 되찾을 수 없어요. 북마크하거나 나에게 보내두세요.",
-    en: "You're using Planner Together without an account. This link is the only way back into your timetable — if you lose it, it can't be recovered. Bookmark it or send it to yourself."
+    ko: "로그인 없이 체험 중이에요. 이 링크가 시간표에 다시 들어올 수 있는 유일한 방법이라, 잃어버리면 되찾을 수 없어요. 북마크하거나 나에게 보내두세요. 계정을 만들면 시간표를 여러 개 만들고 어느 기기에서든 열 수 있어요.",
+    en: "You're trying Planner Together without an account. This link is the only way back into your timetable — if you lose it, it can't be recovered. Bookmark it or send it to yourself. Create an account to make more timetables and open them from any device."
   },
   "guest.banner.copy": { ko: "링크 복사", en: "Copy link" },
   "guest.banner.dismiss": { ko: "확인했어요", en: "Got it" },
   "guest.banner.signup": { ko: "계정 만들기", en: "Create an account" },
-  "guest.dashboard.body": {
-    ko: "게스트로 만든 시간표는 이 브라우저에서만 보여요. 브라우저 데이터를 지우거나 다른 기기에서 열면 사라지니, 시간표 링크를 따로 저장해두세요.",
-    en: "Timetables you make as a guest live in this browser only. They disappear if you clear browser data or switch devices, so save each timetable's link somewhere safe."
-  },
 
   "auth.signupComplete": {
     ko: "가입이 완료됐어요. 이제 로그인해주세요.",
