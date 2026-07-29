@@ -107,10 +107,23 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
                   >
                     {/* `button { font: inherit }` in globals.css beats any
                         text-size utility on the button itself, so the size
-                        has to live on this span instead. */}
-                    <span className="block truncate text-[10px] text-foreground sm:text-xs">
-                      {item.all_day ? item.title : `${item.start_time.slice(0, 5)} ${item.title}`}
-                    </span>
+                        has to live on these spans instead. Time and title get
+                        their own line so neither has to share width with the
+                        other before truncating. */}
+                    {item.all_day ? (
+                      <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                        {item.title}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                          {item.start_time.slice(0, 5)}
+                        </span>
+                        <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                          {item.title}
+                        </span>
+                      </>
+                    )}
                   </button>
                 ))}
               </div>
