@@ -160,7 +160,8 @@ export const messages = {
     en: "You're trying Planner Together without an account. This link is the only way back into your timetable — if you lose it, it can't be recovered. Bookmark it or send it to yourself. Create an account to make more timetables and open them from any device."
   },
   "guest.banner.copy": { ko: "링크 복사", en: "Copy link" },
-  "guest.banner.dismiss": { ko: "확인했어요", en: "Got it" },
+  "guest.banner.collapse": { ko: "안내 접기", en: "Collapse notice" },
+  "guest.banner.expand": { ko: "안내 펼치기", en: "Expand notice" },
   "guest.banner.signup": { ko: "계정 만들기", en: "Create an account" },
 
   "auth.signupComplete": {
