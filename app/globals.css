@@ -41,11 +41,19 @@ body {
     sans-serif;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+/* Normalizes native form-control font styling. This has to live in `@layer
+   base`: un-layered rules beat every layered one, so an un-layered `font:
+   inherit` silently overrode any text-size/weight utility applied straight to
+   a <button> (Tailwind emits those into `@layer utilities`). Inside base, the
+   reset still applies to controls that carry no typography class, and
+   utilities win when they do. */
+@layer base {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 }
 
 /* Hour, half-hour, then very faint 5-minute guides (72px / 12 = 6px). */
