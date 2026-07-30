@@ -47,7 +47,6 @@ export function TimetableGrid({
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const activeMode = useUiStore((state) => state.activeMode);
   const gridZoom = useUiStore((state) => state.gridZoom);
-  const hourHeight = zoomToHourHeight(gridZoom);
   const t = useT();
   const [draft, setDraft] = useState<{
     dayId: string;
@@ -59,8 +58,16 @@ export function TimetableGrid({
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const timedRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [timedViewportHeight, setTimedViewportHeight] = useState(0);
   const allDayItems = schedules.filter((item) => item.all_day);
+
+  // Zooming out past the point where a whole day fits would leave the grid
+  // stranded above empty space, so the rows never shrink below one screenful —
+  // the same rule the columns follow horizontally.
+  const fillHourHeight = timedViewportHeight / 24;
+  const hourHeight = Math.max(zoomToHourHeight(gridZoom), fillHourHeight);
 
   // Live pointers and in-progress draft blocks of everyone else editing this
   // timetable.
@@ -79,20 +86,29 @@ export function TimetableGrid({
   // real drag starts crisply instead of being swallowed by the click handler.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
-  // Show up to 7 columns at a time; extra days scroll horizontally.
+  // Show up to 7 columns at a time; extra days scroll horizontally. The timed
+  // area's own height is measured too, since that's what the rows have to fill.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const measure = () => setViewportWidth(el.clientWidth);
+    const measure = () => {
+      setViewportWidth(el.clientWidth);
+      // offsetTop covers the date headers and the all-day band, neither of
+      // which scales — and neither depends on the hour height, so measuring
+      // here can't feed back into the size it's about to produce.
+      const timed = timedRef.current;
+      setTimedViewportHeight(timed ? Math.max(0, el.clientHeight - timed.offsetTop) : 0);
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
+    // The all-day band grows with its lanes, moving the timed grid down.
+    if (contentRef.current) observer.observe(contentRef.current);
     return () => observer.disconnect();
   }, []);
 
   // Rescaling around the top of the viewport would throw the visible hours
   // away, so the time sitting mid-screen is what stays put across a zoom.
-  const timedRef = useRef<HTMLDivElement>(null);
   const lastHourHeight = useRef(hourHeight);
   useLayoutEffect(() => {
     const scroller = scrollRef.current;
