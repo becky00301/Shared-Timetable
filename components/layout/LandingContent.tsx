@@ -71,7 +71,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         <div className="relative">
           <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
             <span className="flex items-center gap-1.5 text-lg font-semibold text-white">
-              📅 Planner Together
+              Planner Together
             </span>
             <nav className="flex items-center gap-2 sm:gap-3">
               <LocaleToggle className="border-white/30 bg-white/10 backdrop-blur" invert />
@@ -455,7 +455,7 @@ function HeroMockup() {
       block: { col: 1, top: 30, height: 56, label: ko ? "로마 구경" : "Rome tour" }
     },
     {
-      name: ko ? "지훈" : "Jihun",
+      name: ko ? "지훈" : "Alex",
       color: "#22c55e",
       from: ["84px", "-34px"],
       delay: "1.2s",
