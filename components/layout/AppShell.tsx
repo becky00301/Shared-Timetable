@@ -67,14 +67,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <LocaleToggle />
             {signedIn ? (
               <>
-                <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
-                    {label?.slice(0, 1)}
+                {user?.isGuest ? (
+                  <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
+                      {label?.slice(0, 1)}
+                    </span>
+                    <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={label ?? undefined}>
+                      {label}
+                    </span>
                   </span>
-                  <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={label ?? undefined}>
-                    {label}
-                  </span>
-                </span>
+                ) : (
+                  <Link
+                    href="/account"
+                    aria-label={t("account.page.open")}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 transition hover:border-primary/40 hover:bg-black/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  >
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
+                      {label?.slice(0, 1)}
+                    </span>
+                    <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={label ?? undefined}>
+                      {label}
+                    </span>
+                  </Link>
+                )}
                 <Button size="sm" variant="outline" onClick={signOut}>
                   {t("common.logout")}
                 </Button>

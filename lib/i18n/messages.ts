@@ -140,6 +140,20 @@ export const messages = {
     ko: "문제가 생겼어요. 다시 시도해주세요.",
     en: "Something went wrong. Please try again."
   },
+  "account.page.open": { ko: "마이페이지 열기", en: "Open account settings" },
+  "account.page.title": { ko: "마이페이지", en: "My account" },
+  "account.page.subtitle": {
+    ko: "계정 정보와 보안 설정을 관리하세요.",
+    en: "Manage your account information and security settings."
+  },
+  "account.page.email": { ko: "로그인 이메일", en: "Login email" },
+  "account.menu.password": { ko: "비밀번호 변경", en: "Change password" },
+  "account.menu.delete": { ko: "회원 탈퇴", en: "Close account" },
+  "account.change.title": { ko: "비밀번호 변경", en: "Change password" },
+  "account.change.body": {
+    ko: "현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다.",
+    en: "Confirm your current password, then choose a new one."
+  },
   "account.danger.title": { ko: "회원 탈퇴", en: "Close your account" },
   "account.danger.body": {
     ko: "계정과 개인정보를 삭제합니다. 혼자 쓰던 시간표는 함께 삭제되고, 다른 참여자가 있는 시간표는 남은 참여자에게 소유권이 넘어갑니다. 되돌릴 수 없습니다.",

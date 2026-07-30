@@ -74,7 +74,7 @@ export function DeleteAccountSection() {
   }
 
   return (
-    <section className="mt-16 rounded-xl border border-red-500/25 bg-red-500/[0.03] p-5">
+    <section className="rounded-lg border border-red-500/25 bg-red-500/[0.03] p-5">
       <h2 className="text-base font-semibold text-foreground">{t("account.danger.title")}</h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{t("account.danger.body")}</p>
       <Button
