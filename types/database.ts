@@ -120,7 +120,7 @@ export type Database = {
           id: string;
           project_id: string;
           day_id: string;
-          creator_id: string;
+          creator_id: string | null;
           title: string;
           description: string | null;
           location: string | null;
@@ -137,7 +137,7 @@ export type Database = {
           id?: string;
           project_id: string;
           day_id: string;
-          creator_id: string;
+          creator_id?: string | null;
           title: string;
           description?: string | null;
           location?: string | null;
@@ -225,6 +225,10 @@ export type Database = {
       join_project_by_invite: {
         Args: { token: string };
         Returns: string;
+      };
+      prepare_account_deletion: {
+        Args: { target_user_id: string };
+        Returns: Array<{ transferred: number; deleted: number }>;
       };
     };
     Enums: Record<string, never>;

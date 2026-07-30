@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -27,6 +28,7 @@ export default function DashboardPage() {
     () => [...allProjects].sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [allProjects]
   );
+  const isGuest = useProjectStore((state) => state.isGuest);
   const loadDashboard = useProjectStore((state) => state.loadDashboard);
   const setCreateProjectOpen = useUiStore((state) => state.setCreateProjectOpen);
   const [loadError, setLoadError] = useState(false);
@@ -106,6 +108,10 @@ export default function DashboardPage() {
             {t("dashboard.empty")}
           </div>
         )}
+
+        {/* Guests never reach this page, but the store settles after the first
+            paint — so gate on it rather than showing them a dead control. */}
+        {isGuest ? null : <DeleteAccountSection />}
       </main>
       <CreateProjectModal />
     </AppShell>

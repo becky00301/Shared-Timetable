@@ -14,6 +14,7 @@ export const messages = {
   "common.back": { ko: "뒤로", en: "Back" },
   "common.next": { ko: "다음", en: "Next" },
   "common.close": { ko: "닫기", en: "Close" },
+  "common.cancel": { ko: "취소", en: "Cancel" },
   "common.rename": { ko: "이름 수정", en: "Rename" },
   "common.name": { ko: "이름", en: "Name" },
   "common.loading": { ko: "불러오는 중...", en: "Loading…" },
@@ -139,6 +140,77 @@ export const messages = {
     ko: "문제가 생겼어요. 다시 시도해주세요.",
     en: "Something went wrong. Please try again."
   },
+  "account.danger.title": { ko: "회원 탈퇴", en: "Close your account" },
+  "account.danger.body": {
+    ko: "계정과 개인정보를 삭제합니다. 혼자 쓰던 시간표는 함께 삭제되고, 다른 참여자가 있는 시간표는 남은 참여자에게 소유권이 넘어갑니다. 되돌릴 수 없습니다.",
+    en: "Deletes your account and personal data. Timetables you were using alone go with it; ones with other members are handed over to a remaining member. This can't be undone."
+  },
+  "account.danger.cta": { ko: "회원 탈퇴", en: "Close account" },
+  "account.confirm.title": { ko: "정말 탈퇴하시겠어요?", en: "Close your account?" },
+  "account.confirm.body": {
+    ko: "확인을 위해 아래에 {word} 를 입력해 주세요.",
+    en: "Type {word} below to confirm."
+  },
+  "account.confirm.word": { ko: "탈퇴", en: "DELETE" },
+  "account.password.label": { ko: "현재 비밀번호", en: "Current password" },
+  "account.password.placeholder": {
+    ko: "현재 비밀번호를 입력해 주세요",
+    en: "Enter your current password"
+  },
+  "account.password.incorrect": {
+    ko: "비밀번호가 올바르지 않아요.",
+    en: "That password is incorrect."
+  },
+  "account.summary.loading": { ko: "탈퇴 결과를 확인하고 있어요...", en: "Checking what will change..." },
+  "account.summary.delete": { ko: "함께 삭제되는 개인 시간표", en: "Personal timetables deleted" },
+  "account.summary.transfer": {
+    ko: "소유권이 이전되는 공동 시간표",
+    en: "Shared timetables transferred"
+  },
+  "account.summary.failed": {
+    ko: "시간표 현황을 불러오지 못했어요. 탈퇴를 진행하면 서버에서 다시 확인합니다.",
+    en: "We couldn't load the timetable summary. The server will check it again before deletion."
+  },
+  "account.confirm.submit": { ko: "영구 삭제", en: "Delete permanently" },
+  "account.confirm.working": { ko: "삭제 중...", en: "Deleting…" },
+  "account.deleted": { ko: "계정을 삭제했어요.", en: "Your account has been deleted." },
+  "account.deleteFailed": {
+    ko: "탈퇴 처리에 실패했어요. 잠시 후 다시 시도해 주세요.",
+    en: "We couldn't close the account. Please try again shortly."
+  },
+
+  "auth.forgot.link": { ko: "비밀번호를 잊으셨나요?", en: "Forgot your password?" },
+  "auth.forgot.title": { ko: "비밀번호 재설정", en: "Reset your password" },
+  "auth.forgot.subtitle": {
+    ko: "가입한 이메일로 재설정 링크를 보내드려요.",
+    en: "We'll email you a link to set a new password."
+  },
+  "auth.forgot.submit": { ko: "재설정 링크 보내기", en: "Send reset link" },
+  "auth.forgot.sending": { ko: "보내는 중...", en: "Sending…" },
+  "auth.forgot.sent": {
+    ko: "해당 이메일로 가입된 계정이 있다면 재설정 링크를 보냈어요. 메일함을 확인해 주세요.",
+    en: "If an account exists for that email, we've sent a reset link. Please check your inbox."
+  },
+  "auth.forgot.back": { ko: "← 로그인으로 돌아가기", en: "← Back to log in" },
+  "auth.reset.title": { ko: "새 비밀번호 설정", en: "Set a new password" },
+  "auth.reset.subtitle": {
+    ko: "새로 사용할 비밀번호를 입력해 주세요.",
+    en: "Enter the password you'd like to use from now on."
+  },
+  "auth.reset.newPassword": { ko: "새 비밀번호", en: "New password" },
+  "auth.reset.confirmPassword": { ko: "새 비밀번호 확인", en: "Confirm new password" },
+  "auth.reset.submit": { ko: "비밀번호 변경", en: "Change password" },
+  "auth.reset.saving": { ko: "변경 중...", en: "Saving…" },
+  "auth.reset.done": { ko: "비밀번호를 변경했어요.", en: "Your password has been changed." },
+  "auth.reset.mismatch": {
+    ko: "두 비밀번호가 서로 달라요.",
+    en: "The two passwords don't match."
+  },
+  "auth.reset.expired": {
+    ko: "링크가 만료되었거나 이미 사용되었어요. 재설정을 다시 요청해 주세요.",
+    en: "That link has expired or was already used. Please request a new one."
+  },
+
   "auth.guest.divider": { ko: "또는", en: "or" },
   "auth.guest.cta": { ko: "로그인 없이 체험하기", en: "Try it without an account" },
   "auth.guest.hint": {

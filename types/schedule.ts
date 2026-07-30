@@ -2,7 +2,7 @@ export type ScheduleItem = {
   id: string;
   project_id: string;
   day_id: string;
-  creator_id: string;
+  creator_id: string | null;
   title: string;
   description?: string | null;
   location?: string | null;
