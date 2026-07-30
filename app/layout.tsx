@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { ThemeProvider } from "@appica/ui-react/providers/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { LocaleProvider } from "@/lib/i18n/locale";
@@ -38,6 +39,7 @@ export default function RootLayout({
           </LocaleProvider>
         </ThemeProvider>
         <Toaster richColors position="top-right" />
+        <Analytics />
       </body>
       {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
     </html>
