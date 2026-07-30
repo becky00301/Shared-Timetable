@@ -138,9 +138,11 @@ export function TimetableGrid({
     MIN_ZOOMED_COL_WIDTH,
     Math.round(Math.max(MIN_DAY_COL_WIDTH, fittedColWidth) * gridZoom)
   );
-  // Zooming out must not strand the columns short of the viewport, so when
-  // every day already fits they keep filling it and only the rows shrink.
-  const noDeadSpaceWidth = days.length <= MAX_VISIBLE_DAYS ? fittedColWidth : 0;
+  // Zooming out must not strand the columns short of the viewport, so once
+  // every day fits across it they stop shrinking and only the rows do. This
+  // is an even split of all the days, not just the seven shown at 100% — a
+  // fortnight zoomed out fits on screen too, and should fill it.
+  const noDeadSpaceWidth = days.length ? Math.floor(availableWidth / days.length) : 0;
   const colWidth =
     viewportWidth && (manyDays || gridZoom !== 1 || fittedColWidth < MIN_DAY_COL_WIDTH)
       ? Math.max(scaledColWidth, noDeadSpaceWidth)
