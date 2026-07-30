@@ -5,9 +5,60 @@ import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { PeerDraftBlock } from "@/components/timetable/PeerDraftBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
 import { cn } from "@/lib/utils/cn";
+import { timeToMinutes } from "@/lib/utils/time";
 import type { PeerDraft } from "@/lib/supabase/cursors";
 import type { ProjectDay } from "@/types/project";
 import type { AvailabilitySlot, ScheduleItem } from "@/types/schedule";
+
+type PositionedSchedule = {
+  item: ScheduleItem;
+  lane: number;
+  laneCount: number;
+};
+
+function positionOverlappingSchedules(schedules: ScheduleItem[]): PositionedSchedule[] {
+  const sorted = [...schedules].sort((a, b) => {
+    const startDifference = timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+    if (startDifference !== 0) return startDifference;
+
+    const endDifference = timeToMinutes(b.end_time) - timeToMinutes(a.end_time);
+    return endDifference !== 0 ? endDifference : a.id.localeCompare(b.id);
+  });
+  const groups: ScheduleItem[][] = [];
+  let groupEnd = -1;
+
+  for (const item of sorted) {
+    const start = timeToMinutes(item.start_time);
+    const end = timeToMinutes(item.end_time);
+    if (!groups.length || start >= groupEnd) {
+      groups.push([item]);
+      groupEnd = end;
+    } else {
+      groups[groups.length - 1].push(item);
+      groupEnd = Math.max(groupEnd, end);
+    }
+  }
+
+  return groups.flatMap((group) => {
+    const laneEnds: number[] = [];
+    const positioned = group.map((item) => {
+      const start = timeToMinutes(item.start_time);
+      const end = timeToMinutes(item.end_time);
+      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
+
+      if (lane === -1) {
+        lane = laneEnds.length;
+        laneEnds.push(end);
+      } else {
+        laneEnds[lane] = end;
+      }
+
+      return { item, lane };
+    });
+
+    return positioned.map(({ item, lane }) => ({ item, lane, laneCount: laneEnds.length }));
+  });
+}
 
 // Just the timed body of a day. The date header and the all-day band live in
 // TimetableGrid so they can span every column and stay aligned.
@@ -48,6 +99,8 @@ export function DateColumn({
   onDeleteSchedule: (id: string) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
 }) {
+  const positionedSchedules = positionOverlappingSchedules(schedules);
+
   return (
     <div
       className={cn("border-r border-border last:border-r-0", width ? "shrink-0" : "min-w-0 flex-1")}
@@ -65,10 +118,12 @@ export function DateColumn({
           memberCount={memberCount}
           hourHeight={hourHeight}
         />
-        {schedules.map((item) => (
+        {positionedSchedules.map(({ item, lane, laneCount }) => (
           <ScheduleBlock
             key={item.id}
             item={item}
+            lane={lane}
+            laneCount={laneCount}
             canEdit={canEdit}
             isSelected={selectedScheduleId === item.id}
             hourHeight={hourHeight}

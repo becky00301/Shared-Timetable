@@ -23,6 +23,8 @@ function snapPx(deltaY: number, hourHeight: number) {
 
 export function ScheduleBlock({
   item,
+  lane,
+  laneCount,
   isSelected,
   canEdit,
   hourHeight,
@@ -31,6 +33,8 @@ export function ScheduleBlock({
   onDelete
 }: {
   item: ScheduleItem;
+  lane: number;
+  laneCount: number;
   isSelected: boolean;
   canEdit: boolean;
   hourHeight: number;
@@ -60,6 +64,14 @@ export function ScheduleBlock({
     34,
     resize?.edge === "top" ? baseHeight - preview : resize ? baseHeight + preview : baseHeight
   );
+  const splitPosition =
+    laneCount > 1
+      ? {
+          left: `calc(${(lane / laneCount) * 100}% + ${lane === 0 ? 4 : 2}px)`,
+          right: `calc(${((laneCount - lane - 1) / laneCount) * 100}% + ${lane === laneCount - 1 ? 4 : 2}px)`
+        }
+      : undefined;
+  const isSplit = laneCount > 1;
 
   function startResize(edge: "top" | "bottom", event: React.PointerEvent) {
     if (!canEdit) return;
@@ -87,9 +99,11 @@ export function ScheduleBlock({
     <div
       ref={setNodeRef}
       data-schedule-id={item.id}
+      title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
       className={cn(
         // transition-colors only: animating transform makes the block lag the cursor.
         "absolute left-1 right-1 z-10 cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",
+        isSplit && "px-1 py-2 sm:px-1.5",
         isSelected && "ring-2 ring-white/70",
         isDragging && "opacity-70"
       )}
@@ -97,7 +111,8 @@ export function ScheduleBlock({
         top,
         height,
         backgroundColor: item.color,
-        transform: CSS.Translate.toString(transform)
+        transform: CSS.Translate.toString(transform),
+        ...splitPosition
       }}
       onClick={onSelect}
       onContextMenu={onContextMenu}
@@ -114,14 +129,42 @@ export function ScheduleBlock({
         <GripHorizontal size={12} />
       </button>
       <div className="mt-1 min-w-0">
-        <p className="text-[13px] font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-sm">
+        <p
+          className={cn(
+            "font-semibold leading-tight text-white",
+            isSplit
+              ? "truncate text-[10px] sm:text-xs"
+              : "text-[13px] [overflow-wrap:anywhere] sm:text-sm"
+          )}
+        >
           {item.title}
         </p>
-        <p className="mt-1 text-[11px] leading-tight text-white/85 [overflow-wrap:anywhere] sm:text-xs">
-          {formatTimeRange(item.start_time, item.end_time)}
+        <p
+          className={cn(
+            "mt-1 leading-tight text-white/85",
+            isSplit
+              ? cn("overflow-hidden whitespace-nowrap", laneCount > 2 ? "text-[8px]" : "text-[9px]")
+              : "text-[11px] [overflow-wrap:anywhere] sm:text-xs"
+          )}
+        >
+          {isSplit ? (
+            <>
+              <span className="block">{item.start_time.slice(0, 5)}</span>
+              <span className="block">- {item.end_time.slice(0, 5)}</span>
+            </>
+          ) : (
+            formatTimeRange(item.start_time, item.end_time)
+          )}
         </p>
         {item.location ? (
-          <p className="mt-1 text-[11px] leading-tight text-white/75 [overflow-wrap:anywhere] sm:text-xs">
+          <p
+            className={cn(
+              "mt-1 leading-tight text-white/75",
+              isSplit
+                ? "truncate text-[9px] sm:text-[10px]"
+                : "text-[11px] [overflow-wrap:anywhere] sm:text-xs"
+            )}
+          >
             {item.location}
           </p>
         ) : null}
