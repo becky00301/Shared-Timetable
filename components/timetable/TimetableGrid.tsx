@@ -130,27 +130,21 @@ export function TimetableGrid({
   // Floor for zoomed-out columns: below this the date header stops being
   // readable, so zooming out further only shrinks the hour rows.
   const MIN_ZOOMED_COL_WIDTH = 56;
-  const manyDays = days.length > 7;
   const visibleDayCount = Math.min(days.length, MAX_VISIBLE_DAYS);
   const availableWidth = Math.max(0, viewportWidth - TIME_COL_WIDTH);
+  // What a column gets when a week of them shares the viewport at 100%.
   const fittedColWidth = viewportWidth && visibleDayCount ? Math.floor(availableWidth / visibleDayCount) : 0;
   const scaledColWidth = Math.max(
     MIN_ZOOMED_COL_WIDTH,
     Math.round(Math.max(MIN_DAY_COL_WIDTH, fittedColWidth) * gridZoom)
   );
-  // Zooming out must not strand the columns short of the viewport, so once
-  // every day fits across it they stop shrinking and only the rows do. This
-  // is an even split of all the days, not just the seven shown at 100% — a
-  // fortnight zoomed out fits on screen too, and should fill it.
-  const noDeadSpaceWidth = days.length ? Math.floor(availableWidth / days.length) : 0;
+  // Fixed widths are only for days that genuinely overflow. The moment they
+  // all fit — which zooming out is what makes happen — the columns go back to
+  // flexing so they divide the width exactly, instead of being pinned to a
+  // rounded pixel width that leaves a gap down the right-hand side.
   const colWidth =
-    viewportWidth && (manyDays || gridZoom !== 1 || fittedColWidth < MIN_DAY_COL_WIDTH)
-      ? Math.max(scaledColWidth, noDeadSpaceWidth)
-      : undefined;
-  // Wide columns overflow the viewport even with only a few days, so the
-  // horizontal scroll layout keys off the measured total, not the day count.
-  const overflowsX = colWidth ? colWidth * days.length > availableWidth + 1 : false;
-  const hScroll = manyDays || overflowsX;
+    viewportWidth && scaledColWidth * days.length > availableWidth ? scaledColWidth : undefined;
+  const hScroll = colWidth !== undefined;
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
