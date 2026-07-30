@@ -9,19 +9,21 @@ export function DraftScheduleBlock({
   startTime,
   endTime,
   naming,
+  hourHeight,
   onCommit,
   onCancel
 }: {
   startTime: string;
   endTime: string;
   naming: boolean;
+  hourHeight: number;
   onCommit: (title: string) => void;
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState("");
   const t = useT();
-  const top = minutesToTop(timeToMinutes(startTime));
-  const height = Math.max(34, durationToHeight(startTime, endTime));
+  const top = minutesToTop(timeToMinutes(startTime), hourHeight);
+  const height = Math.max(34, durationToHeight(startTime, endTime, hourHeight));
 
   // Blur or Enter commits the typed name; the parent creates the schedule only
   // when a name was entered, and discards the draft otherwise.

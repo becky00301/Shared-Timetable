@@ -11,17 +11,19 @@ export function PeerDraftBlock({
   startMinutes,
   endMinutes,
   name,
-  color
+  color,
+  hourHeight
 }: {
   startMinutes: number;
   endMinutes: number;
   name: string;
   color: string;
+  hourHeight: number;
 }) {
-  const top = minutesToTop(startMinutes);
+  const top = minutesToTop(startMinutes, hourHeight);
   const height = Math.max(
     18,
-    durationToHeight(minutesToTime(startMinutes), minutesToTime(endMinutes))
+    durationToHeight(minutesToTime(startMinutes), minutesToTime(endMinutes), hourHeight)
   );
 
   return (

@@ -20,6 +20,7 @@ export function DateColumn({
   selectedScheduleId,
   canEdit,
   width,
+  hourHeight,
   draft,
   peerDrafts,
   onDraftCommit,
@@ -37,6 +38,7 @@ export function DateColumn({
   selectedScheduleId: string | null;
   canEdit: boolean;
   width?: number;
+  hourHeight: number;
   draft: { start_time: string; end_time: string; naming: boolean } | null;
   peerDrafts: PeerDraft[];
   onDraftCommit: (title: string) => void;
@@ -52,13 +54,16 @@ export function DateColumn({
       style={width ? { width } : undefined}
     >
       <div
-        className={cn("timetable-grid relative h-[1728px]", canEdit && "cursor-crosshair")}
+        className={cn("timetable-grid relative", canEdit && "cursor-crosshair")}
+        // --hour-h drives the background guide lines in globals.css.
+        style={{ height: hourHeight * 24, "--hour-h": `${hourHeight}px` } as React.CSSProperties}
         onPointerDown={(event) => onPointerStart(day.id, event)}
       >
         <AvailabilityHeatmap
           active={activeMode === "availability"}
           slots={availability}
           memberCount={memberCount}
+          hourHeight={hourHeight}
         />
         {schedules.map((item) => (
           <ScheduleBlock
@@ -66,6 +71,7 @@ export function DateColumn({
             item={item}
             canEdit={canEdit}
             isSelected={selectedScheduleId === item.id}
+            hourHeight={hourHeight}
             onSelect={() => onSelectSchedule(item.id)}
             onResize={(edge, deltaY) => onResize(item, edge, deltaY)}
             onDelete={() => onDeleteSchedule(item.id)}
@@ -78,6 +84,7 @@ export function DateColumn({
             endMinutes={peer.endMinutes}
             name={peer.name}
             color={peer.color}
+            hourHeight={hourHeight}
           />
         ))}
         {draft ? (
@@ -85,6 +92,7 @@ export function DateColumn({
             startTime={draft.start_time}
             endTime={draft.end_time}
             naming={draft.naming}
+            hourHeight={hourHeight}
             onCommit={onDraftCommit}
             onCancel={onDraftCancel}
           />

@@ -159,6 +159,10 @@ export const messages = {
     ko: "로그인 없이 체험 중이에요. 이 링크가 시간표에 다시 들어올 수 있는 유일한 방법이라, 잃어버리면 되찾을 수 없어요. 북마크하거나 나에게 보내두세요. 계정을 만들면 시간표를 여러 개 만들고 어느 기기에서든 열 수 있어요.",
     en: "You're trying Planner Together without an account. This link is the only way back into your timetable — if you lose it, it can't be recovered. Bookmark it or send it to yourself. Create an account to make more timetables and open them from any device."
   },
+  "grid.zoomIn": { ko: "확대", en: "Zoom in" },
+  "grid.zoomOut": { ko: "축소", en: "Zoom out" },
+  "grid.zoomReset": { ko: "기본 배율로", en: "Reset zoom" },
+
   "guest.banner.copy": { ko: "링크 복사", en: "Copy link" },
   "guest.banner.collapse": { ko: "안내 접기", en: "Collapse notice" },
   "guest.banner.expand": { ko: "안내 펼치기", en: "Expand notice" },

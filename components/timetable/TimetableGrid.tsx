@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
@@ -14,12 +14,12 @@ import { useDateFormat } from "@/lib/i18n/dates";
 import { cn } from "@/lib/utils/cn";
 import {
   DAY_END_MINUTES,
-  HOUR_HEIGHT,
   MIN_DURATION_MINUTES,
   minutesToTime,
   pointerYToTime,
   snapMinutes,
-  timeToMinutes
+  timeToMinutes,
+  zoomToHourHeight
 } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -46,6 +46,8 @@ export function TimetableGrid({
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const activeMode = useUiStore((state) => state.activeMode);
+  const gridZoom = useUiStore((state) => state.gridZoom);
+  const hourHeight = zoomToHourHeight(gridZoom);
   const t = useT();
   const [draft, setDraft] = useState<{
     dayId: string;
@@ -88,19 +90,49 @@ export function TimetableGrid({
     return () => observer.disconnect();
   }, []);
 
+  // Rescaling around the top of the viewport would throw the visible hours
+  // away, so the time sitting mid-screen is what stays put across a zoom.
+  const timedRef = useRef<HTMLDivElement>(null);
+  const lastHourHeight = useRef(hourHeight);
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current;
+    const timed = timedRef.current;
+    const previous = lastHourHeight.current;
+    lastHourHeight.current = hourHeight;
+    if (!scroller || !timed || previous === hourHeight) return;
+    // The headers and all-day band above the grid don't scale, so they're
+    // excluded from the ratio and added back afterwards.
+    const offset = timed.offsetTop;
+    const centre = scroller.scrollTop + scroller.clientHeight / 2 - offset;
+    if (centre <= 0) return;
+    scroller.scrollTop = offset + (centre * hourHeight) / previous - scroller.clientHeight / 2;
+  }, [hourHeight]);
+
   const TIME_COL_WIDTH = 64; // matches TimeColumn w-16
   const MAX_VISIBLE_DAYS = 7;
   const MIN_DAY_COL_WIDTH = 96;
+  // Floor for zoomed-out columns: below this the date header stops being
+  // readable, so zooming out further only shrinks the hour rows.
+  const MIN_ZOOMED_COL_WIDTH = 56;
   const manyDays = days.length > 7;
   const visibleDayCount = Math.min(days.length, MAX_VISIBLE_DAYS);
-  const fittedColWidth =
-    viewportWidth && visibleDayCount
-      ? Math.floor(Math.max(0, viewportWidth - TIME_COL_WIDTH) / visibleDayCount)
-      : 0;
+  const availableWidth = Math.max(0, viewportWidth - TIME_COL_WIDTH);
+  const fittedColWidth = viewportWidth && visibleDayCount ? Math.floor(availableWidth / visibleDayCount) : 0;
+  const scaledColWidth = Math.max(
+    MIN_ZOOMED_COL_WIDTH,
+    Math.round(Math.max(MIN_DAY_COL_WIDTH, fittedColWidth) * gridZoom)
+  );
+  // Zooming out must not strand the columns short of the viewport, so when
+  // every day already fits they keep filling it and only the rows shrink.
+  const noDeadSpaceWidth = days.length <= MAX_VISIBLE_DAYS ? fittedColWidth : 0;
   const colWidth =
-    viewportWidth && (manyDays || fittedColWidth < MIN_DAY_COL_WIDTH)
-      ? Math.max(MIN_DAY_COL_WIDTH, fittedColWidth)
+    viewportWidth && (manyDays || gridZoom !== 1 || fittedColWidth < MIN_DAY_COL_WIDTH)
+      ? Math.max(scaledColWidth, noDeadSpaceWidth)
       : undefined;
+  // Wide columns overflow the viewport even with only a few days, so the
+  // horizontal scroll layout keys off the measured total, not the day count.
+  const overflowsX = colWidth ? colWidth * days.length > availableWidth + 1 : false;
+  const hScroll = manyDays || overflowsX;
 
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
@@ -110,11 +142,11 @@ export function TimetableGrid({
     // naming input.
     if (draft) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const anchor = timeToMinutes(pointerYToTime(event.clientY - rect.top));
+    const anchor = timeToMinutes(pointerYToTime(event.clientY - rect.top, hourHeight));
 
     if (activeMode === "availability") {
       const onUp = (upEvent: PointerEvent) => {
-        const end = timeToMinutes(pointerYToTime(upEvent.clientY - rect.top));
+        const end = timeToMinutes(pointerYToTime(upEvent.clientY - rect.top, hourHeight));
         addAvailability({
           project_id: projectId,
           day_id: dayId,
@@ -135,7 +167,7 @@ export function TimetableGrid({
     dragRef.current = { dayId, start: anchor, end: anchor + MIN_DURATION_MINUTES };
     setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + MIN_DURATION_MINUTES, naming: false });
     const onMove = (moveEvent: PointerEvent) => {
-      const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top));
+      const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top, hourHeight));
       const start = Math.min(anchor, current);
       const end = Math.min(DAY_END_MINUTES, Math.max(anchor + MIN_DURATION_MINUTES, current));
       if (dragRef.current) {
@@ -211,7 +243,7 @@ export function TimetableGrid({
   function onDragEnd(event: DragEndEvent) {
     const item = schedules.find((schedule) => schedule.id === event.active.id);
     if (!item || !canEdit) return;
-    const deltaMinutes = snapMinutes((event.delta.y / HOUR_HEIGHT) * 60);
+    const deltaMinutes = snapMinutes((event.delta.y / hourHeight) * 60);
     const start = Math.max(0, Math.min(DAY_END_MINUTES - MIN_DURATION_MINUTES, timeToMinutes(item.start_time) + deltaMinutes));
     const duration = timeToMinutes(item.end_time) - timeToMinutes(item.start_time);
     const currentDayIndex = days.findIndex((day) => day.id === item.day_id);
@@ -233,7 +265,7 @@ export function TimetableGrid({
   function resizeItem(itemId: string, edge: "top" | "bottom", deltaY: number) {
     const item = schedules.find((candidate) => candidate.id === itemId);
     if (!item) return;
-    const deltaMinutes = snapMinutes((deltaY / 72) * 60);
+    const deltaMinutes = snapMinutes((deltaY / hourHeight) * 60);
     const start = timeToMinutes(item.start_time);
     const end = timeToMinutes(item.end_time);
     const nextStart = edge === "top" ? Math.min(end - MIN_DURATION_MINUTES, Math.max(0, start + deltaMinutes)) : start;
@@ -272,12 +304,12 @@ export function TimetableGrid({
         id="timetable-export"
         className="min-h-0 flex-1 overflow-auto bg-background"
       >
-        <div ref={contentRef} className={cn("relative", manyDays ? "w-max min-w-full" : "min-w-full")}>
+        <div ref={contentRef} className={cn("relative", hScroll ? "w-max min-w-full" : "min-w-full")}>
           <LiveCursors cursors={cursors} />
           {/* Date headers */}
           <div className="sticky top-0 z-30 flex bg-surface">
             <div className="sticky left-0 z-40 h-12 w-16 shrink-0 border-b border-r border-border bg-surface" />
-            <div ref={colsRef} className={manyDays ? "flex" : "flex flex-1"}>
+            <div ref={colsRef} className={hScroll ? "flex" : "flex flex-1"}>
               {days.map((day) => (
                 <DayHeaderCell key={day.id} day={day} weekdayOnly={weekdayOnly} width={colWidth} />
               ))}
@@ -310,11 +342,11 @@ export function TimetableGrid({
           </div>
 
           {/* Timed grid */}
-          <div className="flex">
+          <div ref={timedRef} className="flex">
             <div className="sticky left-0 z-40">
-              <TimeColumn />
+              <TimeColumn hourHeight={hourHeight} />
             </div>
-            <div className={manyDays ? "flex" : "flex flex-1"}>
+            <div className={hScroll ? "flex" : "flex flex-1"}>
               {days.map((day) => (
                 <DateColumn
                   key={day.id}
@@ -323,6 +355,7 @@ export function TimetableGrid({
                   activeMode={activeMode}
                   memberCount={members.length}
                   width={colWidth}
+                  hourHeight={hourHeight}
                   selectedScheduleId={selectedScheduleId}
                   schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
                   availability={availability.filter((slot) => slot.day_id === day.id)}

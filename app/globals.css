@@ -56,16 +56,19 @@ body {
   }
 }
 
-/* Hour, half-hour, then very faint 5-minute guides (72px / 12 = 6px). */
+/* Hour, half-hour, then very faint 5-minute guides. Derived from --hour-h so
+   the guides rescale with the grid's zoom; the column sets that per render and
+   the fallback here is the 100% height. */
 .timetable-grid {
+  --hour-h: 72px;
   background-image:
     linear-gradient(to bottom, rgba(55, 53, 47, 0.12) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(55, 53, 47, 0.06) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(55, 53, 47, 0.03) 1px, transparent 1px);
   background-size:
-    100% 72px,
-    100% 36px,
-    100% 6px;
+    100% var(--hour-h),
+    100% calc(var(--hour-h) / 2),
+    100% calc(var(--hour-h) / 12);
 }
 
 .export-mode .editor-only {

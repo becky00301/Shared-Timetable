@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
 import {
-  HOUR_HEIGHT,
   durationToHeight,
   formatTimeRange,
   minutesToTop,
@@ -18,14 +17,15 @@ import {
 import type { ScheduleItem } from "@/types/schedule";
 
 /** Pixel delta snapped to the same 5-minute grid the commit will land on. */
-function snapPx(deltaY: number) {
-  return (snapMinutes((deltaY / HOUR_HEIGHT) * 60) / 60) * HOUR_HEIGHT;
+function snapPx(deltaY: number, hourHeight: number) {
+  return (snapMinutes((deltaY / hourHeight) * 60) / 60) * hourHeight;
 }
 
 export function ScheduleBlock({
   item,
   isSelected,
   canEdit,
+  hourHeight,
   onSelect,
   onResize,
   onDelete
@@ -33,6 +33,7 @@ export function ScheduleBlock({
   item: ScheduleItem;
   isSelected: boolean;
   canEdit: boolean;
+  hourHeight: number;
   onSelect: () => void;
   /** Called once, on release — not on every pointer move. */
   onResize: (edge: "top" | "bottom", deltaY: number) => void;
@@ -51,9 +52,9 @@ export function ScheduleBlock({
     disabled: !canEdit,
     data: { dayId: item.day_id, item }
   });
-  const baseTop = minutesToTop(timeToMinutes(item.start_time));
-  const baseHeight = Math.max(34, durationToHeight(item.start_time, item.end_time));
-  const preview = resize ? snapPx(resize.deltaY) : 0;
+  const baseTop = minutesToTop(timeToMinutes(item.start_time), hourHeight);
+  const baseHeight = Math.max(34, durationToHeight(item.start_time, item.end_time, hourHeight));
+  const preview = resize ? snapPx(resize.deltaY, hourHeight) : 0;
   const top = resize?.edge === "top" ? baseTop + preview : baseTop;
   const height = Math.max(
     34,
@@ -76,7 +77,7 @@ export function ScheduleBlock({
       window.removeEventListener("pointerup", onUp);
       setResize(null);
       // Only a real drag should write; a stray click on the handle shouldn't.
-      if (snapPx(last) !== 0) onResize(edge, last);
+      if (snapPx(last, hourHeight) !== 0) onResize(edge, last);
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);

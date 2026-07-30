@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
+import { MAX_ZOOM, MIN_ZOOM, ZOOM_STEP } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -21,6 +22,8 @@ export function TimetableHeader({
   const setViewMode = useUiStore((state) => state.setViewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const setWeekStartsOnSunday = useUiStore((state) => state.setWeekStartsOnSunday);
+  const gridZoom = useUiStore((state) => state.gridZoom);
+  const setGridZoom = useUiStore((state) => state.setGridZoom);
   const isGuest = useProjectStore((state) => state.isGuest);
   const t = useT();
 
@@ -68,6 +71,42 @@ export function TimetableHeader({
             <span className="hidden sm:inline">{t("grid.tabMonth")}</span>
           </button>
         </div>
+
+        {/* Scaling only applies to the time grid, so it disappears in month view. */}
+        {viewMode === "grid" ? (
+          <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={() => setGridZoom(gridZoom - ZOOM_STEP)}
+              disabled={gridZoom <= MIN_ZOOM}
+              aria-label={t("grid.zoomOut")}
+              title={t("grid.zoomOut")}
+              className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              <Minus size={14} />
+            </button>
+            {/* Tabular figures stop the row shifting as the percentage changes. */}
+            <button
+              type="button"
+              onClick={() => setGridZoom(1)}
+              aria-label={t("grid.zoomReset")}
+              title={t("grid.zoomReset")}
+              className="min-w-11 rounded-md px-1 py-1 text-xs tabular-nums text-muted transition hover:bg-black/6 hover:text-foreground"
+            >
+              {Math.round(gridZoom * 100)}%
+            </button>
+            <button
+              type="button"
+              onClick={() => setGridZoom(gridZoom + ZOOM_STEP)}
+              disabled={gridZoom >= MAX_ZOOM}
+              aria-label={t("grid.zoomIn")}
+              title={t("grid.zoomIn")}
+              className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {isWeekly ? (
