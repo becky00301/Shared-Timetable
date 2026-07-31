@@ -253,11 +253,12 @@ export function ScheduleDetailPanel({
             </select>
           </label>
         ) : (
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
             <label className="flex min-w-0 flex-col gap-1.5 text-muted">
               {t("detail.start")}
               <Input
                 type="time"
+                className="max-w-full [inline-size:100%] [min-inline-size:0]"
                 step={300}
                 value={startTime}
                 disabled={!canEdit}
@@ -271,6 +272,7 @@ export function ScheduleDetailPanel({
               {t("detail.end")}
               <Input
                 type="time"
+                className="max-w-full [inline-size:100%] [min-inline-size:0]"
                 step={300}
                 value={endTime}
                 disabled={!canEdit}
