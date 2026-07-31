@@ -102,7 +102,7 @@ export function ScheduleBlock({
       title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
       className={cn(
         // transition-colors only: animating transform makes the block lag the cursor.
-        "absolute left-1 right-1 z-10 cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",
+        "absolute left-1 right-1 z-10 touch-manipulation cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
         isSelected && "ring-2 ring-white/70",
         isDragging && "opacity-70"
@@ -133,8 +133,8 @@ export function ScheduleBlock({
           className={cn(
             "font-semibold leading-tight text-white",
             isSplit
-              ? "truncate text-[10px] sm:text-xs"
-              : "text-[13px] [overflow-wrap:anywhere] sm:text-sm"
+              ? "truncate text-[9px] sm:text-xs"
+              : "text-[11px] [overflow-wrap:anywhere] sm:text-sm"
           )}
         >
           {item.title}
@@ -144,7 +144,7 @@ export function ScheduleBlock({
             "mt-1 leading-tight text-white/85",
             isSplit
               ? cn("overflow-hidden whitespace-nowrap", laneCount > 2 ? "text-[8px]" : "text-[9px]")
-              : "text-[11px] [overflow-wrap:anywhere] sm:text-xs"
+              : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
           )}
         >
           {isSplit ? (
@@ -162,7 +162,7 @@ export function ScheduleBlock({
               "mt-1 leading-tight text-white/75",
               isSplit
                 ? "truncate text-[9px] sm:text-[10px]"
-                : "text-[11px] [overflow-wrap:anywhere] sm:text-xs"
+                : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
             )}
           >
             {item.location}

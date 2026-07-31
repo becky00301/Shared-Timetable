@@ -42,7 +42,7 @@ export function Button({
   const mapped = {
     variant: VARIANT_MAP[variant],
     size: SIZE_MAP[size],
-    className: cn(className)
+    className: cn("whitespace-nowrap", className)
   };
 
   // asChild: hand the child element to Appica's `render` prop and lift its

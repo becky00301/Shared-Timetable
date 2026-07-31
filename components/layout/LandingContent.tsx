@@ -69,11 +69,11 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         </div>
 
         <div className="relative">
-          <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-            <span className="flex items-center gap-1.5 text-lg font-semibold text-white">
-              Planner Together
+          <header className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
+            <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-white sm:text-lg">
+              Planner<span className="hidden min-[360px]:inline"> Together</span>
             </span>
-            <nav className="flex items-center gap-2 sm:gap-3">
+            <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
               <LocaleToggle className="border-white/30 bg-white/10 backdrop-blur" invert />
               {loggedIn ? (
                 <button
@@ -95,7 +95,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
               )}
               <Link
                 href={appHref}
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#2a3348] shadow-sm transition hover:bg-white/90"
+                className="shrink-0 whitespace-nowrap rounded-full bg-white px-3 py-2 text-xs font-semibold text-[#2a3348] shadow-sm transition hover:bg-white/90 sm:px-4 sm:text-sm"
               >
                 {loggedIn ? t("landing.cta.mine") : t("common.signup")}
               </Link>
@@ -117,7 +117,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <div className="mt-9 flex justify-center">
               <Link
                 href={appHref}
-                className="rounded-full bg-[#14161c] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+                className="whitespace-nowrap rounded-full bg-[#14161c] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
               >
                 {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
               </Link>
@@ -199,14 +199,14 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href={appHref}
-                className="w-full rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#2a3348] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:w-auto"
+                className="w-full whitespace-nowrap rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#2a3348] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:w-auto"
               >
                 {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
               </Link>
               {loggedIn ? null : (
                 <Link
                   href="/login"
-                  className="w-full rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+                  className="w-full whitespace-nowrap rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
                 >
                   {t("landing.final.guest")}
                 </Link>

@@ -196,8 +196,8 @@ export function ScheduleDetailPanel({
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-4 text-sm">
-        <label className="flex flex-col gap-1.5 text-muted">
+      <div className="mt-4 flex min-w-0 flex-col gap-4 text-sm">
+        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
           {t("common.name")}
           <Input
             value={title}
@@ -210,10 +210,10 @@ export function ScheduleDetailPanel({
           />
         </label>
 
-        <label className="flex flex-col gap-1.5 text-muted">
+        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
           {item.all_day ? t("detail.startDate") : t("detail.date")}
           <select
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
+            className="h-10 min-w-0 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground outline-none disabled:opacity-60 sm:text-sm"
             value={dayId}
             disabled={!canEdit}
             onChange={(event) => {
@@ -230,10 +230,10 @@ export function ScheduleDetailPanel({
         </label>
 
         {item.all_day ? (
-          <label className="flex flex-col gap-1.5 text-muted">
+          <label className="flex min-w-0 flex-col gap-1.5 text-muted">
             {t("detail.endDate")}
             <select
-              className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none disabled:opacity-60"
+              className="h-10 min-w-0 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground outline-none disabled:opacity-60 sm:text-sm"
               value={endDayId}
               disabled={!canEdit}
               onChange={(event) => {
@@ -253,8 +253,8 @@ export function ScheduleDetailPanel({
             </select>
           </label>
         ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1.5 text-muted">
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <label className="flex min-w-0 flex-col gap-1.5 text-muted">
             {t("detail.start")}
             <Input
               type="time"
@@ -267,7 +267,7 @@ export function ScheduleDetailPanel({
               }}
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-muted">
+          <label className="flex min-w-0 flex-col gap-1.5 text-muted">
             {t("detail.end")}
             <Input
               type="time"
@@ -283,7 +283,7 @@ export function ScheduleDetailPanel({
         </div>
         )}
 
-        <label className="flex flex-col gap-1.5 text-muted">
+        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
           {t("detail.location")}
           <Input
             value={location}
@@ -294,7 +294,7 @@ export function ScheduleDetailPanel({
           />
         </label>
 
-        <label className="flex flex-col gap-1.5 text-muted">
+        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
           {t("detail.memo")}
           <Textarea
             value={description}

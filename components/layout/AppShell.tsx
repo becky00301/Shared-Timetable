@@ -44,11 +44,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
+          <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
               <CalendarClock size={18} />
             </span>
-            Planner Together
+            <span className="hidden whitespace-nowrap sm:inline">Planner Together</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             {/* Guests are a single-timetable trial with no dashboard. */}
@@ -63,12 +63,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             ) : null}
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <LocaleToggle />
             {signedIn ? (
               <>
                 {user?.isGuest ? (
-                  <span className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
+                  <span className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
                       {label?.slice(0, 1)}
                     </span>
@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Link
                     href="/account"
                     aria-label={t("account.page.open")}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 transition hover:border-primary/40 hover:bg-black/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 transition hover:border-primary/40 hover:bg-black/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold uppercase text-blue-700">
                       {label?.slice(0, 1)}

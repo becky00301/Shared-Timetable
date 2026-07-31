@@ -10,6 +10,8 @@ type UiStore = {
   weekStartsOnSunday: boolean;
   /** Time-grid scale, 1 = 100%. Drives both hour height and column width. */
   gridZoom: number;
+  defaultGridZoom: number;
+  gridZoomInitialized: boolean;
   isCreateProjectOpen: boolean;
   isShareOpen: boolean;
   setSelectedSchedule: (id: string | null) => void;
@@ -17,6 +19,8 @@ type UiStore = {
   setViewMode: (mode: "grid" | "month") => void;
   setWeekStartsOnSunday: (sundayFirst: boolean) => void;
   setGridZoom: (zoom: number) => void;
+  initializeGridZoom: (isMobile: boolean) => void;
+  resetGridZoom: () => void;
   setCreateProjectOpen: (open: boolean) => void;
   setShareOpen: (open: boolean) => void;
 };
@@ -27,6 +31,8 @@ export const useUiStore = create<UiStore>((set) => ({
   viewMode: "grid",
   weekStartsOnSunday: false,
   gridZoom: 1,
+  defaultGridZoom: 1,
+  gridZoomInitialized: false,
   isCreateProjectOpen: false,
   isShareOpen: false,
   setSelectedSchedule: (id) => set({ selectedScheduleId: id }),
@@ -34,6 +40,13 @@ export const useUiStore = create<UiStore>((set) => ({
   setViewMode: (mode) => set({ viewMode: mode }),
   setWeekStartsOnSunday: (sundayFirst) => set({ weekStartsOnSunday: sundayFirst }),
   setGridZoom: (zoom) => set({ gridZoom: clampZoom(zoom) }),
+  initializeGridZoom: (isMobile) =>
+    set((state) => {
+      if (state.gridZoomInitialized) return state;
+      const defaultGridZoom = isMobile ? 0.75 : 1;
+      return { gridZoom: defaultGridZoom, defaultGridZoom, gridZoomInitialized: true };
+    }),
+  resetGridZoom: () => set((state) => ({ gridZoom: state.defaultGridZoom })),
   setCreateProjectOpen: (open) => set({ isCreateProjectOpen: open }),
   setShareOpen: (open) => set({ isShareOpen: open })
 }));

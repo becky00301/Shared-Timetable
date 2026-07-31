@@ -23,7 +23,7 @@ export function LocaleToggle({
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full border border-border bg-surface p-0.5 text-xs",
+        "inline-flex shrink-0 items-center rounded-full border border-border bg-surface p-0.5 text-xs",
         className
       )}
       role="group"
@@ -36,7 +36,7 @@ export function LocaleToggle({
           onClick={() => setLocale(option.value)}
           aria-pressed={locale === option.value}
           className={cn(
-            "rounded-full px-2.5 py-1 font-medium transition-colors",
+            "whitespace-nowrap rounded-full px-2.5 py-1 font-medium transition-colors",
             locale === option.value
               ? "bg-primary text-white"
               : invert

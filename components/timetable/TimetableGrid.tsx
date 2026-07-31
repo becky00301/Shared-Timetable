@@ -47,6 +47,7 @@ export function TimetableGrid({
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const activeMode = useUiStore((state) => state.activeMode);
   const gridZoom = useUiStore((state) => state.gridZoom);
+  const initializeGridZoom = useUiStore((state) => state.initializeGridZoom);
   const t = useT();
   const [draft, setDraft] = useState<{
     dayId: string;
@@ -62,6 +63,10 @@ export function TimetableGrid({
   const [viewportWidth, setViewportWidth] = useState(0);
   const [timedViewportHeight, setTimedViewportHeight] = useState(0);
   const allDayItems = schedules.filter((item) => item.all_day);
+
+  useEffect(() => {
+    initializeGridZoom(window.matchMedia("(max-width: 639px)").matches);
+  }, [initializeGridZoom]);
 
   // Zooming out past the point where a whole day fits would leave the grid
   // stranded above empty space, so the rows never shrink below one screenful —

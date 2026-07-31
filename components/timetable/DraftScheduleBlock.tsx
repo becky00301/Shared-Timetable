@@ -56,7 +56,7 @@ export function DraftScheduleBlock({
           }}
           onBlur={finish}
           placeholder={t("grid.draftPlaceholder")}
-          className="w-full bg-transparent text-sm font-semibold text-white placeholder:text-white/60 focus:outline-none"
+          className="w-full bg-transparent text-base font-semibold text-white placeholder:text-white/60 focus:outline-none sm:text-sm"
         />
       ) : (
         <p className="text-sm font-semibold text-white/90">{t("grid.newSchedule")}</p>

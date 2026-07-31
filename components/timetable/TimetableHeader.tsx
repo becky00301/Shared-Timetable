@@ -24,6 +24,7 @@ export function TimetableHeader({
   const setWeekStartsOnSunday = useUiStore((state) => state.setWeekStartsOnSunday);
   const gridZoom = useUiStore((state) => state.gridZoom);
   const setGridZoom = useUiStore((state) => state.setGridZoom);
+  const resetGridZoom = useUiStore((state) => state.resetGridZoom);
   const isGuest = useProjectStore((state) => state.isGuest);
   const t = useT();
 
@@ -88,7 +89,7 @@ export function TimetableHeader({
             {/* Tabular figures stop the row shifting as the percentage changes. */}
             <button
               type="button"
-              onClick={() => setGridZoom(1)}
+              onClick={resetGridZoom}
               aria-label={t("grid.zoomReset")}
               title={t("grid.zoomReset")}
               className="min-w-11 rounded-md px-1 py-1 text-xs tabular-nums text-muted transition hover:bg-black/6 hover:text-foreground"
