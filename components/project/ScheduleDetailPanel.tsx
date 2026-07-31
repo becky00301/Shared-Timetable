@@ -256,31 +256,35 @@ export function ScheduleDetailPanel({
           <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
             <label className="flex min-w-0 flex-col gap-1.5 text-muted">
               {t("detail.start")}
-              <Input
-                type="time"
-                className="max-w-full [inline-size:100%] [min-inline-size:0]"
-                step={300}
-                value={startTime}
-                disabled={!canEdit}
-                onChange={(event) => {
-                  setStartTime(event.target.value);
-                  saveTimes(event.target.value, endTime);
-                }}
-              />
+              <div className="w-full min-w-0 overflow-hidden rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                <Input
+                  type="time"
+                  className="max-w-full rounded-none border-0 bg-transparent focus:border-transparent focus:ring-0 [inline-size:100%] [min-inline-size:0]"
+                  step={300}
+                  value={startTime}
+                  disabled={!canEdit}
+                  onChange={(event) => {
+                    setStartTime(event.target.value);
+                    saveTimes(event.target.value, endTime);
+                  }}
+                />
+              </div>
             </label>
             <label className="flex min-w-0 flex-col gap-1.5 text-muted">
               {t("detail.end")}
-              <Input
-                type="time"
-                className="max-w-full [inline-size:100%] [min-inline-size:0]"
-                step={300}
-                value={endTime}
-                disabled={!canEdit}
-                onChange={(event) => {
-                  setEndTime(event.target.value);
-                  saveTimes(startTime, event.target.value);
-                }}
-              />
+              <div className="w-full min-w-0 overflow-hidden rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                <Input
+                  type="time"
+                  className="max-w-full rounded-none border-0 bg-transparent focus:border-transparent focus:ring-0 [inline-size:100%] [min-inline-size:0]"
+                  step={300}
+                  value={endTime}
+                  disabled={!canEdit}
+                  onChange={(event) => {
+                    setEndTime(event.target.value);
+                    saveTimes(startTime, event.target.value);
+                  }}
+                />
+              </div>
             </label>
           </div>
         )}
