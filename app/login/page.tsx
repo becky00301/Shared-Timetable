@@ -167,6 +167,19 @@ function LoginForm() {
           </Button>
         </form>
 
+        {/* Only offered when signing in — during sign-up there is no password
+            to recover yet. */}
+        {mode === "signin" ? (
+          <p className="mt-3 text-center">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted transition hover:text-foreground"
+            >
+              {t("auth.forgot.link")}
+            </Link>
+          </p>
+        ) : null}
+
         <p className="mt-4 text-center text-sm text-muted">
           {mode === "signin" ? t("auth.toSignup") : t("auth.toSignin")}
           <button

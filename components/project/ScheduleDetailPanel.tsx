@@ -176,7 +176,7 @@ export function ScheduleDetailPanel({
   return (
     <aside
       ref={popoverRef}
-      className="fixed z-50 max-h-[78vh] w-[min(340px,calc(100vw-24px))] overflow-auto rounded-xl border border-border bg-surface p-4 shadow-xl"
+      className="fixed z-50 max-h-[78vh] w-[min(340px,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-surface p-4 shadow-xl"
       style={{
         top: popoverPos?.top ?? 0,
         left: popoverPos?.left ?? 0,
@@ -253,34 +253,34 @@ export function ScheduleDetailPanel({
             </select>
           </label>
         ) : (
-        <div className="grid min-w-0 grid-cols-2 gap-3">
-          <label className="flex min-w-0 flex-col gap-1.5 text-muted">
-            {t("detail.start")}
-            <Input
-              type="time"
-              step={300}
-              value={startTime}
-              disabled={!canEdit}
-              onChange={(event) => {
-                setStartTime(event.target.value);
-                saveTimes(event.target.value, endTime);
-              }}
-            />
-          </label>
-          <label className="flex min-w-0 flex-col gap-1.5 text-muted">
-            {t("detail.end")}
-            <Input
-              type="time"
-              step={300}
-              value={endTime}
-              disabled={!canEdit}
-              onChange={(event) => {
-                setEndTime(event.target.value);
-                saveTimes(startTime, event.target.value);
-              }}
-            />
-          </label>
-        </div>
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+              {t("detail.start")}
+              <Input
+                type="time"
+                step={300}
+                value={startTime}
+                disabled={!canEdit}
+                onChange={(event) => {
+                  setStartTime(event.target.value);
+                  saveTimes(event.target.value, endTime);
+                }}
+              />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+              {t("detail.end")}
+              <Input
+                type="time"
+                step={300}
+                value={endTime}
+                disabled={!canEdit}
+                onChange={(event) => {
+                  setEndTime(event.target.value);
+                  saveTimes(startTime, event.target.value);
+                }}
+              />
+            </label>
+          </div>
         )}
 
         <label className="flex min-w-0 flex-col gap-1.5 text-muted">

@@ -9,6 +9,8 @@ import type { ScheduleItem } from "@/types/schedule";
 
 const LANE_HEIGHT = 26;
 const BAND_PADDING = 8;
+const TOUCH_LONG_PRESS_MS = 450;
+const TOUCH_MOVE_TOLERANCE = 10;
 
 type Placed = { item: ScheduleItem; start: number; end: number; lane: number };
 
@@ -94,21 +96,58 @@ export function AllDayBand({
     if (!canEdit || event.button !== 0 || draft) return;
     if (event.target !== event.currentTarget) return;
     const anchor = columnAt(event.clientX);
-    setDraft({ start: anchor, end: anchor, naming: false });
+    const requiresLongPress = event.pointerType === "touch";
+    const origin = { x: event.clientX, y: event.clientY };
+    let activated = !requiresLongPress;
+    let longPressTimer: number | null = null;
+
+    function beginDraft() {
+      setDraft({ start: anchor, end: anchor, naming: false });
+    }
+
+    function cleanup() {
+      if (longPressTimer !== null) window.clearTimeout(longPressTimer);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+    }
 
     const onMove = (moveEvent: PointerEvent) => {
+      if (!activated) {
+        const moved = Math.hypot(moveEvent.clientX - origin.x, moveEvent.clientY - origin.y);
+        if (moved > TOUCH_MOVE_TOLERANCE) cleanup();
+        return;
+      }
+
+      moveEvent.preventDefault();
       const current = columnAt(moveEvent.clientX);
       setDraft((prev) =>
         prev ? { ...prev, start: Math.min(anchor, current), end: Math.max(anchor, current) } : prev
       );
     };
     const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
+      const shouldOpenNaming = activated;
+      cleanup();
+      if (shouldOpenNaming) setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
     };
+    const onCancel = () => {
+      const shouldDiscardDraft = activated;
+      cleanup();
+      if (shouldDiscardDraft) setDraft(null);
+    };
+
+    if (requiresLongPress) {
+      longPressTimer = window.setTimeout(() => {
+        activated = true;
+        beginDraft();
+      }, TOUCH_LONG_PRESS_MS);
+    } else {
+      beginDraft();
+    }
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
   }
 
   function commitDraft() {
@@ -129,6 +168,14 @@ export function AllDayBand({
         ref={areaRef}
         className={cn("absolute inset-0", canEdit && !draft && "cursor-cell")}
         onPointerDown={startDrag}
+        onContextMenu={(event) => {
+          if (
+            event.target === event.currentTarget &&
+            window.matchMedia("(pointer: coarse)").matches
+          ) {
+            event.preventDefault();
+          }
+        }}
       >
         {placed.map((span) => (
           <AllDayBar

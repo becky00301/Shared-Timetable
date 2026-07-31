@@ -25,6 +25,9 @@ import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay, ProjectMember } from "@/types/project";
 
+const TOUCH_LONG_PRESS_MS = 450;
+const TOUCH_MOVE_TOLERANCE = 10;
+
 export function TimetableGrid({
   projectId,
   days,
@@ -181,9 +184,31 @@ export function TimetableGrid({
       return;
     }
 
-    dragRef.current = { dayId, start: anchor, end: anchor + MIN_DURATION_MINUTES };
-    setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + MIN_DURATION_MINUTES, naming: false });
+    const requiresLongPress = event.pointerType === "touch";
+    const origin = { x: event.clientX, y: event.clientY };
+    let activated = !requiresLongPress;
+    let longPressTimer: number | null = null;
+
+    function beginDraft() {
+      dragRef.current = { dayId, start: anchor, end: anchor + MIN_DURATION_MINUTES };
+      setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + MIN_DURATION_MINUTES, naming: false });
+    }
+
+    function cleanup() {
+      if (longPressTimer !== null) window.clearTimeout(longPressTimer);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+    }
+
     const onMove = (moveEvent: PointerEvent) => {
+      if (!activated) {
+        const moved = Math.hypot(moveEvent.clientX - origin.x, moveEvent.clientY - origin.y);
+        if (moved > TOUCH_MOVE_TOLERANCE) cleanup();
+        return;
+      }
+
+      moveEvent.preventDefault();
       const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top, hourHeight));
       const start = Math.min(anchor, current);
       const end = Math.min(DAY_END_MINUTES, Math.max(anchor + MIN_DURATION_MINUTES, current));
@@ -194,15 +219,32 @@ export function TimetableGrid({
       setDraft((prev) => (prev ? { ...prev, startMinutes: start, endMinutes: end } : prev));
     };
     const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      const shouldOpenNaming = activated;
+      cleanup();
       // Keep the draft local and open the name input; nothing is saved until a
       // name is entered.
-      setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
+      if (shouldOpenNaming) setDraft((prev) => (prev ? { ...prev, naming: true } : prev));
       dragRef.current = null;
     };
+    const onCancel = () => {
+      const shouldDiscardDraft = activated;
+      cleanup();
+      if (shouldDiscardDraft) setDraft(null);
+      dragRef.current = null;
+    };
+
+    if (requiresLongPress) {
+      longPressTimer = window.setTimeout(() => {
+        activated = true;
+        beginDraft();
+      }, TOUCH_LONG_PRESS_MS);
+    } else {
+      beginDraft();
+    }
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
   }
 
   function createAllDay(startDayId: string, endDayId: string, title: string) {

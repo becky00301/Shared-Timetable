@@ -111,6 +111,14 @@ export function DateColumn({
         // --hour-h drives the background guide lines in globals.css.
         style={{ height: hourHeight * 24, "--hour-h": `${hourHeight}px` } as React.CSSProperties}
         onPointerDown={(event) => onPointerStart(day.id, event)}
+        onContextMenu={(event) => {
+          if (
+            event.target === event.currentTarget &&
+            window.matchMedia("(pointer: coarse)").matches
+          ) {
+            event.preventDefault();
+          }
+        }}
       >
         <AvailabilityHeatmap
           active={activeMode === "availability"}

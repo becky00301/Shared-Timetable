@@ -22,13 +22,25 @@ const SECTIONS_KO: Section[] = [
   {
     title: "3. 보유 및 이용 기간",
     body: [
-      "회원 탈퇴 또는 이용자의 삭제 요청 시 해당 정보를 지체 없이 파기합니다.",
-      "시간표를 삭제하면 그에 속한 날짜·일정·메모도 함께 삭제됩니다.",
-      "관계 법령에 따라 별도 보관이 필요한 경우 해당 기간 동안 보관합니다."
+      "계정 정보(이메일·이름·프로필 이미지): 회원 탈퇴 시까지 보유하며, 탈퇴 즉시 파기합니다.",
+      "시간표 정보(시간표 이름·설명, 날짜, 일정, 메모): 해당 시간표를 삭제할 때까지 보유합니다. 시간표를 삭제하면 그에 속한 날짜·일정·메모도 함께 삭제됩니다.",
+      "구글 캘린더 접근 토큰: 연동을 해제하거나 탈퇴할 때까지 보유하며, 해제 즉시 파기합니다.",
+      "접속 로그·쿠키 등 자동 생성 정보: 서비스 운영 및 장애 대응에 필요한 기간 동안 보유합니다.",
+      "관계 법령에서 별도의 보관 기간을 정한 경우에는 해당 기간 동안 보관한 뒤 파기합니다."
     ]
   },
   {
-    title: "4. 개인정보 처리 위탁",
+    title: "4. 파기 절차 및 방법",
+    body: [
+      "파기 절차: 회원 탈퇴, 시간표 삭제, 연동 해제 등 보유 목적이 달성되면 별도의 승인 절차 없이 즉시 삭제됩니다. 서비스 내 '회원 탈퇴' 기능으로 직접 처리할 수 있습니다.",
+      "파기 방법: 데이터베이스에 저장된 전자적 파일은 복구할 수 없는 방법으로 삭제합니다. 종이 문서 형태로 보관하는 개인정보는 없습니다.",
+      "탈퇴 시 계정 정보와 구글 연동 토큰, 본인만 참여 중이던 시간표는 함께 삭제됩니다.",
+      "다른 참여자가 있는 시간표는 남은 참여자에게 소유권이 이전되어 유지되며, 이 경우 탈퇴한 이용자의 계정 정보는 해당 시간표에서 제거됩니다.",
+      "백업 데이터에 남은 사본은 백업 보관 주기가 지나면 순차적으로 소멸됩니다."
+    ]
+  },
+  {
+    title: "5. 개인정보 처리 위탁",
     body: [
       "Supabase — 데이터베이스 및 인증 관리",
       "Vercel — 서비스 호스팅 및 배포",
@@ -37,7 +49,7 @@ const SECTIONS_KO: Section[] = [
     ]
   },
   {
-    title: "5. 제3자 제공",
+    title: "6. 제3자 제공",
     body: [
       "회사는 이용자의 개인정보를 제3자에게 판매하거나 제공하지 않습니다.",
       "다만 이용자가 시간표를 공유하거나 초대 링크로 다른 이용자를 초대한 경우, 해당 시간표의 내용과 참여자 이메일은 그 시간표 참여자에게 공개됩니다.",
@@ -45,17 +57,19 @@ const SECTIONS_KO: Section[] = [
     ]
   },
   {
-    title: "6. 쿠키 및 분석 도구",
+    title: "7. 쿠키 및 분석 도구",
     body: [
       "로그인 상태 유지를 위해 필수 쿠키를 사용합니다.",
       "서비스 이용 현황 분석을 위해 Google Tag Manager 기반의 분석 도구가 사용될 수 있으며, 브라우저 설정에서 쿠키 저장을 거부할 수 있습니다."
     ]
   },
   {
-    title: "7. 이용자의 권리",
+    title: "8. 이용자의 권리",
     body: [
       "이용자는 언제든지 자신의 개인정보를 조회·수정·삭제하거나 처리 정지를 요청할 수 있습니다.",
-      "계정 삭제 또는 문의는 아래 연락처로 요청해 주세요."
+      "회원 탈퇴는 로그인 후 마이페이지의 '회원 탈퇴' 메뉴에서 직접 처리할 수 있습니다.",
+      "비밀번호를 잊은 경우 로그인 화면의 '비밀번호를 잊으셨나요?'에서 재설정 링크를 받을 수 있습니다.",
+      "그 밖의 열람·정정·처리 정지 요청은 아래 보호책임자 연락처로 문의해 주세요."
     ]
   }
 ];
@@ -81,13 +95,25 @@ const SECTIONS_EN: Section[] = [
   {
     title: "3. Retention period",
     body: [
-      "When you delete your account or request deletion, the data is destroyed without delay.",
-      "Deleting a timetable also deletes its dates, schedules, and notes.",
-      "Where a law requires separate retention, the data is kept for that period."
+      "Account data (email, name, profile image): kept until you close your account, then destroyed immediately.",
+      "Timetable data (name and description, dates, schedules, notes): kept until you delete that timetable. Deleting a timetable also deletes its dates, schedules, and notes.",
+      "Google Calendar access token: kept until you disconnect or close your account, then destroyed immediately.",
+      "Automatically generated data such as access logs and cookies: kept for as long as needed to operate the service and respond to faults.",
+      "Where a law sets its own retention period, the data is kept for that period and then destroyed."
     ]
   },
   {
-    title: "4. Processing entrusted to others",
+    title: "4. How data is destroyed",
+    body: [
+      "Procedure: once the purpose is met — you close your account, delete a timetable, or disconnect an integration — the data is deleted immediately, with no separate approval step. You can do this yourself with the 'Close account' control in the app.",
+      "Method: electronic records in the database are deleted irrecoverably. No personal data is held on paper.",
+      "Closing your account also deletes your account data, your Google token, and any timetable you were the only member of.",
+      "Timetables with other members are handed over to a remaining member and kept; your account data is removed from them.",
+      "Copies left in backups age out as the backup retention cycle passes."
+    ]
+  },
+  {
+    title: "5. Processing entrusted to others",
     body: [
       "Supabase — database and authentication",
       "Vercel — hosting and deployment",
@@ -96,7 +122,7 @@ const SECTIONS_EN: Section[] = [
     ]
   },
   {
-    title: "5. Sharing with third parties",
+    title: "6. Sharing with third parties",
     body: [
       "We do not sell or provide your personal data to third parties.",
       "However, if you share a timetable or invite others with an invite link, that timetable's contents and members' emails are visible to its participants.",
@@ -104,17 +130,19 @@ const SECTIONS_EN: Section[] = [
     ]
   },
   {
-    title: "6. Cookies and analytics",
+    title: "7. Cookies and analytics",
     body: [
       "We use essential cookies to keep you logged in.",
       "Analytics based on Google Tag Manager may be used to understand usage; you can refuse cookie storage in your browser settings."
     ]
   },
   {
-    title: "7. Your rights",
+    title: "8. Your rights",
     body: [
       "You can view, correct, delete, or request a halt to the processing of your personal data at any time.",
-      "For account deletion or questions, contact us at the address below."
+      "You can close your account yourself from the 'Close account' menu in My account once signed in.",
+      "If you've forgotten your password, use 'Forgot your password?' on the log-in screen to get a reset link.",
+      "For any other access, correction, or suspension request, contact the privacy officer below."
     ]
   }
 ];
@@ -125,8 +153,12 @@ const COPY = {
     title: "개인정보처리방침",
     intro:
       "플래너 투게더(이하 “서비스”)는 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수합니다.",
-    contactTitle: "8. 문의처",
-    contact: "개인정보 관련 문의: becky00301@gmail.com",
+    contactTitle: "9. 개인정보 보호책임자",
+    contactLines: [
+      "책임자: Planner Together 운영자",
+      "연락처: becky00301@gmail.com",
+      "개인정보 처리에 관한 문의, 열람·정정·삭제 요청은 위 연락처로 접수하며, 지체 없이 답변드립니다."
+    ],
     footer: "본 방침은 서비스 운영 상황에 따라 변경될 수 있으며, 변경 시 이 페이지를 통해 공지합니다.",
     sections: SECTIONS_KO
   },
@@ -135,8 +167,12 @@ const COPY = {
     title: "Privacy Policy",
     intro:
       "Planner Together (the “Service”) treats your personal data with care and complies with applicable law.",
-    contactTitle: "8. Contact",
-    contact: "Privacy inquiries: becky00301@gmail.com",
+    contactTitle: "9. Privacy officer",
+    contactLines: [
+      "Officer: Planner Together operator",
+      "Contact: becky00301@gmail.com",
+      "Questions about how your data is handled, and requests to access, correct, or delete it, go to the address above and are answered without delay."
+    ],
     footer:
       "This policy may change as the service evolves; any changes will be announced on this page.",
     sections: SECTIONS_EN
@@ -170,7 +206,11 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-lg font-semibold">{copy.contactTitle}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">{copy.contact}</p>
+            <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-sm leading-7 text-muted">
+              {copy.contactLines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
           </section>
         </div>
 
