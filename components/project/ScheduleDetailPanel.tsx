@@ -5,7 +5,6 @@ import { X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
-import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { timeToMinutes } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
@@ -14,23 +13,8 @@ import type { ProjectDay } from "@/types/project";
 
 const COLORS = ["#1972F7", "#8B5CF6", "#F59E0B", "#22C55E", "#EF4444"];
 
-// Below this the sidebar has no room, so the panel becomes a popover pinned to
-// the schedule block instead — same breakpoint as the `xl:` classes below.
-const SIDEBAR_QUERY = "(min-width: 1280px)";
 const POPOVER_GAP = 8;
 const VIEWPORT_MARGIN = 12;
-
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(false);
-  useEffect(() => {
-    const list = window.matchMedia(query);
-    const update = () => setMatches(list.matches);
-    update();
-    list.addEventListener("change", update);
-    return () => list.removeEventListener("change", update);
-  }, [query]);
-  return matches;
-}
 
 export function ScheduleDetailPanel({
   days,
@@ -67,14 +51,13 @@ export function ScheduleDetailPanel({
   }, [item]);
 
   const selectedId = item?.id;
-  const asSidebar = useMediaQuery(SIDEBAR_QUERY);
   const popoverRef = useRef<HTMLElement>(null);
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
   // Pin the popover beside the block it belongs to, flipping and clamping so it
   // always lands fully on screen.
   useLayoutEffect(() => {
-    if (asSidebar || !selectedId) {
+    if (!selectedId) {
       setPopoverPos(null);
       return;
     }
@@ -116,12 +99,12 @@ export function ScheduleDetailPanel({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [asSidebar, selectedId, item?.day_id, item?.start_time, item?.all_day]);
+  }, [selectedId, item?.day_id, item?.start_time, item?.all_day]);
 
   // Clicking away closes the popover, the way Google Calendar's does. Clicks on
   // another schedule are left alone so they can just switch the selection.
   useEffect(() => {
-    if (asSidebar || !selectedId) return;
+    if (!selectedId) return;
 
     function onPointerDown(event: PointerEvent) {
       const target = event.target as HTMLElement | null;
@@ -133,7 +116,7 @@ export function ScheduleDetailPanel({
 
     window.addEventListener("pointerdown", onPointerDown);
     return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, [asSidebar, selectedId, setSelectedSchedule]);
+  }, [selectedId, setSelectedSchedule]);
 
   // Delete/Backspace removes the selected schedule, unless the user is typing.
   useEffect(() => {
@@ -167,16 +150,7 @@ export function ScheduleDetailPanel({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedId, canEdit, deleteSchedule, setSelectedSchedule, t]);
 
-  if (!item) {
-    return (
-      <aside className="hidden w-80 shrink-0 border-l border-border bg-surface p-5 xl:block">
-        <h2 className="text-sm font-semibold text-foreground">{t("detail.title")}</h2>
-        <div className="mt-6 rounded-xl border border-dashed border-border bg-black/[0.02] p-5 text-sm leading-6 text-muted">
-          {t("detail.empty")}
-        </div>
-      </aside>
-    );
-  }
+  if (!item) return null;
 
   function save(patch: Partial<typeof item> & Record<string, unknown>) {
     if (!item || !canEdit) return;
@@ -202,22 +176,13 @@ export function ScheduleDetailPanel({
   return (
     <aside
       ref={popoverRef}
-      className={cn(
-        "overflow-auto border-border bg-surface",
-        asSidebar
-          ? "w-80 shrink-0 border-l p-5"
-          : "fixed z-50 max-h-[78vh] w-[min(340px,calc(100vw-24px))] rounded-xl border p-4 shadow-xl"
-      )}
-      style={
-        asSidebar
-          ? undefined
-          : {
-              top: popoverPos?.top ?? 0,
-              left: popoverPos?.left ?? 0,
-              // Hidden for the one frame before it has been measured and placed.
-              visibility: popoverPos ? "visible" : "hidden"
-            }
-      }
+      className="fixed z-50 max-h-[78vh] w-[min(340px,calc(100vw-24px))] overflow-auto rounded-xl border border-border bg-surface p-4 shadow-xl"
+      style={{
+        top: popoverPos?.top ?? 0,
+        left: popoverPos?.left ?? 0,
+        // Hidden for the one frame before it has been measured and placed.
+        visibility: popoverPos ? "visible" : "hidden"
+      }}
     >
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">{t("detail.title")}</h2>
