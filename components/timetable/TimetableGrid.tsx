@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
+} from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
 import { AllDayBand } from "@/components/timetable/AllDayBand";
@@ -90,9 +97,17 @@ export function TimetableGrid({
       ? { dayId: draft.dayId, startMinutes: draft.startMinutes, endMinutes: draft.endMinutes }
       : null
   });
-  // A small activation distance keeps clicks from registering as drags, so a
-  // real drag starts crisply instead of being swallowed by the click handler.
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  // Mouse dragging stays immediate. Touch waits long enough to distinguish an
+  // intentional move from tapping an item for details or scrolling the grid.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: TOUCH_LONG_PRESS_MS,
+        tolerance: TOUCH_MOVE_TOLERANCE
+      }
+    })
+  );
 
   // Show up to 7 columns at a time; extra days scroll horizontally. The timed
   // area's own height is measured too, since that's what the rows have to fill.
