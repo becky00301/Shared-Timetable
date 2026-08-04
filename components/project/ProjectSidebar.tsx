@@ -76,6 +76,7 @@ export function ProjectSidebar({
               onChange={(event) => setTitleDraft(event.target.value)}
               onBlur={saveTitle}
               onKeyDown={(event) => {
+                if (event.nativeEvent.isComposing || event.keyCode === 229) return;
                 if (event.key === "Enter") event.currentTarget.blur();
                 if (event.key === "Escape") {
                   setTitleDraft(project.title);

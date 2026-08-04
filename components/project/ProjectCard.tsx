@@ -90,6 +90,7 @@ export function ProjectCard({
             onChange={(event) => setDraft(event.target.value)}
             onBlur={saveTitle}
             onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
               if (event.key === "Enter") event.currentTarget.blur();
               if (event.key === "Escape") {
                 setDraft(project.title);

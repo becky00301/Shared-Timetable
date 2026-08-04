@@ -46,9 +46,11 @@ export function DraftScheduleBlock({
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+
             if (event.key === "Enter") {
               event.preventDefault();
-              finish();
+              event.currentTarget.blur();
             } else if (event.key === "Escape") {
               event.preventDefault();
               onCancel();

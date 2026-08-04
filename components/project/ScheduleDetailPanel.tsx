@@ -205,6 +205,7 @@ export function ScheduleDetailPanel({
             onChange={(event) => setTitle(event.target.value)}
             onBlur={saveTitle}
             onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
               if (event.key === "Enter") event.currentTarget.blur();
             }}
           />
