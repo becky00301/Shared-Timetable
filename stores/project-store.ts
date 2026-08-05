@@ -70,6 +70,11 @@ function requireClient() {
   return supabase;
 }
 
+// Realtime refetches can land while a local update is still in flight. Keep
+// the local version layered over fetched rows so a moved or resized block does
+// not disappear and then reappear at the server-confirmed position.
+const pendingScheduleUpdates = new Map<string, ScheduleItem>();
+
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   currentUserId: null,
   isGuest: false,
@@ -175,6 +180,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (attachmentsRes.error) throw attachmentsRes.error;
       if (notesRes.error) throw notesRes.error;
 
+      const loadedSchedules = ((schedulesRes.data ?? []) as ScheduleItem[]).map(
+        (schedule) => pendingScheduleUpdates.get(schedule.id) ?? schedule
+      );
+
       set((state) => ({
         // Refresh in place. Hoisting the visited project to the front would
         // silently reshuffle the dashboard every time you opened a timetable.
@@ -188,7 +197,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         ],
         schedules: [
           ...state.schedules.filter((s) => s.project_id !== project.id),
-          ...((schedulesRes.data ?? []) as ScheduleItem[])
+          ...loadedSchedules
         ],
         availability: [
           ...state.availability.filter((a) => a.project_id !== project.id),
@@ -406,17 +415,42 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     };
 
     if (item.id) {
-      const { data, error } = await supabase
-        .from("schedule_items")
-        .update(payload)
-        .eq("id", item.id)
-        .select("*")
-        .single();
-      if (error) throw error;
-      set((state) => ({
-        schedules: state.schedules.map((schedule) => (schedule.id === data.id ? (data as ScheduleItem) : schedule))
-      }));
-      return data as ScheduleItem;
+      const previous = get().schedules.find((schedule) => schedule.id === item.id);
+      const optimistic = previous ? ({ ...previous, ...payload } as ScheduleItem) : null;
+      if (optimistic) {
+        pendingScheduleUpdates.set(item.id, optimistic);
+        set((state) => ({
+          schedules: state.schedules.map((schedule) => (schedule.id === item.id ? optimistic : schedule))
+        }));
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("schedule_items")
+          .update(payload)
+          .eq("id", item.id)
+          .select("*")
+          .single();
+        if (error) throw error;
+
+        if (!optimistic || pendingScheduleUpdates.get(item.id) === optimistic) {
+          pendingScheduleUpdates.delete(item.id);
+          set((state) => ({
+            schedules: state.schedules.map((schedule) =>
+              schedule.id === data.id ? (data as ScheduleItem) : schedule
+            )
+          }));
+        }
+        return data as ScheduleItem;
+      } catch (error) {
+        if (optimistic && pendingScheduleUpdates.get(item.id) === optimistic) {
+          pendingScheduleUpdates.delete(item.id);
+          set((state) => ({
+            schedules: state.schedules.map((schedule) => (schedule.id === item.id ? previous! : schedule))
+          }));
+        }
+        throw error;
+      }
     }
 
     const userId = get().currentUserId ?? (await get().loadCurrentUser());
@@ -440,6 +474,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!data?.length) {
       throw new Error(translate("error.scheduleDeleteDenied"));
     }
+    pendingScheduleUpdates.delete(itemId);
     set((state) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),
       attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)
@@ -461,7 +496,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   // Wipe cached project data so a signed-out user never sees the previous
   // account's timetables lingering in memory.
-  reset: () =>
+  reset: () => {
+    pendingScheduleUpdates.clear();
     set({
       currentUserId: null,
       isGuest: false,
@@ -473,7 +509,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       availability: [],
       attachments: [],
       notes: []
-    }),
+    });
+  },
 
   joinByInviteToken: async (token) => {
     const supabase = requireClient();

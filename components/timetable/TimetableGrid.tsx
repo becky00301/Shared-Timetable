@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   DndContext,
-  MouseSensor,
+  PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -34,6 +34,19 @@ import type { ProjectDay, ProjectMember } from "@/types/project";
 
 const TOUCH_LONG_PRESS_MS = 450;
 const TOUCH_MOVE_TOLERANCE = 10;
+
+// Keep the original pointer-based desktop behavior while leaving touch to the
+// delayed TouchSensor below. MouseSensor uses a separate mouse event stream,
+// which made desktop dragging noticeably less direct on some browsers.
+class DesktopPointerSensor extends PointerSensor {
+  static activators = PointerSensor.activators.map((activator) => ({
+    ...activator,
+    handler: (
+      event: Parameters<typeof activator.handler>[0],
+      options: Parameters<typeof activator.handler>[1]
+    ) => event.nativeEvent.pointerType !== "touch" && activator.handler(event, options)
+  }));
+}
 
 export function TimetableGrid({
   projectId,
@@ -100,7 +113,7 @@ export function TimetableGrid({
   // Mouse dragging stays immediate. Touch waits long enough to distinguish an
   // intentional move from tapping an item for details or scrolling the grid.
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(DesktopPointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: TOUCH_LONG_PRESS_MS,
@@ -336,18 +349,13 @@ export function TimetableGrid({
     });
   }
 
-  function resizeItem(itemId: string, edge: "top" | "bottom", deltaY: number) {
+  function resizeItem(itemId: string, startTime: string, endTime: string) {
     const item = schedules.find((candidate) => candidate.id === itemId);
     if (!item) return;
-    const deltaMinutes = snapMinutes((deltaY / hourHeight) * 60);
-    const start = timeToMinutes(item.start_time);
-    const end = timeToMinutes(item.end_time);
-    const nextStart = edge === "top" ? Math.min(end - MIN_DURATION_MINUTES, Math.max(0, start + deltaMinutes)) : start;
-    const nextEnd = edge === "bottom" ? Math.max(start + MIN_DURATION_MINUTES, Math.min(DAY_END_MINUTES, end + deltaMinutes)) : end;
     upsertSchedule({
       ...item,
-      start_time: minutesToTime(nextStart),
-      end_time: minutesToTime(nextEnd)
+      start_time: startTime,
+      end_time: endTime
     }).catch((error) => {
       console.error(error);
       toast.error(`${t("grid.resizeFailed")}: ${error instanceof Error ? error.message : ""}`);
@@ -446,7 +454,7 @@ export function TimetableGrid({
                   onDraftCommit={commitDraft}
                   onDraftCancel={() => setDraft(null)}
                   onSelectSchedule={setSelectedSchedule}
-                  onResize={(item, edge, deltaY) => resizeItem(item.id, edge, deltaY)}
+                  onResize={(item, startTime, endTime) => resizeItem(item.id, startTime, endTime)}
                   onDeleteSchedule={removeSchedule}
                   onPointerStart={onPointerStart}
                 />

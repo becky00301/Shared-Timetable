@@ -95,7 +95,7 @@ export function DateColumn({
   onDraftCommit: (title: string) => void;
   onDraftCancel: () => void;
   onSelectSchedule: (id: string) => void;
-  onResize: (item: ScheduleItem, edge: "top" | "bottom", deltaY: number) => void;
+  onResize: (item: ScheduleItem, startTime: string, endTime: string) => void;
   onDeleteSchedule: (id: string) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
 }) {
@@ -136,7 +136,7 @@ export function DateColumn({
             isSelected={selectedScheduleId === item.id}
             hourHeight={hourHeight}
             onSelect={() => onSelectSchedule(item.id)}
-            onResize={(edge, deltaY) => onResize(item, edge, deltaY)}
+            onResize={(startTime, endTime) => onResize(item, startTime, endTime)}
             onDelete={() => onDeleteSchedule(item.id)}
           />
         ))}

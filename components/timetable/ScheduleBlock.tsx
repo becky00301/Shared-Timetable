@@ -8,18 +8,16 @@ import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
 import {
+  DAY_END_MINUTES,
+  MIN_DURATION_MINUTES,
   durationToHeight,
   formatTimeRange,
+  minutesToTime,
   minutesToTop,
   snapMinutes,
   timeToMinutes
 } from "@/lib/utils/time";
 import type { ScheduleItem } from "@/types/schedule";
-
-/** Pixel delta snapped to the same 5-minute grid the commit will land on. */
-function snapPx(deltaY: number, hourHeight: number) {
-  return (snapMinutes((deltaY / hourHeight) * 60) / 60) * hourHeight;
-}
 
 export function ScheduleBlock({
   item,
@@ -40,14 +38,14 @@ export function ScheduleBlock({
   hourHeight: number;
   onSelect: () => void;
   /** Called once, on release — not on every pointer move. */
-  onResize: (edge: "top" | "bottom", deltaY: number) => void;
+  onResize: (startTime: string, endTime: string) => void;
   onDelete: () => void;
 }) {
   const t = useT();
   // Resizing previews locally and writes once when the pointer is released.
   // Saving on every move meant a two-second drag fired ~120 identical updates,
   // and each one made every other client refetch the whole project.
-  const [resize, setResize] = useState<{ edge: "top" | "bottom"; deltaY: number } | null>(null);
+  const [resize, setResize] = useState<{ startMinutes: number; endMinutes: number } | null>(null);
   const { onContextMenu, menu } = useContextMenu(
     canEdit ? [{ label: t("common.delete"), onSelect: onDelete, danger: true }] : []
   );
@@ -56,14 +54,14 @@ export function ScheduleBlock({
     disabled: !canEdit,
     data: { dayId: item.day_id, item }
   });
-  const baseTop = minutesToTop(timeToMinutes(item.start_time), hourHeight);
+  const baseStart = timeToMinutes(item.start_time);
+  const baseEnd = timeToMinutes(item.end_time);
+  const baseTop = minutesToTop(baseStart, hourHeight);
   const baseHeight = Math.max(34, durationToHeight(item.start_time, item.end_time, hourHeight));
-  const preview = resize ? snapPx(resize.deltaY, hourHeight) : 0;
-  const top = resize?.edge === "top" ? baseTop + preview : baseTop;
-  const height = Math.max(
-    34,
-    resize?.edge === "top" ? baseHeight - preview : resize ? baseHeight + preview : baseHeight
-  );
+  const top = resize ? minutesToTop(resize.startMinutes, hourHeight) : baseTop;
+  const height = resize
+    ? Math.max(34, minutesToTop(resize.endMinutes - resize.startMinutes, hourHeight))
+    : baseHeight;
   const splitPosition =
     laneCount > 1
       ? {
@@ -75,24 +73,43 @@ export function ScheduleBlock({
 
   function startResize(edge: "top" | "bottom", event: React.PointerEvent) {
     if (!canEdit) return;
+    event.preventDefault();
     event.stopPropagation();
     const startY = event.clientY;
-    let last = 0;
-    setResize({ edge, deltaY: 0 });
+    let nextStart = baseStart;
+    let nextEnd = baseEnd;
+    setResize({ startMinutes: baseStart, endMinutes: baseEnd });
 
     const onMove = (moveEvent: PointerEvent) => {
-      last = moveEvent.clientY - startY;
-      setResize({ edge, deltaY: last });
+      moveEvent.preventDefault();
+      const deltaMinutes = snapMinutes(((moveEvent.clientY - startY) / hourHeight) * 60);
+      nextStart = edge === "top"
+        ? Math.min(baseEnd - MIN_DURATION_MINUTES, Math.max(0, baseStart + deltaMinutes))
+        : baseStart;
+      nextEnd = edge === "bottom"
+        ? Math.max(baseStart + MIN_DURATION_MINUTES, Math.min(DAY_END_MINUTES, baseEnd + deltaMinutes))
+        : baseEnd;
+      setResize({ startMinutes: nextStart, endMinutes: nextEnd });
     };
-    const onUp = () => {
+    const cleanup = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+    };
+    const onUp = () => {
+      cleanup();
+      if (nextStart !== baseStart || nextEnd !== baseEnd) {
+        onResize(minutesToTime(nextStart), minutesToTime(nextEnd));
+      }
       setResize(null);
-      // Only a real drag should write; a stray click on the handle shouldn't.
-      if (snapPx(last, hourHeight) !== 0) onResize(edge, last);
+    };
+    const onCancel = () => {
+      cleanup();
+      setResize(null);
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
   }
 
   return (
