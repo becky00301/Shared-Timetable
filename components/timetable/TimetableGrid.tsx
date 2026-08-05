@@ -35,6 +35,10 @@ import type { ProjectDay, ProjectMember } from "@/types/project";
 const TOUCH_LONG_PRESS_MS = 450;
 const TOUCH_MOVE_TOLERANCE = 10;
 
+function isResizeHandle(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest("[data-resize-handle]"));
+}
+
 // Keep the original pointer-based desktop behavior while leaving touch to the
 // delayed TouchSensor below. MouseSensor uses a separate mouse event stream,
 // which made desktop dragging noticeably less direct on some browsers.
@@ -44,7 +48,20 @@ class DesktopPointerSensor extends PointerSensor {
     handler: (
       event: Parameters<typeof activator.handler>[0],
       options: Parameters<typeof activator.handler>[1]
-    ) => event.nativeEvent.pointerType !== "touch" && activator.handler(event, options)
+    ) =>
+      event.nativeEvent.pointerType !== "touch" &&
+      !isResizeHandle(event.nativeEvent.target) &&
+      activator.handler(event, options)
+  }));
+}
+
+class ScheduleTouchSensor extends TouchSensor {
+  static activators = TouchSensor.activators.map((activator) => ({
+    ...activator,
+    handler: (
+      event: Parameters<typeof activator.handler>[0],
+      options: Parameters<typeof activator.handler>[1]
+    ) => !isResizeHandle(event.nativeEvent.target) && activator.handler(event, options)
   }));
 }
 
@@ -114,7 +131,7 @@ export function TimetableGrid({
   // intentional move from tapping an item for details or scrolling the grid.
   const sensors = useSensors(
     useSensor(DesktopPointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, {
+    useSensor(ScheduleTouchSensor, {
       activationConstraint: {
         delay: TOUCH_LONG_PRESS_MS,
         tolerance: TOUCH_MOVE_TOLERANCE

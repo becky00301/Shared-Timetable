@@ -139,6 +139,7 @@ export function ScheduleBlock({
       {menu}
       <button
         type="button"
+        data-resize-handle
         className="absolute inset-x-0 top-0 flex h-2 items-center justify-center text-white/70"
         onPointerDown={(event) => startResize("top", event)}
         aria-label="Resize schedule start"
@@ -188,6 +189,7 @@ export function ScheduleBlock({
       </div>
       <button
         type="button"
+        data-resize-handle
         className="absolute inset-x-0 bottom-0 flex h-2 items-center justify-center text-white/70"
         onPointerDown={(event) => startResize("bottom", event)}
         aria-label="Resize schedule end"
