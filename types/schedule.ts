@@ -11,7 +11,6 @@ export type ScheduleItem = {
   color: string;
   all_day?: boolean;
   end_day_id?: string | null;
-  google_event_id?: string | null;
   created_at: string;
   updated_at: string;
 };

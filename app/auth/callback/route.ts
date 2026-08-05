@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSafeNextPath } from "@/lib/utils/navigation";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = getSafeNextPath(searchParams.get("next"));
 
   const fail = (reason: string) =>
     NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(reason)}`);

@@ -9,7 +9,7 @@ The product is intentionally not a normal monthly calendar. Users create a proje
 - Landing page, login page, dashboard, project page, and invite page
 - Project creation with local MVP state
 - Selected date management
-- Google Calendar-style timetable grid from `00:00` to `23:00`
+- 24-hour timetable grid from `00:00` to `23:00`
 - Drag empty grid cells to create schedule items
 - dnd-kit schedule block movement
 - Top/bottom resize handles for duration edits
@@ -37,6 +37,7 @@ Create `.env.local` from `.env.example`:
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 NEXT_PUBLIC_GTM_ID=your-gtm-container-id
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
 
 `NEXT_PUBLIC_GTM_ID` is optional. When set, Google Tag Manager loads via `@next/third-parties`; when unset, it is skipped entirely. Configure Google Analytics 4 (or any other tag) inside the GTM container itself.
@@ -86,7 +87,6 @@ Run the SQL files in order:
 
 1. `sql/schema.sql`
 2. `sql/policies.sql`
-3. `sql/shared_timetables.sql`
 
 Sign-in uses email + password. Turn **Confirm email** off under Authentication → Sign In / Providers → Email so sign-up completes without a confirmation mail.
 
@@ -101,29 +101,11 @@ A guest gets a real `auth.users` row with `is_anonymous: true` and the `authenti
 Incremental migrations live in `sql/migrations/` and are already folded into `sql/schema.sql`; run them on an existing database:
 
 - `001_project_kind.sql` — weekly vs date-range timetables
-- `002_google_calendar.sql` — Google Calendar sync tables/columns
 - `009_anonymous_guest_name.sql` — display name for guests (they have no email)
+- `011_remove_google_and_legacy.sql` — remove retired Google sync data and legacy anonymous timetable storage
+- `012_read_only_embeds.sql` — add separate read-only embed tokens
 
-The standalone shared timetable at `/shared-timetable.html` does not require login. It stores timetable JSON through the RPC functions in `sql/shared_timetables.sql`; the random `tt` URL parameter acts as the share/edit capability token.
-
-## Google Calendar sync
-
-Each project syncs into its own Google calendar named `Planner Together · {title}`. Schedules are pushed one way (app → Google) and re-syncs update existing events rather than duplicating them.
-
-Setup:
-
-1. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Google Calendar API**.
-2. Configure the OAuth consent screen (External). While the app is in Testing, add each Google account that will connect under **Test users**.
-3. Create an **OAuth client ID** of type *Web application* with these authorized redirect URIs:
-   - `https://your-domain.example/api/google/callback`
-   - `http://localhost:3000/api/google/callback`
-4. Set the server-only environment variables (Vercel → Settings → Environment Variables, and `.env.local` for development):
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`)
-5. Run `sql/migrations/002_google_calendar.sql`.
-
-OAuth tokens are stored in `public.google_accounts`, which has RLS enabled and no policies, so only server routes using the service role can read them.
+For an existing database that previously enabled Google Calendar sync or the legacy standalone timetable, run `sql/migrations/011_remove_google_and_legacy.sql`. This permanently deletes the retired integration tokens and legacy timetable data.
 
 ## Deployment
 
@@ -138,17 +120,18 @@ The app is ready for a standard Vercel Next.js deployment.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `NEXT_PUBLIC_GTM_ID` (optional, enables Google Tag Manager)
-4. In Supabase Auth, add the deployed domain to allowed redirect URLs for OAuth and email login.
-5. Run `sql/schema.sql`, `sql/policies.sql`, and `sql/shared_timetables.sql` before connecting production data.
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-only, required for account deletion)
+4. In Supabase Auth, add the deployed domain to the allowed redirect URLs for email authentication.
+5. Run `sql/schema.sql` and `sql/policies.sql` before connecting production data.
 6. Open `/api/health` on the deployed domain and confirm it returns `status: "ok"`.
 
 ## App Routes
 
-- `/` redirects to the standalone shared timetable
-- `/shared-timetable.html` shareable timetable tool
+- `/` landing page
 - `/login` auth page
 - `/dashboard` project dashboard
 - `/plans/[slug]` selected-date timetable document
+- `/embed/[token]` login-free read-only timetable for Notion embeds
 - `/invite/[token]` invite join page
 
 ## Architecture

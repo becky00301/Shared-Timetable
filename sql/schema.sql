@@ -16,6 +16,7 @@ create table if not exists public.projects (
   slug text unique not null,
   kind text not null default 'daterange' check (kind in ('weekly', 'daterange')),
   invite_token text unique not null default encode(gen_random_bytes(16), 'hex'),
+  embed_token text unique not null default encode(gen_random_bytes(16), 'hex'),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -25,9 +26,16 @@ alter table public.projects
   add column if not exists kind text not null default 'daterange'
   check (kind in ('weekly', 'daterange'));
 
--- Google Calendar sync targets.
 alter table public.projects
-  add column if not exists google_calendar_id text;
+  add column if not exists embed_token text;
+
+update public.projects
+set embed_token = encode(gen_random_bytes(16), 'hex')
+where embed_token is null;
+
+alter table public.projects
+  alter column embed_token set default encode(gen_random_bytes(16), 'hex'),
+  alter column embed_token set not null;
 
 create table if not exists public.project_members (
   id uuid primary key default gen_random_uuid(),
@@ -79,24 +87,11 @@ create table if not exists public.schedule_items (
 );
 
 alter table public.schedule_items
-  add column if not exists google_event_id text;
-
-alter table public.schedule_items
   add column if not exists all_day boolean not null default false;
 
 -- Inclusive end day for multi-day all-day items; null means a single day.
 alter table public.schedule_items
   add column if not exists end_day_id uuid references public.project_days(id) on delete set null;
-
-create table if not exists public.google_accounts (
-  user_id uuid primary key references public.users(id) on delete cascade,
-  google_email text,
-  access_token text not null,
-  refresh_token text,
-  token_expires_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
 
 create table if not exists public.availability (
   id uuid primary key default gen_random_uuid(),
@@ -122,6 +117,7 @@ create table if not exists public.attachments (
 create index if not exists projects_owner_idx on public.projects(owner_id);
 create index if not exists projects_slug_idx on public.projects(slug);
 create index if not exists projects_invite_token_idx on public.projects(invite_token);
+create unique index if not exists projects_embed_token_idx on public.projects(embed_token);
 create index if not exists project_members_project_idx on public.project_members(project_id);
 create index if not exists project_days_project_idx on public.project_days(project_id, sort_order);
 create index if not exists schedule_items_project_day_idx on public.schedule_items(project_id, day_id);

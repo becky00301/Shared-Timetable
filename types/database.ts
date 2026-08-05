@@ -29,8 +29,8 @@ export type Database = {
           description: string | null;
           slug: string;
           kind: "weekly" | "daterange";
-          google_calendar_id: string | null;
           invite_token: string;
+          embed_token: string;
           created_at: string;
           updated_at: string;
         };
@@ -41,8 +41,8 @@ export type Database = {
           description?: string | null;
           slug: string;
           kind?: "weekly" | "daterange";
-          google_calendar_id?: string | null;
           invite_token?: string;
+          embed_token?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -129,7 +129,6 @@ export type Database = {
           color: string | null;
           all_day: boolean;
           end_day_id: string | null;
-          google_event_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -146,7 +145,6 @@ export type Database = {
           color?: string | null;
           all_day?: boolean;
           end_day_id?: string | null;
-          google_event_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -173,28 +171,6 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["availability"]["Insert"]>;
-        Relationships: [];
-      };
-      google_accounts: {
-        Row: {
-          user_id: string;
-          google_email: string | null;
-          access_token: string;
-          refresh_token: string | null;
-          token_expires_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          user_id: string;
-          google_email?: string | null;
-          access_token: string;
-          refresh_token?: string | null;
-          token_expires_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["google_accounts"]["Insert"]>;
         Relationships: [];
       };
       attachments: {
@@ -225,6 +201,10 @@ export type Database = {
       join_project_by_invite: {
         Args: { token: string };
         Returns: string;
+      };
+      get_embedded_timetable: {
+        Args: { embed_token_value: string };
+        Returns: Json;
       };
       prepare_account_deletion: {
         Args: { target_user_id: string };

@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n/locale";
 
 const FEEDBACK_FORM_URL = "https://forms.gle/hbQ1zQ4EPhiemc6h7";
@@ -9,6 +10,9 @@ const FEEDBACK_FORM_URL = "https://forms.gle/hbQ1zQ4EPhiemc6h7";
 // (z-40/50) and the mobile detail panel so it never blocks them.
 export function FeedbackButton() {
   const t = useT();
+  const pathname = usePathname();
+  if (pathname.startsWith("/embed/")) return null;
+
   return (
     <a
       href={FEEDBACK_FORM_URL}

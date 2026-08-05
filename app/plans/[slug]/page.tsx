@@ -44,6 +44,19 @@ export default function ProjectPage() {
     });
   }, [params.slug, loadProject, t]);
 
+  useEffect(() => {
+    if (!project?.embed_token) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("embed") === project.embed_token) return;
+
+    url.searchParams.set("embed", project.embed_token);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`
+    );
+  }, [project?.embed_token]);
+
   const onSync = useCallback(() => {
     loadProject(params.slug).catch((error) => console.error(error));
   }, [params.slug, loadProject]);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
+import { SITE_URL } from "@/lib/seo";
 import type { Project } from "@/types/project";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -13,8 +14,10 @@ export function ShareModal({ project }: { project: Project }) {
   const open = useUiStore((state) => state.isShareOpen);
   const setOpen = useUiStore((state) => state.setShareOpen);
   const t = useT();
-  const origin = typeof window === "undefined" ? "https://plannertogether.app" : window.location.origin;
-  const projectUrl = `${origin}/plans/${project.slug}`;
+  const origin = typeof window === "undefined" ? SITE_URL : window.location.origin;
+  const projectUrl = project.embed_token
+    ? `${origin}/plans/${project.slug}?embed=${project.embed_token}`
+    : `${origin}/plans/${project.slug}`;
   const inviteUrl = `${origin}/invite/${project.invite_token}`;
 
   async function copy(value: string) {
@@ -61,6 +64,7 @@ export function ShareModal({ project }: { project: Project }) {
               </Button>
             </div>
           </label>
+
         </div>
       </DialogContent>
     </Dialog>

@@ -444,8 +444,8 @@ export const messages = {
   },
   "share.projectLabel": { ko: "프로젝트 링크", en: "Project link" },
   "share.projectHint": {
-    ko: "이미 참여 중인 멤버만 열 수 있어요",
-    en: "only members who already joined can open this"
+    ko: "로그인 없이 읽고, 멤버는 로그인 후 편집할 수 있어요",
+    en: "opens read-only without a login; members can edit after signing in"
   },
   "share.copied": { ko: "링크를 복사했어요.", en: "Link copied." },
   "share.button": { ko: "공유", en: "Share" },
@@ -481,6 +481,11 @@ export const messages = {
     en: "This invite link is invalid or expired. Ask whoever invited you for a new one."
   },
   "invite.goDashboard": { ko: "대시보드로 이동", en: "Go to dashboard" },
+
+  // ---------------------------------------------------------------- embed
+  "embed.readOnly": { ko: "읽기 전용", en: "Read only" },
+  "embed.openProject": { ko: "프로젝트 열기", en: "Open project" },
+  "embed.empty": { ko: "아직 선택한 날짜가 없어요.", en: "No dates have been selected yet." },
 
   // ---------------------------------------------------------------- project page
   "project.notFound": { ko: "시간표를 찾을 수 없어요", en: "Timetable not found" },
@@ -549,30 +554,6 @@ export const messages = {
   "detail.endBeforeStart": {
     ko: "종료 시간은 시작 시간보다 뒤여야 해요.",
     en: "The end time has to be after the start time."
-  },
-
-  // ---------------------------------------------------------------- google
-  "google.connect": { ko: "구글 캘린더 연결", en: "Connect Google Calendar" },
-  "google.push": { ko: "구글 캘린더로 보내기", en: "Push to Google Calendar" },
-  "google.syncing": { ko: "동기화 중...", en: "Syncing…" },
-  "google.disconnect": { ko: "해제", en: "Disconnect" },
-  "google.account": { ko: "구글 계정", en: "Google account" },
-  "google.connectedTo": { ko: "{email}에 연결됨", en: "Connected to {email}" },
-  "google.connected": { ko: "구글 캘린더를 연결했어요.", en: "Google Calendar connected." },
-  "google.disconnected": {
-    ko: "구글 캘린더 연결을 해제했어요.",
-    en: "Google Calendar disconnected."
-  },
-  "google.disconnectFailed": { ko: "연결 해제에 실패했어요.", en: "Couldn't disconnect." },
-  "google.noServerConfig": {
-    ko: "서버에 구글 설정이 없어요.",
-    en: "Google isn't configured on the server."
-  },
-  "google.connectFailed": { ko: "구글 연결에 실패했어요: {reason}", en: "Google connection failed: {reason}" },
-  "google.syncFailed": { ko: "동기화에 실패했어요.", en: "Sync failed." },
-  "google.syncDone": {
-    ko: "구글 캘린더에 반영했어요. (추가 {created} · 수정 {updated})",
-    en: "Synced to Google Calendar. ({created} added · {updated} updated)"
   },
 
   // ---------------------------------------------------------------- errors (thrown)

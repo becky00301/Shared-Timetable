@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
+import { getSafeNextPath } from "@/lib/utils/navigation";
 import { useProjectStore } from "@/stores/project-store";
 
 export default function LoginPage() {
@@ -22,7 +23,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  const next = getSafeNextPath(searchParams.get("next"));
   const supabase = createSupabaseBrowserClient();
   const t = useT();
 

@@ -17,8 +17,8 @@ export type Project = {
   description?: string | null;
   slug: string;
   kind: ProjectKind;
-  google_calendar_id?: string | null;
   invite_token: string;
+  embed_token: string;
   created_at: string;
   updated_at: string;
 };
