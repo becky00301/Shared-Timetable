@@ -49,6 +49,7 @@ type ProjectStore = {
   upsertSchedule: (
     item: Partial<ScheduleItem> & Pick<ScheduleItem, "project_id" | "day_id" | "title" | "start_time" | "end_time">
   ) => Promise<ScheduleItem>;
+  undoScheduleChange: (projectId: string) => Promise<boolean>;
   deleteSchedule: (itemId: string) => Promise<void>;
   addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
   reset: () => void;
@@ -74,6 +75,54 @@ function requireClient() {
 // the local version layered over fetched rows so a moved or resized block does
 // not disappear and then reappear at the server-confirmed position.
 const pendingScheduleUpdates = new Map<string, ScheduleItem>();
+const replayingScheduleIds = new Set<string>();
+const undoInFlightProjectIds = new Set<string>();
+const MAX_SCHEDULE_HISTORY = 50;
+let nextScheduleHistoryId = 1;
+
+type ScheduleHistoryEntry =
+  | { id: number; kind: "update"; projectId: string; before: ScheduleItem; after: ScheduleItem }
+  | { id: number; kind: "create"; projectId: string; after: ScheduleItem };
+type ScheduleHistoryInput =
+  | { kind: "update"; projectId: string; before: ScheduleItem; after: ScheduleItem }
+  | { kind: "create"; projectId: string; after: ScheduleItem };
+
+const scheduleHistory: ScheduleHistoryEntry[] = [];
+const editableScheduleKeys = [
+  "project_id",
+  "day_id",
+  "title",
+  "description",
+  "location",
+  "start_time",
+  "end_time",
+  "color",
+  "all_day",
+  "end_day_id"
+] as const satisfies readonly (keyof ScheduleItem)[];
+
+function sameEditableSchedule(left: ScheduleItem, right: ScheduleItem) {
+  return editableScheduleKeys.every((key) => {
+    const leftValue = left[key] ?? null;
+    const rightValue = right[key] ?? null;
+    if ((key === "start_time" || key === "end_time") && typeof leftValue === "string" && typeof rightValue === "string") {
+      return leftValue.slice(0, 5) === rightValue.slice(0, 5);
+    }
+    return leftValue === rightValue;
+  });
+}
+
+function addScheduleHistory(entry: ScheduleHistoryInput) {
+  const saved = { ...entry, id: nextScheduleHistoryId++ } as ScheduleHistoryEntry;
+  scheduleHistory.push(saved);
+  if (scheduleHistory.length > MAX_SCHEDULE_HISTORY) scheduleHistory.shift();
+  return saved;
+}
+
+function removeScheduleHistoryEntry(entryId: number) {
+  const index = scheduleHistory.findIndex((entry) => entry.id === entryId);
+  if (index >= 0) scheduleHistory.splice(index, 1);
+}
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   currentUserId: null,
@@ -417,6 +466,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (item.id) {
       const previous = get().schedules.find((schedule) => schedule.id === item.id);
       const optimistic = previous ? ({ ...previous, ...payload } as ScheduleItem) : null;
+      const historyEntry =
+        previous &&
+        optimistic &&
+        !replayingScheduleIds.has(item.id) &&
+        !sameEditableSchedule(previous, optimistic)
+          ? addScheduleHistory({
+              kind: "update",
+              projectId: item.project_id,
+              before: previous,
+              after: optimistic
+            })
+          : null;
       if (optimistic) {
         pendingScheduleUpdates.set(item.id, optimistic);
         set((state) => ({
@@ -443,6 +504,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         }
         return data as ScheduleItem;
       } catch (error) {
+        if (historyEntry) removeScheduleHistoryEntry(historyEntry.id);
         if (optimistic && pendingScheduleUpdates.get(item.id) === optimistic) {
           pendingScheduleUpdates.delete(item.id);
           set((state) => ({
@@ -461,8 +523,49 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*")
       .single();
     if (error) throw error;
-    set((state) => ({ schedules: [...state.schedules, data as ScheduleItem] }));
-    return data as ScheduleItem;
+    const created = data as ScheduleItem;
+    set((state) => ({ schedules: [...state.schedules, created] }));
+    if (!replayingScheduleIds.has(created.id)) {
+      addScheduleHistory({ kind: "create", projectId: created.project_id, after: created });
+    }
+    return created;
+  },
+
+  undoScheduleChange: async (projectId) => {
+    if (undoInFlightProjectIds.has(projectId)) return false;
+    undoInFlightProjectIds.add(projectId);
+    try {
+      for (let index = scheduleHistory.length - 1; index >= 0; index -= 1) {
+        const entry = scheduleHistory[index];
+        if (entry.projectId !== projectId) continue;
+        scheduleHistory.splice(index, 1);
+
+        const current = get().schedules.find((schedule) => schedule.id === entry.after.id);
+        // A collaborator may have edited the item after this local action.
+        // Never overwrite their newer state with an old local snapshot.
+        if (!current || !sameEditableSchedule(current, entry.after)) continue;
+
+        try {
+          if (entry.kind === "create") {
+            await get().deleteSchedule(entry.after.id);
+          } else {
+            replayingScheduleIds.add(entry.after.id);
+            try {
+              await get().upsertSchedule(entry.before);
+            } finally {
+              replayingScheduleIds.delete(entry.after.id);
+            }
+          }
+          return true;
+        } catch (error) {
+          scheduleHistory.splice(Math.min(index, scheduleHistory.length), 0, entry);
+          throw error;
+        }
+      }
+      return false;
+    } finally {
+      undoInFlightProjectIds.delete(projectId);
+    }
   },
 
   deleteSchedule: async (itemId) => {
@@ -475,6 +578,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       throw new Error(translate("error.scheduleDeleteDenied"));
     }
     pendingScheduleUpdates.delete(itemId);
+    for (let index = scheduleHistory.length - 1; index >= 0; index -= 1) {
+      if (scheduleHistory[index].after.id === itemId) scheduleHistory.splice(index, 1);
+    }
     set((state) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),
       attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)
@@ -498,6 +604,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   // account's timetables lingering in memory.
   reset: () => {
     pendingScheduleUpdates.clear();
+    replayingScheduleIds.clear();
+    undoInFlightProjectIds.clear();
+    scheduleHistory.length = 0;
     set({
       currentUserId: null,
       isGuest: false,

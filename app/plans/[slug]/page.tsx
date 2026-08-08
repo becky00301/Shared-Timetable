@@ -28,10 +28,15 @@ export default function ProjectPage() {
   const currentUserId = useProjectStore((state) => state.currentUserId);
   const isGuest = useProjectStore((state) => state.isGuest);
   const loadProject = useProjectStore((state) => state.loadProject);
+  const undoScheduleChange = useProjectStore((state) => state.undoScheduleChange);
   const viewMode = useUiStore((state) => state.viewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const [notFound, setNotFound] = useState(false);
   const t = useT();
+  const currentRole = project
+    ? allMembers.find((member) => member.project_id === project.id && member.user_id === currentUserId)?.role ?? "viewer"
+    : "viewer";
+  const canEdit = Boolean(project) && roleCanEdit(currentRole);
 
   useEffect(() => {
     setNotFound(false);
@@ -62,6 +67,46 @@ export default function ProjectPage() {
   }, [params.slug, loadProject]);
   useProjectRealtime(project?.id ?? "", onSync);
 
+  useEffect(() => {
+    const projectId = project?.id;
+    if (!projectId || !canEdit) return;
+    const activeProjectId = projectId;
+
+    function onUndo(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+      if (
+        event.key.toLowerCase() !== "z" ||
+        (!event.ctrlKey && !event.metaKey) ||
+        event.altKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      undoScheduleChange(activeProjectId)
+        .then((undone) => {
+          if (undone) toast.success(t("grid.undoSuccess"));
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error(t("grid.undoFailed"));
+        });
+    }
+
+    window.addEventListener("keydown", onUndo);
+    return () => window.removeEventListener("keydown", onUndo);
+  }, [project?.id, canEdit, undoScheduleChange, t]);
+
   if (!project) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-5 text-foreground">
@@ -87,9 +132,6 @@ export default function ProjectPage() {
     isWeekly
   );
   const members = allMembers.filter((member) => member.project_id === project.id);
-  const currentRole = members.find((member) => member.user_id === currentUserId)?.role ?? "viewer";
-  const canEdit = roleCanEdit(currentRole);
-
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
       <ProjectSidebar

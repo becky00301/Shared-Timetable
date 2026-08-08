@@ -528,6 +528,8 @@ export const messages = {
   },
   "grid.moveFailed": { ko: "일정을 옮기지 못했어요", en: "Couldn't move the schedule" },
   "grid.resizeFailed": { ko: "길이를 바꾸지 못했어요", en: "Couldn't resize the schedule" },
+  "grid.undoSuccess": { ko: "직전 편집을 되돌렸어요.", en: "Undid the last change." },
+  "grid.undoFailed": { ko: "직전 편집을 되돌리지 못했어요.", en: "Couldn't undo the last change." },
 
   // ---------------------------------------------------------------- detail panel
   "detail.title": { ko: "일정 상세", en: "Schedule details" },
