@@ -1,11 +1,13 @@
 "use client";
 
+import { Moon } from "lucide-react";
 import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
 import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { PeerDraftBlock } from "@/components/timetable/PeerDraftBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
 import { cn } from "@/lib/utils/cn";
-import { timeToMinutes } from "@/lib/utils/time";
+import { minutesToTop, timeToMinutes } from "@/lib/utils/time";
+import { useT } from "@/lib/i18n/locale";
 import type { PeerDraft } from "@/lib/supabase/cursors";
 import type { ProjectDay } from "@/types/project";
 import type { AvailabilitySlot, ScheduleItem } from "@/types/schedule";
@@ -99,7 +101,10 @@ export function DateColumn({
   onDeleteSchedule: (id: string) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
 }) {
+  const t = useT();
   const positionedSchedules = positionOverlappingSchedules(schedules);
+  const wakeMinutes = day.wake_time ? timeToMinutes(day.wake_time) : null;
+  const sleepStartMinutes = wakeMinutes === null ? null : Math.max(0, wakeMinutes - 7 * 60);
 
   return (
     <div
@@ -120,6 +125,26 @@ export function DateColumn({
           }
         }}
       >
+        {wakeMinutes !== null && sleepStartMinutes !== null ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 z-[1] overflow-hidden bg-[#E9EDF4]/80"
+            style={{
+              top: minutesToTop(sleepStartMinutes, hourHeight),
+              height: minutesToTop(wakeMinutes - sleepStartMinutes, hourHeight)
+            }}
+            aria-hidden="true"
+          >
+            <div className="absolute left-1 top-1 flex items-center gap-1 text-[10px] font-medium text-[#596579]">
+              <Moon size={11} />
+              <span className="hidden sm:inline">{t("grid.sleepTime")}</span>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 border-t border-[#7B879A]/75">
+              <span className="absolute bottom-0 right-1 translate-y-full bg-background/85 px-0.5 text-[9px] font-medium tabular-nums text-[#596579]">
+                {day.wake_time?.slice(0, 5)}
+              </span>
+            </div>
+          </div>
+        ) : null}
         <AvailabilityHeatmap
           active={activeMode === "availability"}
           slots={availability}

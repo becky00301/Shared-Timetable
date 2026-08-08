@@ -39,6 +39,7 @@ type ProjectStore = {
   deleteProject: (projectId: string) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
+  updateDayWakeTime: (dayId: string, wakeTime: string | null) => Promise<void>;
   addNote: (projectId: string, body: string) => Promise<void>;
   updateNote: (noteId: string, body: string) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
@@ -354,6 +355,36 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*");
     if (error) throw error;
     set((state) => ({ days: [...state.days, ...((data ?? []) as ProjectDay[])] }));
+  },
+
+  updateDayWakeTime: async (dayId, wakeTime) => {
+    const supabase = requireClient();
+    const previous = get().days.find((day) => day.id === dayId);
+    if (!previous) throw new Error("Day not found.");
+
+    const normalizedWakeTime = wakeTime ? wakeTime.slice(0, 5) : null;
+    const optimistic: ProjectDay = { ...previous, wake_time: normalizedWakeTime };
+    set((state) => ({
+      days: state.days.map((day) => (day.id === dayId ? optimistic : day))
+    }));
+
+    try {
+      const { data, error } = await supabase
+        .from("project_days")
+        .update({ wake_time: normalizedWakeTime })
+        .eq("id", dayId)
+        .select("*")
+        .single();
+      if (error) throw error;
+      set((state) => ({
+        days: state.days.map((day) => (day.id === dayId ? (data as ProjectDay) : day))
+      }));
+    } catch (error) {
+      set((state) => ({
+        days: state.days.map((day) => (day.id === dayId && day === optimistic ? previous : day))
+      }));
+      throw error;
+    }
   },
 
   addNote: async (projectId, body) => {

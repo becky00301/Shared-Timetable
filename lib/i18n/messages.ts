@@ -530,6 +530,16 @@ export const messages = {
   "grid.resizeFailed": { ko: "길이를 바꾸지 못했어요", en: "Couldn't resize the schedule" },
   "grid.undoSuccess": { ko: "직전 편집을 되돌렸어요.", en: "Undid the last change." },
   "grid.undoFailed": { ko: "직전 편집을 되돌리지 못했어요.", en: "Couldn't undo the last change." },
+  "grid.wakeTime": { ko: "기상 시간", en: "Wake time" },
+  "grid.setWakeTime": { ko: "기상 시간 설정", en: "Set wake time" },
+  "grid.saveWakeTime": { ko: "저장", en: "Save" },
+  "grid.savingWakeTime": { ko: "저장 중...", en: "Saving..." },
+  "grid.clearWakeTime": { ko: "기상 시간 해제", en: "Clear wake time" },
+  "grid.sleepTime": { ko: "수면", en: "Sleep" },
+  "grid.wakeTimeSaveFailed": {
+    ko: "기상 시간을 저장하지 못했어요.",
+    en: "Couldn't save the wake time."
+  },
 
   // ---------------------------------------------------------------- detail panel
   "detail.title": { ko: "일정 상세", en: "Schedule details" },

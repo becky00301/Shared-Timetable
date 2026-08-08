@@ -15,6 +15,8 @@ import { AllDayBand } from "@/components/timetable/AllDayBand";
 import { DateColumn } from "@/components/timetable/DateColumn";
 import { LiveCursors } from "@/components/timetable/LiveCursors";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
+import { WakeTimeDialog } from "@/components/timetable/WakeTimeDialog";
+import { AlarmClock } from "lucide-react";
 import { useLiveCursors } from "@/lib/supabase/cursors";
 import { useT } from "@/lib/i18n/locale";
 import { useDateFormat } from "@/lib/i18n/dates";
@@ -83,6 +85,7 @@ export function TimetableGrid({
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const deleteSchedule = useProjectStore((state) => state.deleteSchedule);
   const addAvailability = useProjectStore((state) => state.addAvailability);
+  const updateDayWakeTime = useProjectStore((state) => state.updateDayWakeTime);
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const activeMode = useUiStore((state) => state.activeMode);
@@ -95,6 +98,7 @@ export function TimetableGrid({
     endMinutes: number;
     naming: boolean;
   } | null>(null);
+  const [wakeDay, setWakeDay] = useState<ProjectDay | null>(null);
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -379,6 +383,16 @@ export function TimetableGrid({
     });
   }
 
+  async function saveWakeTime(dayId: string, wakeTime: string | null) {
+    try {
+      await updateDayWakeTime(dayId, wakeTime);
+    } catch (error) {
+      console.error(error);
+      toast.error(t("grid.wakeTimeSaveFailed"));
+      throw error;
+    }
+  }
+
   if (!days.length) {
     return (
       <div className="flex min-h-[540px] flex-1 items-center justify-center p-6">
@@ -398,6 +412,11 @@ export function TimetableGrid({
       onDragEnd={onDragEnd}
       modifiers={[restrictToWindowEdges]}
     >
+      <WakeTimeDialog
+        day={wakeDay}
+        onClose={() => setWakeDay(null)}
+        onSave={saveWakeTime}
+      />
       <div
         ref={scrollRef}
         id="timetable-export"
@@ -407,10 +426,17 @@ export function TimetableGrid({
           <LiveCursors cursors={cursors} />
           {/* Date headers */}
           <div className="sticky top-0 z-30 flex bg-surface">
-            <div className="sticky left-0 z-40 h-12 w-16 shrink-0 border-b border-r border-border bg-surface" />
+            <div className="sticky left-0 z-40 h-14 w-16 shrink-0 border-b border-r border-border bg-surface" />
             <div ref={colsRef} className={hScroll ? "flex" : "flex flex-1"}>
               {days.map((day) => (
-                <DayHeaderCell key={day.id} day={day} weekdayOnly={weekdayOnly} width={colWidth} />
+                <DayHeaderCell
+                  key={day.id}
+                  day={day}
+                  weekdayOnly={weekdayOnly}
+                  width={colWidth}
+                  canEdit={canEdit}
+                  onEditWakeTime={() => setWakeDay(day)}
+                />
               ))}
             </div>
           </div>
@@ -487,24 +513,30 @@ export function TimetableGrid({
 function DayHeaderCell({
   day,
   weekdayOnly,
-  width
+  width,
+  canEdit,
+  onEditWakeTime
 }: {
   day: ProjectDay;
   weekdayOnly?: boolean;
   width?: number;
+  canEdit: boolean;
+  onEditWakeTime: () => void;
 }) {
   const fmt = useDateFormat();
+  const t = useT();
   const date = new Date(day.date);
   const weekday = fmt.weekday(date.getDay());
+  const wakeTime = day.wake_time?.slice(0, 5);
   return (
     <div
       className={cn(
-        "flex h-12 items-center justify-center border-b border-r border-border last:border-r-0",
+        "flex h-14 items-center justify-center border-b border-r border-border last:border-r-0",
         width ? "shrink-0" : "min-w-0 flex-1"
       )}
       style={width ? { width } : undefined}
     >
-      <div className="text-center">
+      <div className="min-w-0 text-center">
         {weekdayOnly ? (
           <p className="text-sm font-semibold text-foreground">{weekday}</p>
         ) : (
@@ -513,6 +545,26 @@ function DayHeaderCell({
             <p className="text-[11px] text-muted">{weekday}</p>
           </>
         )}
+        {canEdit ? (
+          <button
+            type="button"
+            className={cn(
+              "mx-auto mt-0.5 flex h-4 max-w-full items-center justify-center gap-1 rounded px-1 text-[9px] font-medium tabular-nums transition hover:bg-black/6 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+              wakeTime ? "text-[#596579]" : "text-muted/70"
+            )}
+            onClick={onEditWakeTime}
+            title={t("grid.setWakeTime")}
+            aria-label={`${day.date} ${t("grid.setWakeTime")}`}
+          >
+            <AlarmClock size={10} aria-hidden="true" />
+            <span>{wakeTime || "--:--"}</span>
+          </button>
+        ) : wakeTime ? (
+          <div className="mx-auto mt-0.5 flex h-4 items-center justify-center gap-1 text-[9px] font-medium tabular-nums text-[#596579]">
+            <AlarmClock size={10} aria-hidden="true" />
+            <span>{wakeTime}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

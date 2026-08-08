@@ -52,12 +52,16 @@ create table if not exists public.project_days (
   date date not null,
   sort_order integer not null default 0,
   note text,
+  wake_time time,
   created_at timestamptz not null default now(),
   unique (project_id, date)
 );
 
 alter table public.project_days
   add column if not exists note text;
+
+alter table public.project_days
+  add column if not exists wake_time time;
 
 create table if not exists public.project_notes (
   id uuid primary key default gen_random_uuid(),
