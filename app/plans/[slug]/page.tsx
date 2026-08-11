@@ -165,7 +165,7 @@ export default function ProjectPage() {
           </>
         ) : (
           <>
-            <TimetableHeader isWeekly={isWeekly} mobileTitle={project.title} />
+            <TimetableHeader isWeekly={isWeekly} mobileTitle={project.title} canEdit={canEdit} />
             {viewMode === "month" ? (
               <MonthCalendarView projectId={project.id} days={days} />
             ) : (

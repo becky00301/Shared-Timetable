@@ -76,6 +76,7 @@ function requireClient() {
 // the local version layered over fetched rows so a moved or resized block does
 // not disappear and then reappear at the server-confirmed position.
 const pendingScheduleUpdates = new Map<string, ScheduleItem>();
+const pendingDayWakeTimeUpdates = new Map<string, ProjectDay>();
 const replayingScheduleIds = new Set<string>();
 const undoInFlightProjectIds = new Set<string>();
 const MAX_SCHEDULE_HISTORY = 50;
@@ -188,7 +189,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
       set({
         projects: (projectsRes.data ?? []) as Project[],
-        days: (daysRes.data ?? []) as ProjectDay[],
+        days: ((daysRes.data ?? []) as ProjectDay[]).map(
+          (day) => pendingDayWakeTimeUpdates.get(day.id) ?? day
+        ),
         schedules: (schedulesRes.data ?? []) as ScheduleItem[],
         projectsLoaded: true
       });
@@ -233,6 +236,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const loadedSchedules = ((schedulesRes.data ?? []) as ScheduleItem[]).map(
         (schedule) => pendingScheduleUpdates.get(schedule.id) ?? schedule
       );
+      const loadedDays = ((daysRes.data ?? []) as ProjectDay[]).map(
+        (day) => pendingDayWakeTimeUpdates.get(day.id) ?? day
+      );
 
       set((state) => ({
         // Refresh in place. Hoisting the visited project to the front would
@@ -240,7 +246,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         projects: state.projects.some((p) => p.id === project.id)
           ? state.projects.map((p) => (p.id === project.id ? (project as Project) : p))
           : [...state.projects, project as Project],
-        days: [...state.days.filter((d) => d.project_id !== project.id), ...((daysRes.data ?? []) as ProjectDay[])],
+        days: [...state.days.filter((d) => d.project_id !== project.id), ...loadedDays],
         members: [
           ...state.members.filter((m) => m.project_id !== project.id),
           ...((membersRes.data ?? []) as ProjectMember[])
@@ -364,6 +370,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
     const normalizedWakeTime = wakeTime ? wakeTime.slice(0, 5) : null;
     const optimistic: ProjectDay = { ...previous, wake_time: normalizedWakeTime };
+    pendingDayWakeTimeUpdates.set(dayId, optimistic);
     set((state) => ({
       days: state.days.map((day) => (day.id === dayId ? optimistic : day))
     }));
@@ -376,13 +383,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         .select("*")
         .single();
       if (error) throw error;
-      set((state) => ({
-        days: state.days.map((day) => (day.id === dayId ? (data as ProjectDay) : day))
-      }));
+      if (pendingDayWakeTimeUpdates.get(dayId) === optimistic) {
+        pendingDayWakeTimeUpdates.delete(dayId);
+        set((state) => ({
+          days: state.days.map((day) => (day.id === dayId ? (data as ProjectDay) : day))
+        }));
+      }
     } catch (error) {
-      set((state) => ({
-        days: state.days.map((day) => (day.id === dayId && day === optimistic ? previous : day))
-      }));
+      if (pendingDayWakeTimeUpdates.get(dayId) === optimistic) {
+        pendingDayWakeTimeUpdates.delete(dayId);
+        set((state) => ({
+          days: state.days.map((day) => (day.id === dayId && day === optimistic ? previous : day))
+        }));
+      }
       throw error;
     }
   },
@@ -635,6 +648,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   // account's timetables lingering in memory.
   reset: () => {
     pendingScheduleUpdates.clear();
+    pendingDayWakeTimeUpdates.clear();
     replayingScheduleIds.clear();
     undoInFlightProjectIds.clear();
     scheduleHistory.length = 0;

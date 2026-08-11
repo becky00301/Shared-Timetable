@@ -5,7 +5,7 @@ import { clampZoom } from "@/lib/utils/time";
 
 type UiStore = {
   selectedScheduleId: string | null;
-  activeMode: "schedule" | "availability";
+  activeMode: "schedule" | "availability" | "wake";
   viewMode: "grid" | "month";
   weekStartsOnSunday: boolean;
   /** Time-grid scale, 1 = 100%. Drives both hour height and column width. */
@@ -15,7 +15,7 @@ type UiStore = {
   isCreateProjectOpen: boolean;
   isShareOpen: boolean;
   setSelectedSchedule: (id: string | null) => void;
-  setMode: (mode: "schedule" | "availability") => void;
+  setMode: (mode: "schedule" | "availability" | "wake") => void;
   setViewMode: (mode: "grid" | "month") => void;
   setWeekStartsOnSunday: (sundayFirst: boolean) => void;
   setGridZoom: (zoom: number) => void;

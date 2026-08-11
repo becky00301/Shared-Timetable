@@ -87,7 +87,7 @@ export function DateColumn({
   schedules: ScheduleItem[];
   availability: AvailabilitySlot[];
   memberCount: number;
-  activeMode: "schedule" | "availability";
+  activeMode: "schedule" | "availability" | "wake";
   selectedScheduleId: string | null;
   canEdit: boolean;
   width?: number;
@@ -138,7 +138,10 @@ export function DateColumn({
               <Moon size={11} />
               <span className="hidden sm:inline">{t("grid.sleepTime")}</span>
             </div>
-            <div className="absolute inset-x-0 bottom-0 border-t border-[#7B879A]/75">
+            <div
+              data-wake-anchor={day.id}
+              className="absolute inset-x-0 bottom-0 border-t border-[#7B879A]/75"
+            >
               <span className="absolute bottom-0 right-1 translate-y-full bg-background/85 px-0.5 text-[9px] font-medium tabular-nums text-[#596579]">
                 {day.wake_time?.slice(0, 5)}
               </span>
@@ -158,6 +161,7 @@ export function DateColumn({
             lane={lane}
             laneCount={laneCount}
             canEdit={canEdit}
+            isInteractive={activeMode !== "wake"}
             isSelected={selectedScheduleId === item.id}
             hourHeight={hourHeight}
             onSelect={() => onSelectSchedule(item.id)}

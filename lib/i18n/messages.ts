@@ -266,6 +266,12 @@ export const messages = {
     en: "Timetables you're building with others."
   },
   "dashboard.new": { ko: "새 시간표", en: "New timetable" },
+  "dashboard.projectsView": { ko: "시간표 목록", en: "Timetables" },
+  "dashboard.calendar": { ko: "전체 일정", en: "All schedules" },
+  "dashboard.today": { ko: "오늘", en: "Today" },
+  "dashboard.previousMonth": { ko: "이전 달", en: "Previous month" },
+  "dashboard.nextMonth": { ko: "다음 달", en: "Next month" },
+  "dashboard.noSchedulesForDay": { ko: "이날은 일정이 없어요.", en: "No schedules for this day." },
   "dashboard.loadFailed": {
     ko: "프로젝트를 불러오지 못했어요.",
     en: "Couldn't load your timetables."
@@ -531,6 +537,7 @@ export const messages = {
   "grid.undoSuccess": { ko: "직전 편집을 되돌렸어요.", en: "Undid the last change." },
   "grid.undoFailed": { ko: "직전 편집을 되돌리지 못했어요.", en: "Couldn't undo the last change." },
   "grid.wakeTime": { ko: "기상 시간", en: "Wake time" },
+  "grid.wakeMode": { ko: "기상 설정", en: "Set wake time" },
   "grid.setWakeTime": { ko: "기상 시간 설정", en: "Set wake time" },
   "grid.saveWakeTime": { ko: "저장", en: "Save" },
   "grid.savingWakeTime": { ko: "저장 중...", en: "Saving..." },

@@ -16,6 +16,7 @@ import { DateColumn } from "@/components/timetable/DateColumn";
 import { LiveCursors } from "@/components/timetable/LiveCursors";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { WakeTimeDialog } from "@/components/timetable/WakeTimeDialog";
+import { WakeTimePopover } from "@/components/timetable/WakeTimePopover";
 import { AlarmClock } from "lucide-react";
 import { useLiveCursors } from "@/lib/supabase/cursors";
 import { useT } from "@/lib/i18n/locale";
@@ -99,6 +100,10 @@ export function TimetableGrid({
     naming: boolean;
   } | null>(null);
   const [wakeDay, setWakeDay] = useState<ProjectDay | null>(null);
+  const [wakeSelection, setWakeSelection] = useState<{
+    dayId: string;
+    anchorPoint: { x: number; y: number };
+  } | null>(null);
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -203,6 +208,15 @@ export function TimetableGrid({
     viewportWidth && scaledColWidth * days.length > availableWidth ? scaledColWidth : undefined;
   const hScroll = colWidth !== undefined;
 
+  useEffect(() => {
+    if (activeMode === "wake") {
+      setDraft(null);
+      setSelectedSchedule(null);
+      return;
+    }
+    setWakeSelection(null);
+  }, [activeMode, setSelectedSchedule]);
+
   function onPointerStart(dayId: string, event: React.PointerEvent<HTMLDivElement>) {
     if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
     // While the rename input is open, this pointerdown fires before the
@@ -212,6 +226,40 @@ export function TimetableGrid({
     if (draft) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const anchor = timeToMinutes(pointerYToTime(event.clientY - rect.top, hourHeight));
+
+    if (activeMode === "wake") {
+      const origin = { x: event.clientX, y: event.clientY };
+      let moved = false;
+
+      function cleanup() {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", cleanup);
+      }
+
+      const onMove = (moveEvent: PointerEvent) => {
+        if (Math.hypot(moveEvent.clientX - origin.x, moveEvent.clientY - origin.y) <= TOUCH_MOVE_TOLERANCE) {
+          return;
+        }
+        moved = true;
+        cleanup();
+      };
+      const onUp = () => {
+        cleanup();
+        if (moved) return;
+        const wakeTime = minutesToTime(anchor);
+        setWakeDay(null);
+        setWakeSelection({ dayId, anchorPoint: origin });
+        saveWakeTime(dayId, wakeTime).catch(() => {
+          setWakeSelection((current) => (current?.dayId === dayId ? null : current));
+        });
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", cleanup);
+      return;
+    }
 
     if (activeMode === "availability") {
       const onUp = (upEvent: PointerEvent) => {
@@ -393,6 +441,10 @@ export function TimetableGrid({
     }
   }
 
+  const wakeSelectionDay = wakeSelection
+    ? days.find((day) => day.id === wakeSelection.dayId) ?? null
+    : null;
+
   if (!days.length) {
     return (
       <div className="flex min-h-[540px] flex-1 items-center justify-center p-6">
@@ -417,6 +469,14 @@ export function TimetableGrid({
         onClose={() => setWakeDay(null)}
         onSave={saveWakeTime}
       />
+      {wakeSelection && wakeSelectionDay ? (
+        <WakeTimePopover
+          day={wakeSelectionDay}
+          anchorPoint={wakeSelection.anchorPoint}
+          onClose={() => setWakeSelection(null)}
+          onSave={saveWakeTime}
+        />
+      ) : null}
       <div
         ref={scrollRef}
         id="timetable-export"
@@ -435,7 +495,10 @@ export function TimetableGrid({
                   weekdayOnly={weekdayOnly}
                   width={colWidth}
                   canEdit={canEdit}
-                  onEditWakeTime={() => setWakeDay(day)}
+                  onEditWakeTime={() => {
+                    setWakeSelection(null);
+                    setWakeDay(day);
+                  }}
                 />
               ))}
             </div>

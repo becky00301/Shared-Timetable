@@ -25,6 +25,7 @@ export function ScheduleBlock({
   laneCount,
   isSelected,
   canEdit,
+  isInteractive = true,
   hourHeight,
   onSelect,
   onResize,
@@ -35,6 +36,7 @@ export function ScheduleBlock({
   laneCount: number;
   isSelected: boolean;
   canEdit: boolean;
+  isInteractive?: boolean;
   hourHeight: number;
   onSelect: () => void;
   /** Called once, on release — not on every pointer move. */
@@ -51,7 +53,7 @@ export function ScheduleBlock({
   );
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
-    disabled: !canEdit,
+    disabled: !canEdit || !isInteractive,
     data: { dayId: item.day_id, item }
   });
   const baseStart = timeToMinutes(item.start_time);
@@ -121,6 +123,7 @@ export function ScheduleBlock({
         // transition-colors only: animating transform makes the block lag the cursor.
         "absolute left-1 right-1 z-10 touch-manipulation cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
+        !isInteractive && "pointer-events-none",
         isSelected && "ring-2 ring-white/70",
         isDragging && "opacity-70"
       )}
@@ -131,8 +134,8 @@ export function ScheduleBlock({
         transform: CSS.Translate.toString(transform),
         ...splitPosition
       }}
-      onClick={onSelect}
-      onContextMenu={onContextMenu}
+      onClick={isInteractive ? onSelect : undefined}
+      onContextMenu={isInteractive ? onContextMenu : undefined}
       {...attributes}
       {...listeners}
     >

@@ -81,8 +81,8 @@ export function WakeTimeDialog({
             <Input
               type="time"
               value={wakeTime}
-              step={300}
-              onChange={(event) => setWakeTime(event.target.value)}
+              step={60}
+              onInput={(event) => setWakeTime(event.currentTarget.value)}
               disabled={saving}
               autoFocus
             />

@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { CalendarDays, LayoutGrid, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
+import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -30,6 +32,7 @@ export default function DashboardPage() {
   const loadDashboard = useProjectStore((state) => state.loadDashboard);
   const setCreateProjectOpen = useUiStore((state) => state.setCreateProjectOpen);
   const [loadError, setLoadError] = useState(false);
+  const [dashboardView, setDashboardView] = useState<"projects" | "calendar">("projects");
 
   // This page is prerendered, so a client-side navigation can reach it without
   // passing through middleware. Verify the session here too, and clear any
@@ -79,6 +82,30 @@ export default function DashboardPage() {
             {t("dashboard.new")}
           </Button>
         </div>
+        <div className="mt-6 inline-grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
+          <button
+            type="button"
+            onClick={() => setDashboardView("projects")}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition",
+              dashboardView === "projects" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+            )}
+          >
+            <LayoutGrid size={15} />
+            {t("dashboard.projectsView")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDashboardView("calendar")}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition",
+              dashboardView === "calendar" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+            )}
+          >
+            <CalendarDays size={15} />
+            {t("dashboard.calendar")}
+          </button>
+        </div>
         {/* Wait for the full list. Opening a single timetable leaves just that
             project cached, and rendering that would flash a one-card dashboard
             before the rest arrived. */}
@@ -90,7 +117,7 @@ export default function DashboardPage() {
           <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("dashboard.loadFailedRetry")}
           </div>
-        ) : projects.length ? (
+        ) : projects.length && dashboardView === "projects" ? (
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => (
               <ProjectCard
@@ -101,6 +128,8 @@ export default function DashboardPage() {
               />
             ))}
           </div>
+        ) : projects.length ? (
+          <DashboardCalendar projects={projects} days={days} schedules={schedules} />
         ) : (
           <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("dashboard.empty")}

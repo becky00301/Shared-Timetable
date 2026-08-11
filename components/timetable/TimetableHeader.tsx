@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Clock, Minus, Plus } from "lucide-react";
+import { AlarmClock, ArrowLeft, CalendarDays, Clock, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { MAX_ZOOM, MIN_ZOOM, ZOOM_STEP } from "@/lib/utils/time";
@@ -10,13 +10,15 @@ import { useUiStore } from "@/stores/ui-store";
 
 export function TimetableHeader({
   isWeekly = false,
-  mobileTitle
+  mobileTitle,
+  canEdit = false
 }: {
   isWeekly?: boolean;
   /** Rendered only below `lg`, next to the view toggle. The desktop sidebar
       already shows the project title, so this folds the separate mobile
       title bar into this row instead of stacking a second fixed bar above it. */
   mobileTitle?: string;
+  canEdit?: boolean;
 }) {
   const viewMode = useUiStore((state) => state.viewMode);
   const setViewMode = useUiStore((state) => state.setViewMode);
@@ -25,6 +27,9 @@ export function TimetableHeader({
   const gridZoom = useUiStore((state) => state.gridZoom);
   const setGridZoom = useUiStore((state) => state.setGridZoom);
   const resetGridZoom = useUiStore((state) => state.resetGridZoom);
+  const activeMode = useUiStore((state) => state.activeMode);
+  const setMode = useUiStore((state) => state.setMode);
+  const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const isGuest = useProjectStore((state) => state.isGuest);
   const t = useT();
 
@@ -62,7 +67,10 @@ export function TimetableHeader({
           </button>
           <button
             type="button"
-            onClick={() => setViewMode("month")}
+            onClick={() => {
+              setViewMode("month");
+              setMode("schedule");
+            }}
             className={cn(
               "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition sm:px-3",
               viewMode === "month" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
@@ -75,38 +83,62 @@ export function TimetableHeader({
 
         {/* Scaling only applies to the time grid, so it disappears in month view. */}
         {viewMode === "grid" ? (
-          <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-border bg-card p-1">
-            <button
-              type="button"
-              onClick={() => setGridZoom(gridZoom - ZOOM_STEP)}
-              disabled={gridZoom <= MIN_ZOOM}
-              aria-label={t("grid.zoomOut")}
-              title={t("grid.zoomOut")}
-              className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
-            >
-              <Minus size={14} />
-            </button>
-            {/* Tabular figures stop the row shifting as the percentage changes. */}
-            <button
-              type="button"
-              onClick={resetGridZoom}
-              aria-label={t("grid.zoomReset")}
-              title={t("grid.zoomReset")}
-              className="min-w-11 rounded-md px-1 py-1 text-xs tabular-nums text-muted transition hover:bg-black/6 hover:text-foreground"
-            >
-              {Math.round(gridZoom * 100)}%
-            </button>
-            <button
-              type="button"
-              onClick={() => setGridZoom(gridZoom + ZOOM_STEP)}
-              disabled={gridZoom >= MAX_ZOOM}
-              aria-label={t("grid.zoomIn")}
-              title={t("grid.zoomIn")}
-              className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
+          <>
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const nextMode = activeMode === "wake" ? "schedule" : "wake";
+                  setMode(nextMode);
+                  if (nextMode === "wake") setSelectedSchedule(null);
+                }}
+                aria-pressed={activeMode === "wake"}
+                title={t("grid.wakeMode")}
+                className={cn(
+                  "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-sm font-medium transition sm:px-3",
+                  activeMode === "wake"
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-card text-muted hover:bg-black/6 hover:text-foreground"
+                )}
+              >
+                <AlarmClock size={15} />
+                <span className="hidden sm:inline">{t("grid.wakeMode")}</span>
+              </button>
+            ) : null}
+
+            <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-border bg-card p-1">
+              <button
+                type="button"
+                onClick={() => setGridZoom(gridZoom - ZOOM_STEP)}
+                disabled={gridZoom <= MIN_ZOOM}
+                aria-label={t("grid.zoomOut")}
+                title={t("grid.zoomOut")}
+                className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <Minus size={14} />
+              </button>
+              {/* Tabular figures stop the row shifting as the percentage changes. */}
+              <button
+                type="button"
+                onClick={resetGridZoom}
+                aria-label={t("grid.zoomReset")}
+                title={t("grid.zoomReset")}
+                className="min-w-11 rounded-md px-1 py-1 text-xs tabular-nums text-muted transition hover:bg-black/6 hover:text-foreground"
+              >
+                {Math.round(gridZoom * 100)}%
+              </button>
+              <button
+                type="button"
+                onClick={() => setGridZoom(gridZoom + ZOOM_STEP)}
+                disabled={gridZoom >= MAX_ZOOM}
+                aria-label={t("grid.zoomIn")}
+                title={t("grid.zoomIn")}
+                className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </>
         ) : null}
       </div>
 
