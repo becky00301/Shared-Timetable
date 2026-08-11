@@ -296,7 +296,7 @@ function DragMockup() {
       </div>
       <div className="absolute left-[37%] top-4 w-[26%]">
         <div
-          className="flex h-24 origin-top items-start rounded-md bg-[#2383e2] px-2 py-1.5 text-[11px] font-semibold text-white shadow-sm"
+          className="flex h-24 origin-top items-start rounded-[4px] bg-[#2383e2] px-2 py-1.5 text-[11px] font-semibold text-white shadow-sm"
           style={{ animation: `lp-draw 4s ${EASE} infinite` }}
         >
           {label}
@@ -369,13 +369,13 @@ function CollabMockup() {
       </div>
       {/* blocks the two people drop in */}
       <div
-        className="absolute left-[6%] top-6 w-[26%] rounded-md bg-[#e93d82] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
+        className="absolute left-[6%] top-6 w-[26%] rounded-[4px] bg-[#e93d82] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
         style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "200ms" }}
       >
         {b1}
       </div>
       <div
-        className="absolute left-[68%] top-16 w-[26%] rounded-md bg-[#2383e2] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
+        className="absolute left-[68%] top-16 w-[26%] rounded-[4px] bg-[#2383e2] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
         style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "1400ms" }}
       >
         {b2}
@@ -497,7 +497,7 @@ function HeroMockup() {
           ))}
 
           <div
-            className="absolute rounded-md px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
+            className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
             style={{ ...blockBox(settled), backgroundColor: settled.color }}
           >
             {settled.label}
@@ -506,7 +506,7 @@ function HeroMockup() {
           {peers.map((peer) => (
             <div
               key={peer.name}
-              className="absolute rounded-md px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
+              className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
               style={{
                 ...blockBox(peer.block),
                 backgroundColor: peer.color,

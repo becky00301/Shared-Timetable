@@ -245,7 +245,7 @@ export function DashboardCalendar({
                 key={`${entry.item.id}-${selectedDate}-agenda`}
                 type="button"
                 onClick={() => openSchedule(entry)}
-                className="flex min-w-0 items-start gap-3 rounded-md border border-border bg-surface p-3 text-left transition hover:bg-black/6"
+                className="flex min-w-0 items-start gap-3 rounded-[4px] border border-border bg-surface p-3 text-left transition hover:bg-black/6"
               >
                 <span
                   className="mt-1 h-9 w-1 shrink-0 rounded-full"

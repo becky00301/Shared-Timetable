@@ -219,10 +219,10 @@ export function AllDayBand({
                   }
                 }}
                 placeholder={t("grid.allDayPlaceholder")}
-                className="pointer-events-auto h-full w-full rounded-[6px] bg-primary px-1.5 text-base font-medium leading-none text-white outline-none placeholder:text-white/70 sm:text-xs"
+                className="pointer-events-auto h-full w-full rounded-[4px] bg-primary px-1.5 text-base font-medium leading-none text-white outline-none placeholder:text-white/70 sm:text-xs"
               />
             ) : (
-              <div className="h-full w-full rounded-[6px] bg-primary/60" />
+              <div className="h-full w-full rounded-[4px] bg-primary/60" />
             )}
           </div>
         ) : null}
@@ -264,7 +264,7 @@ function AllDayBar({
         onPointerDown={(event) => event.stopPropagation()}
         title={span.item.title}
         className={cn(
-          "absolute flex touch-manipulation items-center rounded-[6px] px-1.5 text-left text-[10px] font-medium text-white sm:text-xs",
+          "absolute flex touch-manipulation items-center rounded-[4px] px-1.5 text-left text-[10px] font-medium text-white sm:text-xs",
           isSelected && "ring-2 ring-black/30"
         )}
         style={{

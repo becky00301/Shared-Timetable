@@ -34,7 +34,7 @@ export function DraftScheduleBlock({
   return (
     <div
       className={cn(
-        "absolute left-2 right-2 z-20 overflow-hidden rounded-lg border border-black/40 bg-primary/80 p-2 shadow-lg",
+        "absolute left-2 right-2 z-20 overflow-hidden rounded-[4px] border border-black/40 bg-primary/80 p-2 shadow-lg",
         !naming && "pointer-events-none"
       )}
       style={{ top, height }}

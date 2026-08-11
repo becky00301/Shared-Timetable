@@ -28,7 +28,7 @@ export function PeerDraftBlock({
 
   return (
     <div
-      className="pointer-events-none absolute left-1 right-1 z-20 overflow-hidden rounded-lg border-2 border-dashed px-1.5 py-1 sm:left-2 sm:right-2"
+      className="pointer-events-none absolute left-1 right-1 z-20 overflow-hidden rounded-[4px] border-2 border-dashed px-1.5 py-1 sm:left-2 sm:right-2"
       style={{ top, height, borderColor: color, backgroundColor: `${color}24` }}
     >
       <span

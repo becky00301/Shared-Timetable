@@ -121,7 +121,7 @@ export function ScheduleBlock({
       title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
       className={cn(
         // transition-colors only: animating transform makes the block lag the cursor.
-        "absolute left-1 right-1 z-10 touch-manipulation cursor-pointer overflow-hidden rounded-md border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:rounded-lg sm:p-2",
+        "absolute left-1 right-1 z-10 touch-manipulation cursor-pointer overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
         !isInteractive && "pointer-events-none",
         isSelected && "ring-2 ring-white/70",

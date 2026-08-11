@@ -210,7 +210,7 @@ export function EmbeddedTimetable({
                 {allDaySpans.map((span) => (
                   <div
                     key={span.item.id}
-                    className="absolute flex items-center overflow-hidden rounded-md px-1.5 text-[10px] font-medium text-white"
+                    className="absolute flex items-center overflow-hidden rounded-[4px] px-1.5 text-[10px] font-medium text-white"
                     style={{
                       left: `${(span.start / sortedDays.length) * 100}%`,
                       width: `${((span.end - span.start + 1) / sortedDays.length) * 100}%`,
@@ -258,7 +258,7 @@ function StaticDayColumn({ schedules }: { schedules: EmbeddedSchedule[] }) {
             <div
               key={item.id}
               title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
-              className="absolute z-10 overflow-hidden rounded-md border border-black/20 px-1.5 py-1.5 text-left shadow-sm"
+              className="absolute z-10 overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-1.5 text-left shadow-sm"
               style={{
                 top: minutesToTop(timeToMinutes(item.start_time), HOUR_HEIGHT),
                 height: Math.max(28, durationToHeight(item.start_time, item.end_time, HOUR_HEIGHT)),
