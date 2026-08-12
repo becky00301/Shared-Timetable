@@ -40,7 +40,11 @@ type ProjectStore = {
   deleteProject: (projectId: string) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
-  updateDayWakeTime: (dayId: string, wakeTime: string | null) => Promise<void>;
+  updateDayWakeTime: (
+    dayId: string,
+    wakeTime: string | null,
+    sleepDurationMinutes?: number
+  ) => Promise<void>;
   addNote: (projectId: string, body: string) => Promise<void>;
   updateNote: (noteId: string, body: string) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
@@ -364,25 +368,51 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set((state) => ({ days: [...state.days, ...((data ?? []) as ProjectDay[])] }));
   },
 
-  updateDayWakeTime: async (dayId, wakeTime) => {
+  updateDayWakeTime: async (dayId, wakeTime, sleepDurationMinutes) => {
     const supabase = requireClient();
     const previous = get().days.find((day) => day.id === dayId);
     if (!previous) throw new Error("Day not found.");
 
     const normalizedWakeTime = wakeTime ? wakeTime.slice(0, 5) : null;
-    const optimistic: ProjectDay = { ...previous, wake_time: normalizedWakeTime };
+    const normalizedSleepDuration = Math.min(
+      720,
+      Math.max(60, sleepDurationMinutes ?? previous.sleep_duration_minutes ?? 420)
+    );
+    const optimistic: ProjectDay = {
+      ...previous,
+      wake_time: normalizedWakeTime,
+      sleep_duration_minutes: normalizedSleepDuration
+    };
     pendingDayWakeTimeUpdates.set(dayId, optimistic);
     set((state) => ({
       days: state.days.map((day) => (day.id === dayId ? optimistic : day))
     }));
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("project_days")
-        .update({ wake_time: normalizedWakeTime })
+        .update({
+          wake_time: normalizedWakeTime,
+          sleep_duration_minutes: normalizedSleepDuration
+        })
         .eq("id", dayId)
         .select("*")
         .single();
+      // Keep wake-time editing operational during the brief window between
+      // deploying this client and applying migration 014. Sleep duration will
+      // persist as soon as the column exists.
+      if (error?.code === "PGRST204" && error.message.includes("sleep_duration_minutes")) {
+        const fallback = await supabase
+          .from("project_days")
+          .update({ wake_time: normalizedWakeTime })
+          .eq("id", dayId)
+          .select("*")
+          .single();
+        data = fallback.data
+          ? { ...fallback.data, sleep_duration_minutes: normalizedSleepDuration }
+          : fallback.data;
+        error = fallback.error;
+      }
       if (error) throw error;
       if (pendingDayWakeTimeUpdates.get(dayId) === optimistic) {
         pendingDayWakeTimeUpdates.delete(dayId);

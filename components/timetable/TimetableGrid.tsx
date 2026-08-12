@@ -431,9 +431,18 @@ export function TimetableGrid({
     });
   }
 
-  async function saveWakeTime(dayId: string, wakeTime: string | null) {
+  async function saveWakeTime(
+    dayId: string,
+    wakeTime: string | null,
+    sleepDurationMinutes?: number
+  ) {
     try {
-      await updateDayWakeTime(dayId, wakeTime);
+      const currentDay = days.find((day) => day.id === dayId);
+      await updateDayWakeTime(
+        dayId,
+        wakeTime,
+        sleepDurationMinutes ?? currentDay?.sleep_duration_minutes ?? 420
+      );
     } catch (error) {
       console.error(error);
       toast.error(t("grid.wakeTimeSaveFailed"));
@@ -535,10 +544,11 @@ export function TimetableGrid({
               <TimeColumn hourHeight={hourHeight} />
             </div>
             <div className={hScroll ? "flex" : "flex flex-1"}>
-              {days.map((day) => (
+              {days.map((day, dayIndex) => (
                 <DateColumn
                   key={day.id}
                   day={day}
+                  nextDay={days[dayIndex + 1] ?? null}
                   canEdit={canEdit}
                   activeMode={activeMode}
                   memberCount={members.length}

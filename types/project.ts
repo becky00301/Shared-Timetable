@@ -39,6 +39,7 @@ export type ProjectDay = {
   sort_order: number;
   note?: string | null;
   wake_time?: string | null;
+  sleep_duration_minutes?: number | null;
   created_at: string;
 };
 

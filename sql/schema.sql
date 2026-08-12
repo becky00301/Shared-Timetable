@@ -53,6 +53,7 @@ create table if not exists public.project_days (
   sort_order integer not null default 0,
   note text,
   wake_time time,
+  sleep_duration_minutes integer not null default 420 check (sleep_duration_minutes between 60 and 720),
   created_at timestamptz not null default now(),
   unique (project_id, date)
 );
@@ -62,6 +63,9 @@ alter table public.project_days
 
 alter table public.project_days
   add column if not exists wake_time time;
+
+alter table public.project_days
+  add column if not exists sleep_duration_minutes integer not null default 420;
 
 create table if not exists public.project_notes (
   id uuid primary key default gen_random_uuid(),

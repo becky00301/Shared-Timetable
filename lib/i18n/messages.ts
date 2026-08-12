@@ -543,6 +543,8 @@ export const messages = {
   "grid.savingWakeTime": { ko: "저장 중...", en: "Saving..." },
   "grid.clearWakeTime": { ko: "기상 시간 해제", en: "Clear wake time" },
   "grid.sleepTime": { ko: "수면", en: "Sleep" },
+  "grid.sleepDuration": { ko: "수면 시간", en: "Sleep duration" },
+  "grid.sleepDurationHours": { ko: "{hours}시간", en: "{hours} hours" },
   "grid.wakeTimeSaveFailed": {
     ko: "기상 시간을 저장하지 못했어요.",
     en: "Couldn't save the wake time."

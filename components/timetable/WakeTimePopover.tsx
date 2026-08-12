@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "re
 import { AlarmClock, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SleepDurationField } from "@/components/timetable/SleepDurationField";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useT } from "@/lib/i18n/locale";
 import type { ProjectDay } from "@/types/project";
@@ -20,18 +21,20 @@ export function WakeTimePopover({
   day: ProjectDay;
   anchorPoint: { x: number; y: number };
   onClose: () => void;
-  onSave: (dayId: string, wakeTime: string | null) => Promise<void>;
+  onSave: (dayId: string, wakeTime: string | null, sleepDurationMinutes: number) => Promise<void>;
 }) {
   const t = useT();
   const fmt = useDateFormat();
   const panelRef = useRef<HTMLElement>(null);
   const [wakeTime, setWakeTime] = useState(day.wake_time?.slice(0, 5) || "07:00");
+  const [sleepDuration, setSleepDuration] = useState(day.sleep_duration_minutes ?? 420);
   const [saving, setSaving] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     setWakeTime(day.wake_time?.slice(0, 5) || "07:00");
-  }, [day.id, day.wake_time]);
+    setSleepDuration(day.sleep_duration_minutes ?? 420);
+  }, [day.id, day.wake_time, day.sleep_duration_minutes]);
 
   useLayoutEffect(() => {
     function place() {
@@ -62,7 +65,7 @@ export function WakeTimePopover({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [anchorPoint.x, anchorPoint.y, day.id, day.wake_time]);
+  }, [anchorPoint.x, anchorPoint.y, day.id, day.wake_time, day.sleep_duration_minutes]);
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -77,7 +80,7 @@ export function WakeTimePopover({
     if (!wakeTime || saving) return;
     setSaving(true);
     try {
-      await onSave(day.id, wakeTime);
+      await onSave(day.id, wakeTime, sleepDuration);
     } catch {
       setWakeTime(day.wake_time?.slice(0, 5) || "07:00");
     } finally {
@@ -89,7 +92,7 @@ export function WakeTimePopover({
     if (saving) return;
     setSaving(true);
     try {
-      await onSave(day.id, null);
+      await onSave(day.id, null, sleepDuration);
       onClose();
     } catch {
       // The grid owns the error toast; leave the editor open for another try.
@@ -143,6 +146,13 @@ export function WakeTimePopover({
             autoFocus
           />
         </label>
+
+        <SleepDurationField
+          value={sleepDuration}
+          disabled={saving}
+          onChange={setSleepDuration}
+          className="mt-4"
+        />
 
         <div className="mt-4 flex min-h-8 items-center justify-between gap-3">
           <Button type="button" variant="ghost" size="sm" onClick={clear} disabled={saving}>

@@ -11,6 +11,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SleepDurationField } from "@/components/timetable/SleepDurationField";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useT } from "@/lib/i18n/locale";
 import type { ProjectDay } from "@/types/project";
@@ -22,15 +23,19 @@ export function WakeTimeDialog({
 }: {
   day: ProjectDay | null;
   onClose: () => void;
-  onSave: (dayId: string, wakeTime: string | null) => Promise<void>;
+  onSave: (dayId: string, wakeTime: string | null, sleepDurationMinutes: number) => Promise<void>;
 }) {
   const t = useT();
   const fmt = useDateFormat();
   const [wakeTime, setWakeTime] = useState("07:00");
+  const [sleepDuration, setSleepDuration] = useState(420);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (day) setWakeTime(day.wake_time?.slice(0, 5) || "07:00");
+    if (day) {
+      setWakeTime(day.wake_time?.slice(0, 5) || "07:00");
+      setSleepDuration(day.sleep_duration_minutes ?? 420);
+    }
   }, [day]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -38,7 +43,7 @@ export function WakeTimeDialog({
     if (!day || !wakeTime || saving) return;
     setSaving(true);
     try {
-      await onSave(day.id, wakeTime);
+      await onSave(day.id, wakeTime, sleepDuration);
       onClose();
     } catch {
       // The grid owns the error toast; keep the dialog open for another try.
@@ -51,7 +56,7 @@ export function WakeTimeDialog({
     if (!day || saving) return;
     setSaving(true);
     try {
-      await onSave(day.id, null);
+      await onSave(day.id, null, sleepDuration);
       onClose();
     } catch {
       // The grid owns the error toast; keep the dialog open for another try.
@@ -87,6 +92,12 @@ export function WakeTimeDialog({
               autoFocus
             />
           </label>
+
+          <SleepDurationField
+            value={sleepDuration}
+            disabled={saving}
+            onChange={setSleepDuration}
+          />
 
           <div className="flex items-center justify-between gap-3">
             {day?.wake_time ? (

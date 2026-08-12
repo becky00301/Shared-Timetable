@@ -83,6 +83,7 @@ export type Database = {
           sort_order: number;
           note: string | null;
           wake_time: string | null;
+          sleep_duration_minutes: number;
           created_at: string;
         };
         Insert: {
@@ -92,6 +93,7 @@ export type Database = {
           sort_order?: number;
           note?: string | null;
           wake_time?: string | null;
+          sleep_duration_minutes?: number;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_days"]["Insert"]>;

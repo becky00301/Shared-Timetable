@@ -66,6 +66,7 @@ function positionOverlappingSchedules(schedules: ScheduleItem[]): PositionedSche
 // TimetableGrid so they can span every column and stay aligned.
 export function DateColumn({
   day,
+  nextDay,
   schedules,
   availability,
   memberCount,
@@ -84,6 +85,7 @@ export function DateColumn({
   onPointerStart
 }: {
   day: ProjectDay;
+  nextDay: ProjectDay | null;
   schedules: ScheduleItem[];
   availability: AvailabilitySlot[];
   memberCount: number;
@@ -104,7 +106,20 @@ export function DateColumn({
   const t = useT();
   const positionedSchedules = positionOverlappingSchedules(schedules);
   const wakeMinutes = day.wake_time ? timeToMinutes(day.wake_time) : null;
-  const sleepStartMinutes = wakeMinutes === null ? null : Math.max(0, wakeMinutes - 7 * 60);
+  const sleepDuration = day.sleep_duration_minutes ?? 420;
+  const morningSleepStart = wakeMinutes === null ? null : Math.max(0, wakeMinutes - sleepDuration);
+  const nextWakeMinutes = nextDay?.wake_time ? timeToMinutes(nextDay.wake_time) : null;
+  const nextSleepStart = nextWakeMinutes === null
+    ? null
+    : nextWakeMinutes - (nextDay?.sleep_duration_minutes ?? 420);
+  const dayTimestamp = Date.parse(`${day.date}T00:00:00Z`);
+  const nextTimestamp = nextDay ? Date.parse(`${nextDay.date}T00:00:00Z`) : null;
+  const isNextCalendarDay = nextTimestamp !== null
+    ? nextTimestamp - dayTimestamp === 24 * 60 * 60 * 1000
+    : false;
+  const eveningSleepStart = isNextCalendarDay && nextSleepStart !== null && nextSleepStart < 0
+    ? 24 * 60 + nextSleepStart
+    : null;
 
   return (
     <div
@@ -125,12 +140,27 @@ export function DateColumn({
           }
         }}
       >
-        {wakeMinutes !== null && sleepStartMinutes !== null ? (
+        {eveningSleepStart !== null ? (
           <div
             className="pointer-events-none absolute inset-x-0 z-[1] overflow-hidden bg-[#E9EDF4]/80"
             style={{
-              top: minutesToTop(sleepStartMinutes, hourHeight),
-              height: minutesToTop(wakeMinutes - sleepStartMinutes, hourHeight)
+              top: minutesToTop(eveningSleepStart, hourHeight),
+              height: minutesToTop(24 * 60 - eveningSleepStart, hourHeight)
+            }}
+            aria-hidden="true"
+          >
+            <div className="absolute left-1 top-1 flex items-center gap-1 text-[10px] font-medium text-[#596579]">
+              <Moon size={11} />
+              <span className="hidden sm:inline">{t("grid.sleepTime")}</span>
+            </div>
+          </div>
+        ) : null}
+        {wakeMinutes !== null && morningSleepStart !== null ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 z-[1] overflow-hidden bg-[#E9EDF4]/80"
+            style={{
+              top: minutesToTop(morningSleepStart, hourHeight),
+              height: minutesToTop(wakeMinutes - morningSleepStart, hourHeight)
             }}
             aria-hidden="true"
           >
