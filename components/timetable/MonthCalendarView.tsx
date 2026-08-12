@@ -5,6 +5,7 @@ import { addMonths, endOfMonth, format, getDay, startOfMonth } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { useDateFormat } from "@/lib/i18n/dates";
+import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
@@ -103,7 +104,10 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
                     onClick={() => setSelectedSchedule(item.id)}
                     title={item.title}
                     className="block w-full rounded-[4px] px-1 py-0.5 text-left transition hover:opacity-80 sm:px-1.5"
-                    style={{ backgroundColor: `${item.color ?? "#1972F7"}55` }}
+                    style={{
+                      backgroundColor: item.color ?? "#1972F7",
+                      color: getScheduleTextColor(item.color ?? "#1972F7")
+                    }}
                   >
                     {/* `button { font: inherit }` in globals.css beats any
                         text-size utility on the button itself, so the size
@@ -111,15 +115,15 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
                         their own line so neither has to share width with the
                         other before truncating. */}
                     {item.all_day ? (
-                      <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                      <span className="block truncate text-[10px] text-current sm:text-xs">
                         {item.title}
                       </span>
                     ) : (
                       <>
-                        <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                        <span className="block truncate text-[10px] text-current sm:text-xs">
                           {item.start_time.slice(0, 5)}
                         </span>
-                        <span className="block truncate text-[10px] text-foreground sm:text-xs">
+                        <span className="block truncate text-[10px] text-current sm:text-xs">
                           {item.title}
                         </span>
                       </>

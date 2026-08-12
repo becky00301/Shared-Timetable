@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
 import { GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
 import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
 import {
@@ -72,6 +73,7 @@ export function ScheduleBlock({
         }
       : undefined;
   const isSplit = laneCount > 1;
+  const textColor = getScheduleTextColor(item.color);
 
   function startResize(edge: "top" | "bottom", event: React.PointerEvent) {
     if (!canEdit) return;
@@ -124,13 +126,14 @@ export function ScheduleBlock({
         "absolute left-1 right-1 z-10 touch-manipulation cursor-pointer overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
         !isInteractive && "pointer-events-none",
-        isSelected && "ring-2 ring-white/70",
+        isSelected && (textColor === "#111827" ? "ring-2 ring-black/40" : "ring-2 ring-white/70"),
         isDragging && "opacity-70"
       )}
       style={{
         top,
         height,
         backgroundColor: item.color,
+        color: textColor,
         transform: CSS.Translate.toString(transform),
         ...splitPosition
       }}
@@ -143,7 +146,7 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 top-0 flex h-2 items-center justify-center text-white/70"
+        className="absolute inset-x-0 top-0 flex h-2 items-center justify-center text-current opacity-70"
         onPointerDown={(event) => startResize("top", event)}
         aria-label="Resize schedule start"
       >
@@ -152,7 +155,7 @@ export function ScheduleBlock({
       <div className="mt-1 min-w-0">
         <p
           className={cn(
-            "font-semibold leading-tight text-white",
+            "font-semibold leading-tight text-current",
             isSplit
               ? "truncate text-[9px] sm:text-xs"
               : "text-[11px] [overflow-wrap:anywhere] sm:text-sm"
@@ -162,7 +165,7 @@ export function ScheduleBlock({
         </p>
         <p
           className={cn(
-            "mt-1 leading-tight text-white/85",
+            "mt-1 leading-tight text-current opacity-[0.82]",
             isSplit
               ? cn("overflow-hidden whitespace-nowrap", laneCount > 2 ? "text-[8px]" : "text-[9px]")
               : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
@@ -180,7 +183,7 @@ export function ScheduleBlock({
         {item.location ? (
           <p
             className={cn(
-              "mt-1 leading-tight text-white/75",
+              "mt-1 leading-tight text-current opacity-70",
               isSplit
                 ? "truncate text-[9px] sm:text-[10px]"
                 : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
@@ -193,7 +196,7 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 bottom-0 flex h-2 items-center justify-center text-white/70"
+        className="absolute inset-x-0 bottom-0 flex h-2 items-center justify-center text-current opacity-70"
         onPointerDown={(event) => startResize("bottom", event)}
         aria-label="Resize schedule end"
       >

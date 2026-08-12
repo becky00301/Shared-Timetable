@@ -6,6 +6,7 @@ import { ExternalLink } from "lucide-react";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useT } from "@/lib/i18n/locale";
+import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
 import { durationToHeight, formatTimeRange, minutesToTop, timeToMinutes } from "@/lib/utils/time";
 import type { ProjectKind } from "@/types/project";
 
@@ -210,13 +211,14 @@ export function EmbeddedTimetable({
                 {allDaySpans.map((span) => (
                   <div
                     key={span.item.id}
-                    className="absolute flex items-center overflow-hidden rounded-[4px] px-1.5 text-[10px] font-medium text-white"
+                    className="absolute flex items-center overflow-hidden rounded-[4px] px-1.5 text-[10px] font-medium"
                     style={{
                       left: `${(span.start / sortedDays.length) * 100}%`,
                       width: `${((span.end - span.start + 1) / sortedDays.length) * 100}%`,
                       top: span.lane * 26 + 2,
                       height: 22,
-                      backgroundColor: span.item.color ?? "#1972F7"
+                      backgroundColor: span.item.color ?? "#1972F7",
+                      color: getScheduleTextColor(span.item.color ?? "#1972F7")
                     }}
                   >
                     <span className="truncate">{span.item.title}</span>
@@ -264,17 +266,18 @@ function StaticDayColumn({ schedules }: { schedules: EmbeddedSchedule[] }) {
                 height: Math.max(28, durationToHeight(item.start_time, item.end_time, HOUR_HEIGHT)),
                 left: `calc(${(lane / laneCount) * 100}% + ${lane === 0 ? 3 : 1}px)`,
                 right: `calc(${((laneCount - lane - 1) / laneCount) * 100}% + ${lane === laneCount - 1 ? 3 : 1}px)`,
-                backgroundColor: item.color ?? "#1972F7"
+                backgroundColor: item.color ?? "#1972F7",
+                color: getScheduleTextColor(item.color ?? "#1972F7")
               }}
             >
-              <p className={split ? "truncate text-[9px] font-semibold leading-tight text-white" : "text-[10px] font-semibold leading-tight text-white [overflow-wrap:anywhere]"}>
+              <p className={split ? "truncate text-[9px] font-semibold leading-tight text-current" : "text-[10px] font-semibold leading-tight text-current [overflow-wrap:anywhere]"}>
                 {item.title}
               </p>
-              <p className="mt-0.5 truncate text-[8px] leading-tight text-white/85">
+              <p className="mt-0.5 truncate text-[8px] leading-tight text-current opacity-[0.82]">
                 {formatTimeRange(item.start_time.slice(0, 5), item.end_time.slice(0, 5))}
               </p>
               {item.location ? (
-                <p className="mt-0.5 truncate text-[8px] leading-tight text-white/75">{item.location}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-current opacity-70">{item.location}</p>
               ) : null}
             </div>
           );

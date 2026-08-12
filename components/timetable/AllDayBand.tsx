@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
+import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
 import type { ProjectDay } from "@/types/project";
 import type { ScheduleItem } from "@/types/schedule";
 
@@ -264,7 +265,7 @@ function AllDayBar({
         onPointerDown={(event) => event.stopPropagation()}
         title={span.item.title}
         className={cn(
-          "absolute flex touch-manipulation items-center rounded-[4px] px-1.5 text-left text-[10px] font-medium text-white sm:text-xs",
+          "absolute flex touch-manipulation items-center rounded-[4px] px-1.5 text-left text-[10px] font-medium sm:text-xs",
           isSelected && "ring-2 ring-black/30"
         )}
         style={{
@@ -273,7 +274,8 @@ function AllDayBar({
           top: span.lane * LANE_HEIGHT,
           height: LANE_HEIGHT - 4,
           marginTop: 2,
-          backgroundColor: span.item.color ?? "#2383e2"
+          backgroundColor: span.item.color ?? "#2383e2",
+          color: getScheduleTextColor(span.item.color ?? "#2383e2")
         }}
       >
         <span className="truncate">{span.item.title}</span>

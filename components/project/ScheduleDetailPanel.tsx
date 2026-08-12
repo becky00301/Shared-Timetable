@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
+import { cn } from "@/lib/utils/cn";
+import { SCHEDULE_COLOR_GROUPS } from "@/lib/utils/schedule-colors";
 import { timeToMinutes } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
-
-const COLORS = ["#1972F7", "#8B5CF6", "#F59E0B", "#22C55E", "#EF4444"];
 
 const POPOVER_GAP = 8;
 const VIEWPORT_MARGIN = 12;
@@ -314,17 +314,28 @@ export function ScheduleDetailPanel({
 
         <div className="flex flex-col gap-1.5 text-muted">
           {t("detail.color")}
-          <div className="flex gap-2">
-            {COLORS.map((color) => (
-              <button
-                key={color}
-                type="button"
-                disabled={!canEdit}
-                onClick={() => save({ color })}
-                className="size-8 rounded-full border border-black/20 transition"
-                style={{ backgroundColor: color, outline: item.color === color ? "2px solid white" : "none" }}
-                aria-label={t("detail.colorLabel", { color })}
-              />
+          <div className="flex flex-col gap-2">
+            {SCHEDULE_COLOR_GROUPS.map((colors) => (
+              <div key={colors[0]} className="grid grid-cols-5 gap-2">
+                {colors.map((color) => {
+                  const selected = item.color?.toLowerCase() === color.toLowerCase();
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      disabled={!canEdit}
+                      onClick={() => save({ color })}
+                      className={cn(
+                        "size-8 rounded-full border border-black/20 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60",
+                        selected && "ring-2 ring-foreground ring-offset-2 ring-offset-surface"
+                      )}
+                      style={{ backgroundColor: color }}
+                      aria-label={t("detail.colorLabel", { color })}
+                      aria-pressed={selected}
+                    />
+                  );
+                })}
+              </div>
             ))}
           </div>
         </div>

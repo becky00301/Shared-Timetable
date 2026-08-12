@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
+import { DEFAULT_SCHEDULE_COLOR } from "@/lib/utils/schedule-colors";
 import type { Project, ProjectDay, ProjectKind, ProjectMember, ProjectNote } from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
@@ -502,7 +503,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       location: item.location || null,
       start_time: item.start_time,
       end_time: item.end_time,
-      color: item.color ?? "#1972F7",
+      color: item.color ?? DEFAULT_SCHEDULE_COLOR,
       all_day: item.all_day ?? false,
       end_day_id: item.end_day_id ?? null
     };
