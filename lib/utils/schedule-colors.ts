@@ -1,8 +1,8 @@
 export const SCHEDULE_COLOR_GROUPS = [
-  ["#C5F9FC", "#D4E5FB", "#66C7F4", "#9DD9D2", "#D9EFBD"],
-  ["#F5FBDA", "#B9D175", "#F4D06F", "#FF8811", "#FF1053"],
-  ["#A33E79", "#4F032E", "#450C3F", "#5320C0", "#6C6EA0"],
-  ["#392F5A", "#1D0C13", "#D9D2C4", "#EDEDE8", "#FFF8F0"]
+  ["#FF1053", "#FF8811", "#F4D06F", "#F5FBDA", "#B9D175"],
+  ["#D9EFBD", "#9DD9D2", "#C5F9FC", "#66C7F4", "#D4E5FB"],
+  ["#6C6EA0", "#392F5A", "#5320C0", "#450C3F", "#A33E79"],
+  ["#4F032E", "#1D0C13", "#D9D2C4", "#EDEDE8", "#FFF8F0"]
 ] as const;
 
 export const DEFAULT_SCHEDULE_COLOR = "#5320C0";
