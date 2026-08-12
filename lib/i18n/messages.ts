@@ -272,6 +272,21 @@ export const messages = {
   "dashboard.previousMonth": { ko: "이전 달", en: "Previous month" },
   "dashboard.nextMonth": { ko: "다음 달", en: "Next month" },
   "dashboard.noSchedulesForDay": { ko: "이날은 일정이 없어요.", en: "No schedules for this day." },
+  "dashboard.ongoingProjects": { ko: "진행 중인 프로젝트", en: "Ongoing projects" },
+  "dashboard.upcomingProjects": { ko: "다가올 프로젝트", en: "Upcoming projects" },
+  "dashboard.pastProjects": { ko: "지난 프로젝트", en: "Past projects" },
+  "dashboard.noOngoingProjects": {
+    ko: "현재 진행 중인 프로젝트가 없어요.",
+    en: "No projects are currently in progress."
+  },
+  "dashboard.noUpcomingProjects": {
+    ko: "다가올 프로젝트가 없어요.",
+    en: "No upcoming projects."
+  },
+  "dashboard.noPastProjects": {
+    ko: "지난 프로젝트가 없어요.",
+    en: "No past projects."
+  },
   "dashboard.loadFailed": {
     ko: "프로젝트를 불러오지 못했어요.",
     en: "Couldn't load your timetables."
