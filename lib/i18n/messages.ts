@@ -482,6 +482,22 @@ export const messages = {
   "export.tile.png": { ko: "이미지", en: "Image" },
   "export.tile.pdf": { ko: "PDF", en: "PDF" },
   "export.tile.excel": { ko: "엑셀", en: "Excel" },
+  "export.embed.title": { ko: "노션에 임베드", en: "Embed in Notion" },
+  "export.embed.hint": {
+    ko: "노션에서 /임베드 를 입력하고 아래 링크를 붙여넣으면 시간표가 읽기 전용으로 보여요. 일정이 바뀌면 임베드도 자동으로 최신 상태가 됩니다.",
+    en: "Type /embed in Notion and paste this link — the timetable shows read-only and stays up to date as schedules change."
+  },
+  "export.embed.linkLabel": { ko: "임베드 링크", en: "Embed link" },
+  "export.embed.copyCode": { ko: "iframe 코드 복사", en: "Copy iframe code" },
+  "export.embed.codeCopied": { ko: "iframe 코드를 복사했어요.", en: "iframe code copied." },
+  "export.embed.copyFailed": {
+    ko: "복사하지 못했어요. 링크를 직접 선택해서 복사해주세요.",
+    en: "Couldn't copy. Select the link and copy it manually."
+  },
+  "export.embed.warning": {
+    ko: "링크를 가진 사람은 로그인 없이 일정 제목·시간·장소를 볼 수 있어요. 참여자와 메모는 보이지 않습니다.",
+    en: "Anyone with the link can see schedule titles, times and locations without logging in. Participants and notes stay hidden."
+  },
 
   // ---------------------------------------------------------------- invite
   "invite.eyebrow": { ko: "플래너 투게더 초대", en: "Planner Together invitation" },
