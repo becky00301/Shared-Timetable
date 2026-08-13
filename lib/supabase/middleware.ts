@@ -4,8 +4,10 @@ import { getSupabasePublicConfig } from "@/lib/supabase/env";
 
 const PROTECTED_PREFIXES = ["/account", "/dashboard", "/plans"];
 const EMBED_TOKEN_PATTERN = /^[A-Fa-f0-9]{32}$/;
-const FRAME_ANCESTORS =
-  "frame-ancestors https://notion.so https://*.notion.so https://notion.site https://*.notion.site https://notion.com https://*.notion.com https://iframe.ly https://*.iframe.ly";
+// Mirrors the /embed header in next.config.ts: the embed token is the access
+// control, so any host may frame a timetable that was rewritten to the
+// read-only embed view.
+const FRAME_ANCESTORS = "frame-ancestors *";
 
 function projectEmbedToken(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith("/plans/")) return null;

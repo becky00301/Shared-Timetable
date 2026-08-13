@@ -35,9 +35,11 @@ const nextConfig: NextConfig = {
         source: "/embed/:path*",
         headers: [
           {
+            // Any host may frame an embed: the unguessable token is the access
+            // control, and a domain allowlist silently blanks out surfaces we
+            // can't enumerate (Notion desktop, iframely proxies, other wikis).
             key: "Content-Security-Policy",
-            value:
-              "frame-ancestors https://notion.so https://*.notion.so https://notion.site https://*.notion.site https://notion.com https://*.notion.com https://iframe.ly https://*.iframe.ly"
+            value: "frame-ancestors *"
           },
           {
             key: "Referrer-Policy",
