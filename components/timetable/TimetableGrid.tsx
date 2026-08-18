@@ -11,14 +11,16 @@ import {
 } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { toast } from "sonner";
+import { DayRouteMapDialog } from "@/components/map/DayRouteMapDialog";
 import { AllDayBand } from "@/components/timetable/AllDayBand";
 import { DateColumn } from "@/components/timetable/DateColumn";
 import { LiveCursors } from "@/components/timetable/LiveCursors";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { WakeTimeDialog } from "@/components/timetable/WakeTimeDialog";
 import { WakeTimePopover } from "@/components/timetable/WakeTimePopover";
-import { AlarmClock } from "lucide-react";
+import { AlarmClock, Map as MapIcon } from "lucide-react";
 import { useLiveCursors } from "@/lib/supabase/cursors";
+import { googleMapsApiKey } from "@/lib/maps/loader";
 import { useT } from "@/lib/i18n/locale";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { cn } from "@/lib/utils/cn";
@@ -100,6 +102,7 @@ export function TimetableGrid({
     naming: boolean;
   } | null>(null);
   const [wakeDay, setWakeDay] = useState<ProjectDay | null>(null);
+  const [mapDay, setMapDay] = useState<ProjectDay | null>(null);
   const [wakeSelection, setWakeSelection] = useState<{
     dayId: string;
     anchorPoint: { x: number; y: number };
@@ -478,6 +481,13 @@ export function TimetableGrid({
         onClose={() => setWakeDay(null)}
         onSave={saveWakeTime}
       />
+      <DayRouteMapDialog
+        day={mapDay}
+        days={days}
+        schedules={schedules}
+        onSelectDay={setMapDay}
+        onClose={() => setMapDay(null)}
+      />
       {wakeSelection && wakeSelectionDay ? (
         <WakeTimePopover
           day={wakeSelectionDay}
@@ -508,6 +518,7 @@ export function TimetableGrid({
                     setWakeSelection(null);
                     setWakeDay(day);
                   }}
+                  onOpenMap={() => setMapDay(day)}
                 />
               ))}
             </div>
@@ -588,13 +599,15 @@ function DayHeaderCell({
   weekdayOnly,
   width,
   canEdit,
-  onEditWakeTime
+  onEditWakeTime,
+  onOpenMap
 }: {
   day: ProjectDay;
   weekdayOnly?: boolean;
   width?: number;
   canEdit: boolean;
   onEditWakeTime: () => void;
+  onOpenMap: () => void;
 }) {
   const fmt = useDateFormat();
   const t = useT();
@@ -618,26 +631,41 @@ function DayHeaderCell({
             <p className="text-[11px] text-muted">{weekday}</p>
           </>
         )}
-        {canEdit ? (
-          <button
-            type="button"
-            className={cn(
-              "mx-auto mt-0.5 flex h-4 max-w-full items-center justify-center gap-1 rounded px-1 text-[9px] font-medium tabular-nums transition hover:bg-black/6 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
-              wakeTime ? "text-[#596579]" : "text-muted/70"
-            )}
-            onClick={onEditWakeTime}
-            title={t("grid.setWakeTime")}
-            aria-label={`${day.date} ${t("grid.setWakeTime")}`}
-          >
-            <AlarmClock size={10} aria-hidden="true" />
-            <span>{wakeTime || "--:--"}</span>
-          </button>
-        ) : wakeTime ? (
-          <div className="mx-auto mt-0.5 flex h-4 items-center justify-center gap-1 text-[9px] font-medium tabular-nums text-[#596579]">
-            <AlarmClock size={10} aria-hidden="true" />
-            <span>{wakeTime}</span>
-          </div>
-        ) : null}
+        <div className="mt-0.5 flex items-center justify-center gap-1">
+          {canEdit ? (
+            <button
+              type="button"
+              className={cn(
+                "flex h-4 max-w-full items-center justify-center gap-1 rounded px-1 text-[9px] font-medium tabular-nums transition hover:bg-black/6 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+                wakeTime ? "text-[#596579]" : "text-muted/70"
+              )}
+              onClick={onEditWakeTime}
+              title={t("grid.setWakeTime")}
+              aria-label={`${day.date} ${t("grid.setWakeTime")}`}
+            >
+              <AlarmClock size={10} aria-hidden="true" />
+              <span>{wakeTime || "--:--"}</span>
+            </button>
+          ) : wakeTime ? (
+            <div className="flex h-4 items-center justify-center gap-1 text-[9px] font-medium tabular-nums text-[#596579]">
+              <AlarmClock size={10} aria-hidden="true" />
+              <span>{wakeTime}</span>
+            </div>
+          ) : null}
+          {/* Without a Maps key the dialog has nothing to show, so the entry
+              point stays hidden rather than opening onto a setup notice. */}
+          {googleMapsApiKey() ? (
+            <button
+              type="button"
+              className="flex h-4 items-center justify-center rounded px-1 text-muted/70 transition hover:bg-black/6 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+              onClick={onOpenMap}
+              title={t("grid.openMap")}
+              aria-label={`${day.date} ${t("grid.openMap")}`}
+            >
+              <MapIcon size={10} aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

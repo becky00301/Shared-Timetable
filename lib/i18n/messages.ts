@@ -483,6 +483,36 @@ export const messages = {
   "export.tile.pdf": { ko: "PDF", en: "PDF" },
   "export.tile.excel": { ko: "엑셀", en: "Excel" },
 
+  // ---------------------------------------------------------------- map
+  "map.title": { ko: "이동 경로", en: "Route" },
+  "map.subtitle": {
+    ko: "위치를 입력한 일정을 시간 순서대로 지도에 이어서 보여줘요.",
+    en: "Schedules with a location, pinned and joined in time order."
+  },
+  "map.previousDay": { ko: "이전 날짜", en: "Previous day" },
+  "map.nextDay": { ko: "다음 날짜", en: "Next day" },
+  "map.noLocations": {
+    ko: "이 날짜에는 위치가 입력된 일정이 없어요. 일정의 위치 칸에 주소나 장소 이름을 넣어주세요.",
+    en: "No schedule on this day has a location yet. Add an address or place name to a schedule's location field."
+  },
+  "map.noKey": {
+    ko: "지도를 쓰려면 구글 지도 API 키가 필요해요. NEXT_PUBLIC_GOOGLE_MAPS_API_KEY 환경 변수를 설정해주세요.",
+    en: "The map needs a Google Maps API key. Set the NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable."
+  },
+  "map.failed": {
+    ko: "지도를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+    en: "Couldn't load the map. Please try again in a moment."
+  },
+  "map.notFound": { ko: "주소 못 찾음", en: "address not found" },
+  "map.noneFound": {
+    ko: "입력된 위치를 지도에서 하나도 찾지 못했어요. 주소를 더 구체적으로 적어주세요.",
+    en: "None of the locations could be found on the map. Try more specific addresses."
+  },
+  "map.notFoundHint": {
+    ko: "{count}개 일정의 위치를 지도에서 찾지 못했어요. 더 구체적인 주소로 바꾸면 표시됩니다.",
+    en: "Couldn't place {count} schedule(s) on the map. A more specific address will fix it."
+  },
+
   // ---------------------------------------------------------------- invite
   "invite.eyebrow": { ko: "플래너 투게더 초대", en: "Planner Together invitation" },
   "invite.joining": { ko: "참여하는 중...", en: "Joining…" },
@@ -554,6 +584,7 @@ export const messages = {
   "grid.wakeTime": { ko: "기상 시간", en: "Wake time" },
   "grid.wakeMode": { ko: "기상 설정", en: "Set wake time" },
   "grid.setWakeTime": { ko: "기상 시간 설정", en: "Set wake time" },
+  "grid.openMap": { ko: "이동 경로 지도", en: "Route map" },
   "grid.saveWakeTime": { ko: "저장", en: "Save" },
   "grid.savingWakeTime": { ko: "저장 중...", en: "Saving..." },
   "grid.clearWakeTime": { ko: "기상 시간 해제", en: "Clear wake time" },
