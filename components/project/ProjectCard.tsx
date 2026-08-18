@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { CalendarDays, MousePointer2 } from "lucide-react";
+import { MousePointer2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useContextMenu } from "@/components/ui/context-menu";
@@ -78,7 +78,7 @@ export function ProjectCard({
 
   return (
     <div
-      className="group relative flex min-h-48 flex-col justify-between rounded-xl border border-border bg-card p-5 transition hover:border-primary/50 hover:bg-black/[0.04]"
+      className="group relative flex min-h-36 flex-col justify-between rounded-xl border border-border bg-card p-4 transition hover:border-border-strong hover:bg-black/[0.02]"
       onContextMenu={onContextMenu}
     >
       {menu}
@@ -109,30 +109,31 @@ export function ProjectCard({
             aria-label={project.title}
             className="absolute inset-0 z-0 rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
           />
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">{project.title}</h3>
-              <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{project.description}</p>
-            </div>
-            <div className="rounded-lg border border-border bg-black/5 p-2 text-muted group-hover:text-foreground">
-              <CalendarDays size={18} />
-            </div>
-          </div>
-          <div>
-            {dateRange ? (
-              <span className="inline-flex rounded-md bg-black/6 px-2 py-1 text-xs text-muted">
-                {dateRange}
-              </span>
-            ) : (
-              <span className="text-xs text-muted">{t("card.noDates")}</span>
-            )}
+          {/* The old card carried a calendar icon on every tile — identical
+              across the grid, so it added weight without telling anyone
+              anything. What differs between cards is the title, the dates and
+              the schedule count, so only those remain. */}
+          <div className="flex flex-col gap-1">
+            <h3 className="text-base font-semibold text-foreground">{project.title}</h3>
+            {project.description ? (
+              <p className="line-clamp-2 text-sm leading-6 text-muted">{project.description}</p>
+            ) : null}
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted">
-        <span>{t("card.scheduleCount", { count: schedules.length })}</span>
-        <span className="inline-flex items-center gap-1">
-          <MousePointer2 size={14} />
+      {/* Dates and schedule count are the two facts that separate one timetable
+          from another, so they share a single meta line at the foot of the card
+          instead of floating apart. */}
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-muted">
+        <span className="truncate tabular-nums">
+          {dateRange ?? t("card.noDates")}
+          <span className="mx-1.5 text-border-emphasis">·</span>
+          {t("card.scheduleCount", { count: schedules.length })}
+        </span>
+        {/* A hint for a hidden interaction, shown only while the pointer is on
+            the card it applies to. */}
+        <span className="inline-flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
+          <MousePointer2 size={13} />
           {t("card.contextHint")}
         </span>
       </div>

@@ -134,23 +134,29 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <main className="mx-auto max-w-7xl px-5 py-10">
-        <div className="flex flex-col justify-between gap-4 border-b border-border pb-8 md:flex-row md:items-end">
+        {/* The page title is wayfinding, not the content: at 4xl it outweighed
+            every timetable listed below it. */}
+        <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end">
           <div>
-            <h1 className="text-4xl font-semibold text-foreground">{t("dashboard.title")}</h1>
-            <p className="mt-2 text-muted">{t("dashboard.subtitle")}</p>
+            <h1 className="text-2xl font-semibold text-foreground">{t("dashboard.title")}</h1>
+            <p className="mt-1 text-sm text-muted">{t("dashboard.subtitle")}</p>
           </div>
           <Button onClick={() => setCreateProjectOpen(true)}>
             <Plus size={16} />
             {t("dashboard.new")}
           </Button>
         </div>
-        <div className="mt-6 inline-grid grid-cols-2 gap-1 rounded-lg border border-border bg-card p-1">
+        {/* Same segmented control as the timetable header, so switching views
+            looks like the same gesture in both places. */}
+        <div className="mt-6 inline-grid grid-cols-2 gap-0.5 rounded-lg bg-black/[0.05] p-0.5">
           <button
             type="button"
             onClick={() => setDashboardView("projects")}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition",
-              dashboardView === "projects" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+              "flex items-center justify-center gap-2 rounded-[7px] px-3 py-1.5 text-sm transition",
+              dashboardView === "projects"
+                ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
+                : "text-muted hover:text-foreground"
             )}
           >
             <LayoutGrid size={15} />
@@ -160,8 +166,10 @@ export default function DashboardPage() {
             type="button"
             onClick={() => setDashboardView("calendar")}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition",
-              dashboardView === "calendar" ? "bg-primary text-white" : "text-muted hover:bg-black/6"
+              "flex items-center justify-center gap-2 rounded-[7px] px-3 py-1.5 text-sm transition",
+              dashboardView === "calendar"
+                ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
+                : "text-muted hover:text-foreground"
             )}
           >
             <CalendarDays size={15} />
@@ -187,7 +195,7 @@ export default function DashboardPage() {
                 className={cn(index > 0 && "border-t border-border pt-8")}
               >
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-foreground">{t(group.title)}</h2>
+                  <h2 className="text-base font-semibold text-foreground">{t(group.title)}</h2>
                   <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-black/6 px-2 py-0.5 text-xs tabular-nums text-muted">
                     {group.projects.length}
                   </span>
