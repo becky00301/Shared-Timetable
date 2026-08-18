@@ -148,12 +148,12 @@ export default function DashboardPage() {
         </div>
         {/* Same segmented control as the timetable header, so switching views
             looks like the same gesture in both places. */}
-        <div className="mt-6 inline-grid grid-cols-2 gap-0.5 rounded-lg bg-black/[0.05] p-0.5">
+        <div className="mt-6 inline-grid grid-cols-2 gap-0.5 rounded-[10px] bg-black/[0.05] p-0.5">
           <button
             type="button"
             onClick={() => setDashboardView("projects")}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-[7px] px-3 py-1.5 text-sm transition",
+              "flex items-center justify-center gap-2 rounded-[8px] px-3 py-1.5 text-sm transition",
               dashboardView === "projects"
                 ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                 : "text-muted hover:text-foreground"
@@ -166,7 +166,7 @@ export default function DashboardPage() {
             type="button"
             onClick={() => setDashboardView("calendar")}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-[7px] px-3 py-1.5 text-sm transition",
+              "flex items-center justify-center gap-2 rounded-[8px] px-3 py-1.5 text-sm transition",
               dashboardView === "calendar"
                 ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                 : "text-muted hover:text-foreground"

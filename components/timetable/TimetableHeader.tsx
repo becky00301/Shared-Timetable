@@ -56,12 +56,12 @@ export function TimetableHeader({
         {/* A segmented control, not two buttons: the selected view is a white
             pill lifted off a grey track. Filling it with the near-black primary
             made a view switch look like the page's main action. */}
-        <div className="grid shrink-0 grid-cols-2 gap-0.5 rounded-lg bg-black/[0.05] p-0.5">
+        <div className="grid shrink-0 grid-cols-2 gap-0.5 rounded-[10px] bg-black/[0.05] p-0.5">
           <button
             type="button"
             onClick={() => setViewMode("grid")}
             className={cn(
-              "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1.5 text-sm transition sm:px-3",
+              "flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-sm transition sm:px-3",
               viewMode === "grid"
                 ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                 : "text-muted hover:text-foreground"
@@ -77,7 +77,7 @@ export function TimetableHeader({
               setMode("schedule");
             }}
             className={cn(
-              "flex items-center gap-1.5 rounded-[7px] px-2.5 py-1.5 text-sm transition sm:px-3",
+              "flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-sm transition sm:px-3",
               viewMode === "month"
                 ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                 : "text-muted hover:text-foreground"
@@ -102,7 +102,7 @@ export function TimetableHeader({
                 aria-pressed={activeMode === "wake"}
                 title={t("grid.wakeMode")}
                 className={cn(
-                  "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-sm font-medium transition sm:px-3",
+                  "flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border px-2.5 text-sm font-medium transition sm:px-3",
                   activeMode === "wake"
                     ? "border-primary bg-primary text-white"
                     : "border-border bg-card text-muted hover:bg-black/6 hover:text-foreground"
@@ -113,14 +113,14 @@ export function TimetableHeader({
               </button>
             ) : null}
 
-            <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-black/[0.05] p-0.5">
+            <div className="flex shrink-0 items-center gap-0.5 rounded-[10px] bg-black/[0.05] p-0.5">
               <button
                 type="button"
                 onClick={() => setGridZoom(gridZoom - ZOOM_STEP)}
                 disabled={gridZoom <= MIN_ZOOM}
                 aria-label={t("grid.zoomOut")}
                 title={t("grid.zoomOut")}
-                className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+                className="rounded-[8px] p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <Minus size={14} />
               </button>
@@ -130,7 +130,7 @@ export function TimetableHeader({
                 onClick={resetGridZoom}
                 aria-label={t("grid.zoomReset")}
                 title={t("grid.zoomReset")}
-                className="min-w-11 rounded-md px-1 py-1 text-xs tabular-nums text-muted transition hover:bg-black/6 hover:text-foreground"
+                className="min-w-11 rounded-[8px] px-1 py-1 text-xs tabular-nums text-muted transition hover:bg-black/6 hover:text-foreground"
               >
                 {Math.round(gridZoom * 100)}%
               </button>
@@ -140,7 +140,7 @@ export function TimetableHeader({
                 disabled={gridZoom >= MAX_ZOOM}
                 aria-label={t("grid.zoomIn")}
                 title={t("grid.zoomIn")}
-                className="rounded-md p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+                className="rounded-[8px] p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <Plus size={14} />
               </button>
@@ -152,12 +152,12 @@ export function TimetableHeader({
       {isWeekly ? (
         <div className="flex items-center gap-2 text-sm text-muted">
           <span>{t("grid.weekStart")}</span>
-          <div className="grid grid-cols-2 gap-0.5 rounded-lg bg-black/[0.05] p-0.5">
+          <div className="grid grid-cols-2 gap-0.5 rounded-[10px] bg-black/[0.05] p-0.5">
             <button
               type="button"
               onClick={() => setWeekStartsOnSunday(false)}
               className={cn(
-                "rounded-[7px] px-2.5 py-1 text-sm transition",
+                "rounded-[8px] px-2.5 py-1 text-sm transition",
                 !weekStartsOnSunday
                   ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                   : "text-muted hover:text-foreground"
@@ -169,7 +169,7 @@ export function TimetableHeader({
               type="button"
               onClick={() => setWeekStartsOnSunday(true)}
               className={cn(
-                "rounded-[7px] px-2.5 py-1 text-sm transition",
+                "rounded-[8px] px-2.5 py-1 text-sm transition",
                 weekStartsOnSunday
                   ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                   : "text-muted hover:text-foreground"
