@@ -56,7 +56,11 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   return (
     <main className="bg-background text-foreground">
       {/* ---------------------------------------------------------------- hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#5c6fa0] via-[#8fa2ca] to-[#eef2f9]">
+      {/* The hero used to run through a saturated lavender that appears nowhere
+          else in the product. Same shape, same depth, but on the cool grey the
+          app itself is built from, so the first screen and the first timetable
+          look like one thing. */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#394050] via-[#79808f] to-[#f2f4f8]">
         {/* starfield */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           {DOTS.map(([top, left, size], i) => (
@@ -106,7 +110,9 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <p className="mb-4 text-sm font-semibold tracking-[0.12em] text-white/75 sm:text-base">
               {t("landing.hero.brand")}
             </p>
-            <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-7xl">
+            {/* Pretendard at 800 turns Korean headlines into a wall of strokes;
+                700 at a slightly smaller size stays emphatic and readable. */}
+            <h1 className="text-[2.75rem] font-bold leading-[1.12] tracking-[-0.02em] text-white sm:text-6xl">
               {t("landing.hero.line1")}
               <br />
               {t("landing.hero.line2")}
@@ -173,7 +179,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
 
       {/* ------------------------------------------------------------ final cta */}
       <section className="px-5 pb-20 sm:pb-28">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#5c6fa0] via-[#7286b4] to-[#8fa2ca] px-6 py-16 text-center sm:px-12 sm:py-20">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#394050] via-[#5b6373] to-[#79808f] px-6 py-16 text-center sm:px-12 sm:py-20">
           {/* Same starfield as the hero, so the page closes where it opened. */}
           <div aria-hidden className="pointer-events-none absolute inset-0">
             {DOTS.map(([top, left, size], i) => (
@@ -296,7 +302,7 @@ function DragMockup() {
       </div>
       <div className="absolute left-[37%] top-4 w-[26%]">
         <div
-          className="flex h-24 origin-top items-start rounded-[4px] bg-[#2383e2] px-2 py-1.5 text-[11px] font-semibold text-white shadow-sm"
+          className="flex h-24 origin-top items-start rounded-[4px] bg-[#3F5F94] px-2 py-1.5 text-[11px] font-semibold text-white shadow-sm"
           style={{ animation: `lp-draw 4s ${EASE} infinite` }}
         >
           {label}
@@ -335,7 +341,7 @@ function DatesMockup() {
             <div key={i} className="relative flex aspect-square items-center justify-center">
               {sel ? (
                 <span
-                  className="absolute inset-0.5 rounded-md bg-[#2383e2]"
+                  className="absolute inset-0.5 rounded-md bg-[#3F5F94]"
                   style={{ animation: `lp-cell-on 4s ${EASE} infinite`, animationDelay: `${range.indexOf(i) * 130}ms` }}
                 />
               ) : null}
@@ -369,25 +375,25 @@ function CollabMockup() {
       </div>
       {/* blocks the two people drop in */}
       <div
-        className="absolute left-[6%] top-6 w-[26%] rounded-[4px] bg-[#e93d82] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
+        className="absolute left-[6%] top-6 w-[26%] rounded-[4px] bg-[#8C4249] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
         style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "200ms" }}
       >
         {b1}
       </div>
       <div
-        className="absolute left-[68%] top-16 w-[26%] rounded-[4px] bg-[#2383e2] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
+        className="absolute left-[68%] top-16 w-[26%] rounded-[4px] bg-[#3F5F94] px-2 py-1 text-[11px] font-semibold text-white shadow-sm"
         style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "1400ms" }}
       >
         {b2}
       </div>
       {/* live cursors */}
       <div className="absolute left-[10%] top-2" style={{ animation: `lp-cursor-a 4s ${EASE} infinite` }}>
-        <MousePointer2 size={16} className="fill-[#e93d82] text-[#e93d82]" />
-        <span className="ml-2 rounded bg-[#e93d82] px-1.5 py-0.5 text-[9px] font-medium text-white">{meA}</span>
+        <MousePointer2 size={16} className="fill-[#E93D82] text-[#E93D82]" />
+        <span className="ml-2 rounded bg-[#E93D82] px-1.5 py-0.5 text-[9px] font-medium text-white">{meA}</span>
       </div>
       <div className="absolute right-[10%] top-4" style={{ animation: `lp-cursor-b 4s ${EASE} infinite` }}>
-        <MousePointer2 size={16} className="fill-[#2383e2] text-[#2383e2]" />
-        <span className="ml-2 rounded bg-[#2383e2] px-1.5 py-0.5 text-[9px] font-medium text-white">{meB}</span>
+        <MousePointer2 size={16} className="fill-[#0091FF] text-[#0091FF]" />
+        <span className="ml-2 rounded bg-[#0091FF] px-1.5 py-0.5 text-[9px] font-medium text-white">{meB}</span>
       </div>
     </div>
   );
@@ -424,7 +430,7 @@ function ShareMockup() {
         ))}
       </div>
       <div
-        className="absolute right-4 top-12 rounded-md bg-[#22c55e] px-2 py-1 text-[10px] font-semibold text-white shadow-md"
+        className="absolute right-4 top-12 rounded-md bg-[#30A46C] px-2 py-1 text-[10px] font-semibold text-white shadow-md"
         style={{ animation: `lp-copied 4s ${EASE} infinite` }}
       >
         {copied}
@@ -443,27 +449,32 @@ function HeroMockup() {
   const ko = locale === "ko";
   const days = ko ? ["월", "화", "수"] : ["Mon", "Tue", "Wed"];
 
-  // The first block is already on the grid; the rest get drawn by a peer, so
-  // each peer's colour matches the block they leave behind.
-  const settled = { col: 0, top: 14, height: 40, color: "#2383e2", label: ko ? "출발" : "Depart" };
+  // The first block is already on the grid; the rest get drawn by a peer.
+  // Cursors keep the bright identity colours the app assigns to people, while
+  // the blocks they leave behind use the schedule palette — the same split the
+  // real timetable has.
+  const settled = { col: 0, top: 14, height: 40, color: "#3F5F94", label: ko ? "출발" : "Depart" };
   const peers = [
     {
       name: ko ? "민지" : "Minji",
-      color: "#8b5cf6",
+      color: "#8E4EC6",
+      blockColor: "#8C4249",
       from: ["-70px", "-46px"],
       delay: "0s",
       block: { col: 1, top: 30, height: 56, label: ko ? "로마 구경" : "Rome tour" }
     },
     {
       name: ko ? "지훈" : "Alex",
-      color: "#22c55e",
+      color: "#30A46C",
+      blockColor: "#4A7040",
       from: ["84px", "-34px"],
       delay: "1.2s",
       block: { col: 2, top: 8, height: 32, label: ko ? "체크인" : "Check-in" }
     },
     {
       name: ko ? "나" : "Me",
-      color: "#f59e0b",
+      color: "#E2A400",
+      blockColor: "#8A6224",
       from: ["48px", "72px"],
       delay: "2.4s",
       block: { col: 2, top: 52, height: 44, label: ko ? "저녁" : "Dinner" }
@@ -509,7 +520,7 @@ function HeroMockup() {
               className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold text-white shadow-sm"
               style={{
                 ...blockBox(peer.block),
-                backgroundColor: peer.color,
+                backgroundColor: peer.blockColor,
                 animation: `hero-block ${HERO_LOOP} ease-out ${peer.delay} infinite`
               }}
             >
