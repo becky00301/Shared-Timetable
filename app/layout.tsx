@@ -50,6 +50,15 @@ export default function RootLayout({
   return (
     <html lang="ko" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body>
+        {/* Pretendard, dynamic-subset: the browser pulls only the unicode
+            ranges a page actually renders, so Korean copy gets a real typeface
+            for a few tens of KB instead of the OS fallback. React hoists these
+            into <head>. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
         {gtmId ? (
           <noscript>
             <iframe

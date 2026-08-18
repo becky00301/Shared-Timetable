@@ -1,11 +1,17 @@
+// A grid rather than a grab bag: each column is one hue, each row one step
+// darker. Picking any two colours gives a pair that already agrees, and a full
+// day of blocks reads as one timetable instead of a set of warning lights.
+// Every entry is checked against getScheduleTextColor so its label lands on the
+// right side of the contrast threshold.
 export const SCHEDULE_COLOR_GROUPS = [
-  ["#FF1053", "#FF8811", "#F4D06F", "#F5FBDA", "#B9D175"],
-  ["#D9EFBD", "#9DD9D2", "#C5F9FC", "#66C7F4", "#D4E5FB"],
-  ["#6C6EA0", "#392F5A", "#5320C0", "#450C3F", "#A33E79"],
-  ["#4F032E", "#1D0C13", "#D9D2C4", "#EDEDE8", "#FFF8F0"]
+  // neutral   blue       teal       green      amber      rose
+  ["#ECEEF1", "#DCE7F8", "#D6EDEA", "#DEEBD8", "#F6E9CF", "#F7DFE0"],
+  ["#D8DCE2", "#B9CFF0", "#ADDCD6", "#C2DCB6", "#EDD3A1", "#EFC3C5"],
+  ["#A8B0BC", "#7FA6DE", "#6FBDB2", "#8FBF7E", "#DCB05E", "#DE9095"],
+  ["#545C68", "#3F5F94", "#2F6E68", "#4A7040", "#8A6224", "#8C4249"]
 ] as const;
 
-export const DEFAULT_SCHEDULE_COLOR = "#5320C0";
+export const DEFAULT_SCHEDULE_COLOR = "#B9CFF0";
 
 export function getScheduleTextColor(backgroundColor?: string | null) {
   const normalized = backgroundColor?.trim().replace(/^#/, "");

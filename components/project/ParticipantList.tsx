@@ -27,20 +27,21 @@ export function ParticipantList({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       {members.map((member) => (
+        // Plain rows rather than stacked cards: a boxed card per person turned a
+        // three-person list into three competing blocks. The email moves to the
+        // row's title so the list stays one line per participant.
         <div
           key={member.id}
-          className="flex items-center justify-between gap-2 rounded-lg border border-border bg-black/[0.03] px-3 py-2"
+          className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 transition hover:bg-black/[0.04]"
+          title={member.user?.email}
         >
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-blue-700">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-[11px] font-semibold text-foreground">
               {member.user?.name?.slice(0, 1) ?? "U"}
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm text-foreground">{member.user?.name ?? "Member"}</p>
-              <p className="truncate text-xs text-muted">{member.user?.email}</p>
-            </div>
+            <p className="truncate text-sm text-foreground">{member.user?.name ?? "Member"}</p>
           </div>
           {canManage && member.role !== "owner" ? (
             <select

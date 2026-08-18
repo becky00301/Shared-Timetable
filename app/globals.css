@@ -13,7 +13,9 @@
   --color-surface: var(--background-subtle);
   --color-card: var(--background-subtle);
   --color-muted: var(--foreground-muted);
-  --shadow-glow: 0 1px 2px oklch(0 0 0 / 6%), 0 10px 30px oklch(0 0 0 / 8%);
+  /* A quieter lift: the old 30px spread read as a glow around every card,
+     which competes with the grid for attention. */
+  --shadow-glow: 0 1px 2px oklch(0 0 0 / 4%), 0 8px 20px oklch(0 0 0 / 6%);
   /* Between phone widths and the desktop (lg) two-column layouts, content
      sized for mobile stretches edge-to-edge and looks oversized. `tablet:`
      gives that in-between range (800px+) its own step. */
@@ -22,6 +24,24 @@
 
 :root {
   color-scheme: light;
+}
+
+/* Appica's defaults are built for dense dashboards, where body copy sits at a
+   mid grey. This app is read at arm's length on a timetable, so the neutral
+   ramp is re-anchored: primary text darker, secondary text pulled away from it
+   so the two levels are unmistakable, and surfaces separated enough that the
+   sidebar reads as a different plane from the grid. Hue stays on Appica's cool
+   grey (~264) so nothing clashes with the components it ships. */
+:root {
+  --foreground: oklch(0.32 0.021 264);
+  --foreground-muted: oklch(0.545 0.024 264);
+  --foreground-subtle: oklch(0.665 0.021 264);
+
+  --background-subtle: oklch(0.978 0.002 264);
+  --background-muted: oklch(0.962 0.003 264);
+
+  --border: oklch(0.916 0.005 264);
+  --border-muted: oklch(0.951 0.003 264);
 }
 
 * {
@@ -34,11 +54,16 @@ html {
 
 /* Appica's base layer already sets body background/color/antialiasing; only
    the app's font stack is layered on top. */
+/* Pretendard leads: it carries Korean, and its Latin/numerals sit close enough
+   to Inter that the existing English copy keeps its proportions. */
 body {
   margin: 0;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    "Pretendard Variable", Pretendard, Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Korean text has no ascender/descender variety to lean on, so slightly
+     tighter tracking keeps headings from looking loose. */
+  letter-spacing: -0.011em;
 }
 
 /* Normalizes native form-control font styling. This has to live in `@layer

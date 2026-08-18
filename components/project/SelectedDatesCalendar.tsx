@@ -94,7 +94,7 @@ export function SelectedDatesCalendar({
   return (
     <>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.selectedDates")}</h2>
+        <h2 className="text-xs font-semibold text-muted">{t("sidebar.selectedDates")}</h2>
         {canEdit && projectId ? (
           <button
             type="button"

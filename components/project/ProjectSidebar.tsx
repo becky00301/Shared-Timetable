@@ -115,29 +115,34 @@ export function ProjectSidebar({
         <ExportToolbar project={project} targetId="timetable-export" />
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.participants")}</h2>
-        <span className="text-xs text-muted">{t("common.peopleCount", { count: members.length })}</span>
+      {/* Section labels sit a level below the project title and the content
+          they head: before, every heading in this column carried the same
+          weight, so the eye had nothing to climb. */}
+      <div className="mt-8 flex items-center justify-between">
+        <h2 className="text-xs font-semibold text-muted">{t("sidebar.participants")}</h2>
+        <span className="text-xs tabular-nums text-muted">
+          {t("common.peopleCount", { count: members.length })}
+        </span>
       </div>
-      <div className="mt-3">
+      <div className="mt-2 -mx-2">
         <ParticipantList members={members} canManage={currentRole === "owner"} />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-8">
         <SelectedDatesCalendar days={days} projectId={project.id} canEdit={canEdit} />
       </div>
 
-      <div className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.notes")}</h2>
+      <div className="mt-8">
+        <h2 className="text-xs font-semibold text-muted">{t("sidebar.notes")}</h2>
       </div>
-      <div className="mt-3">
+      <div className="mt-2">
         <SidebarNotes projectId={project.id} canEdit={canEdit} />
       </div>
 
-      <div className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground">{t("sidebar.scheduleMemos")}</h2>
+      <div className="mt-8">
+        <h2 className="text-xs font-semibold text-muted">{t("sidebar.scheduleMemos")}</h2>
       </div>
-      <div className="mt-3 pb-2">
+      <div className="mt-2 pb-2">
         <SidebarScheduleMemos projectId={project.id} days={days} />
       </div>
     </aside>
