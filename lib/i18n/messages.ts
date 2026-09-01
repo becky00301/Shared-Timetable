@@ -443,6 +443,41 @@ export const messages = {
   "notes.deleted": { ko: "메모를 삭제했어요.", en: "Note deleted." },
   "notes.deleteFailed": { ko: "메모를 삭제하지 못했어요.", en: "Couldn't delete the note." },
 
+  // ---------------------------------------------------------------- budget
+  "budget.title": { ko: "예산", en: "Budget" },
+  "budget.total": { ko: "전체 예산", en: "Total budget" },
+  "budget.totalPlaceholder": { ko: "예산 입력", en: "Set an amount" },
+  "budget.currency": { ko: "통화", en: "Currency" },
+  "budget.spent": { ko: "사용", en: "Spent" },
+  "budget.remaining": { ko: "남음", en: "Left" },
+  "budget.over": { ko: "초과", en: "Over" },
+  "budget.percentUsed": { ko: "{percent}%", en: "{percent}%" },
+  "budget.noBudget": {
+    ko: "전체 예산을 정하면 얼마나 남았는지 보여드릴게요.",
+    en: "Set a total budget to see what's left."
+  },
+  "budget.fromSchedules": { ko: "일정에 적은 금액", en: "From schedules" },
+  "budget.otherSpending": { ko: "그 밖의 지출", en: "Other spending" },
+  "budget.itemCount": { ko: "{count}건", en: "{count}" },
+  "budget.expenseLabelPlaceholder": { ko: "택시비, 숙소 보증금 등", en: "Taxi, deposit, …" },
+  "budget.expenseAmountPlaceholder": { ko: "금액", en: "Amount" },
+  "budget.addExpense": { ko: "지출 추가", en: "Add spending" },
+  "budget.adding": { ko: "추가 중...", en: "Adding…" },
+  "budget.expenseEmpty": {
+    ko: "일정 밖에서 쓴 돈을 여기에 더할 수 있어요.",
+    en: "Add money spent outside the timetable here."
+  },
+  "budget.expenseEditHint": { ko: "클릭해서 수정", en: "Click to edit" },
+  "budget.expenseDeleteLabel": { ko: "지출 삭제", en: "Delete spending" },
+  "budget.expenseDeleted": { ko: "지출을 삭제했어요.", en: "Spending deleted." },
+  "budget.addFailed": { ko: "지출을 추가하지 못했어요.", en: "Couldn't add the spending." },
+  "budget.saveFailed": { ko: "예산을 저장하지 못했어요.", en: "Couldn't save the budget." },
+  "budget.deleteFailed": { ko: "지출을 삭제하지 못했어요.", en: "Couldn't delete the spending." },
+  "budget.invalidAmount": { ko: "금액을 다시 확인해 주세요.", en: "Check the amount." },
+  "budget.notMigrated": {
+    ko: "예산 기능을 쓰려면 데이터베이스에 015_budget 마이그레이션을 적용해야 해요.",
+    en: "Apply the 015_budget migration to this database to use budgets."
+  },
   // ---------------------------------------------------------------- members
   "members.roleChanged": { ko: "권한을 변경했어요.", en: "Role updated." },
   "members.roleChangeFailed": { ko: "권한을 변경하지 못했어요.", en: "Couldn't update the role." },
@@ -608,6 +643,8 @@ export const messages = {
   "detail.start": { ko: "시작", en: "Starts" },
   "detail.end": { ko: "종료", en: "Ends" },
   "detail.location": { ko: "장소", en: "Location" },
+  "detail.amount": { ko: "금액", en: "Amount" },
+  "detail.amountPlaceholder": { ko: "예: 25000", en: "e.g. 25000" },
   "detail.memo": { ko: "메모", en: "Notes" },
   "detail.color": { ko: "색상", en: "Color" },
   "detail.colorLabel": { ko: "색상 {color}", en: "Color {color}" },

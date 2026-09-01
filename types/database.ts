@@ -31,6 +31,8 @@ export type Database = {
           kind: "weekly" | "daterange";
           invite_token: string;
           embed_token: string;
+          budget_total: number | null;
+          budget_currency: string;
           created_at: string;
           updated_at: string;
         };
@@ -43,6 +45,8 @@ export type Database = {
           kind?: "weekly" | "daterange";
           invite_token?: string;
           embed_token?: string;
+          budget_total?: number | null;
+          budget_currency?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -119,6 +123,30 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["project_notes"]["Insert"]>;
         Relationships: [];
       };
+      project_expenses: {
+        Row: {
+          id: string;
+          project_id: string;
+          creator_id: string | null;
+          label: string;
+          amount: number;
+          spent_on: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          creator_id?: string | null;
+          label: string;
+          amount?: number;
+          spent_on?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_expenses"]["Insert"]>;
+        Relationships: [];
+      };
       schedule_items: {
         Row: {
           id: string;
@@ -133,6 +161,7 @@ export type Database = {
           color: string | null;
           all_day: boolean;
           end_day_id: string | null;
+          amount: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -149,6 +178,7 @@ export type Database = {
           color?: string | null;
           all_day?: boolean;
           end_day_id?: string | null;
+          amount?: number | null;
           created_at?: string;
           updated_at?: string;
         };

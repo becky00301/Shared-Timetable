@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
 import { cn } from "@/lib/utils/cn";
+import {
+  amountToInput,
+  currencyFractionDigits,
+  DEFAULT_CURRENCY,
+  parseAmountInput
+} from "@/lib/utils/money";
 import { SCHEDULE_COLOR_GROUPS } from "@/lib/utils/schedule-colors";
 import { timeToMinutes } from "@/lib/utils/time";
 import { useProjectStore } from "@/stores/project-store";
@@ -28,7 +34,10 @@ export function ScheduleDetailPanel({
   const deleteSchedule = useProjectStore((state) => state.deleteSchedule);
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const schedules = useProjectStore((state) => state.schedules);
+  const projects = useProjectStore((state) => state.projects);
   const item = schedules.find((schedule) => schedule.id === selectedScheduleId);
+  const currency =
+    projects.find((project) => project.id === item?.project_id)?.budget_currency || DEFAULT_CURRENCY;
   const t = useT();
 
   const [title, setTitle] = useState("");
@@ -38,6 +47,7 @@ export function ScheduleDetailPanel({
   const [endTime, setEndTime] = useState("10:00");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
 
   useEffect(() => {
     if (!item) return;
@@ -48,6 +58,7 @@ export function ScheduleDetailPanel({
     setEndTime(item.end_time.slice(0, 5));
     setLocation(item.location ?? "");
     setDescription(item.description ?? "");
+    setAmount(amountToInput(item.amount));
   }, [item]);
 
   const selectedId = item?.id;
@@ -163,6 +174,25 @@ export function ScheduleDetailPanel({
   function saveTitle() {
     const next = title.trim() || t("grid.newSchedule");
     if (next !== item!.title) save({ title: next });
+  }
+
+  // An empty field means "no amount", which the summary treats differently
+  // from an item that genuinely costs nothing.
+  function saveAmount() {
+    const raw = amount.trim();
+    if (!raw) {
+      setAmount("");
+      if (item!.amount !== null && item!.amount !== undefined) save({ amount: null });
+      return;
+    }
+    const parsed = parseAmountInput(raw);
+    if (parsed === null) {
+      toast.error(t("budget.invalidAmount"));
+      setAmount(amountToInput(item!.amount));
+      return;
+    }
+    setAmount(String(parsed));
+    if (parsed !== item!.amount) save({ amount: parsed });
   }
 
   function saveTimes(nextStart: string, nextEnd: string) {
@@ -299,6 +329,29 @@ export function ScheduleDetailPanel({
             onChange={(event) => setLocation(event.target.value)}
             onBlur={() => save({ location: location.trim() })}
           />
+        </label>
+
+        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+          {t("detail.amount")}
+          <div className="flex w-full min-w-0 items-center overflow-hidden rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+            <span className="shrink-0 pl-3 text-xs tabular-nums text-muted">{currency}</span>
+            <Input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step={currencyFractionDigits(currency) === 0 ? 1 : 0.01}
+              className="rounded-none border-0 bg-transparent focus:border-transparent focus:ring-0"
+              value={amount}
+              disabled={!canEdit}
+              placeholder={t("detail.amountPlaceholder")}
+              onChange={(event) => setAmount(event.target.value)}
+              onBlur={saveAmount}
+              onKeyDown={(event) => {
+                if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+                if (event.key === "Enter") event.currentTarget.blur();
+              }}
+            />
+          </div>
         </label>
 
         <label className="flex min-w-0 flex-col gap-1.5 text-muted">

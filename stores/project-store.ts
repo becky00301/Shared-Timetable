@@ -5,8 +5,16 @@ import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
+import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
 import { DEFAULT_SCHEDULE_COLOR } from "@/lib/utils/schedule-colors";
-import type { Project, ProjectDay, ProjectKind, ProjectMember, ProjectNote } from "@/types/project";
+import type {
+  Project,
+  ProjectDay,
+  ProjectExpense,
+  ProjectKind,
+  ProjectMember,
+  ProjectNote
+} from "@/types/project";
 import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
 type ProjectStore = {
@@ -26,6 +34,9 @@ type ProjectStore = {
   availability: AvailabilitySlot[];
   attachments: Attachment[];
   notes: ProjectNote[];
+  /** Spending recorded outside the timetable. Summed with schedule amounts to
+      give what the project has actually spent. */
+  expenses: ProjectExpense[];
   loadCurrentUser: () => Promise<string | null>;
   /** Signs in anonymously, creates the guest's single timetable, and returns
       its slug to navigate to. */
@@ -45,6 +56,19 @@ type ProjectStore = {
     wakeTime: string | null,
     sleepDurationMinutes?: number
   ) => Promise<void>;
+  updateProjectBudget: (
+    projectId: string,
+    patch: { budget_total?: number | null; budget_currency?: string }
+  ) => Promise<void>;
+  addExpense: (
+    projectId: string,
+    input: { label: string; amount: number; spent_on?: string | null }
+  ) => Promise<void>;
+  updateExpense: (
+    expenseId: string,
+    patch: { label?: string; amount?: number; spent_on?: string | null }
+  ) => Promise<void>;
+  deleteExpense: (expenseId: string) => Promise<void>;
   addNote: (projectId: string, body: string) => Promise<void>;
   updateNote: (noteId: string, body: string) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
@@ -77,6 +101,39 @@ function requireClient() {
   return supabase;
 }
 
+// SQL numeric can arrive as a string, so every row carrying money is funnelled
+// through these before it reaches the UI. Doing it at the store boundary means
+// no component ever has to guess whether it holds a number.
+function normalizeProject(row: Project): Project {
+  return {
+    ...row,
+    budget_total: toAmount(row.budget_total),
+    budget_currency: row.budget_currency || DEFAULT_CURRENCY
+  };
+}
+
+function normalizeSchedule(row: ScheduleItem): ScheduleItem {
+  return { ...row, amount: toAmount(row.amount) };
+}
+
+function normalizeExpense(row: ProjectExpense): ProjectExpense {
+  return { ...row, amount: toAmount(row.amount) ?? 0 };
+}
+
+// The production database can trail the deployed client (see sql/migrations).
+// A missing budget column or table degrades to "no budget yet" rather than
+// breaking the timetable that happens to sit next to it.
+function isMissingRelation(error: { code?: string } | null) {
+  return error?.code === "42P01" || error?.code === "PGRST205" || error?.code === "PGRST106";
+}
+
+function isMissingColumn(error: { code?: string; message?: string } | null, column: string) {
+  return (
+    (error?.code === "PGRST204" || error?.code === "42703") &&
+    Boolean(error?.message?.includes(column))
+  );
+}
+
 // Realtime refetches can land while a local update is still in flight. Keep
 // the local version layered over fetched rows so a moved or resized block does
 // not disappear and then reappear at the server-confirmed position.
@@ -105,7 +162,8 @@ const editableScheduleKeys = [
   "end_time",
   "color",
   "all_day",
-  "end_day_id"
+  "end_day_id",
+  "amount"
 ] as const satisfies readonly (keyof ScheduleItem)[];
 
 function sameEditableSchedule(left: ScheduleItem, right: ScheduleItem) {
@@ -143,6 +201,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   availability: [],
   attachments: [],
   notes: [],
+  expenses: [],
 
   loadCurrentUser: async () => {
     const supabase = createSupabaseBrowserClient();
@@ -193,11 +252,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (schedulesRes.error) throw schedulesRes.error;
 
       set({
-        projects: (projectsRes.data ?? []) as Project[],
+        projects: ((projectsRes.data ?? []) as Project[]).map(normalizeProject),
         days: ((daysRes.data ?? []) as ProjectDay[]).map(
           (day) => pendingDayWakeTimeUpdates.get(day.id) ?? day
         ),
-        schedules: (schedulesRes.data ?? []) as ScheduleItem[],
+        schedules: ((schedulesRes.data ?? []) as ScheduleItem[]).map(normalizeSchedule),
         projectsLoaded: true
       });
     } finally {
@@ -218,8 +277,15 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (projectError) throw projectError;
       if (!project) return null;
 
-      const [daysRes, membersRes, schedulesRes, availabilityRes, attachmentsRes, notesRes] =
-        await Promise.all([
+      const [
+        daysRes,
+        membersRes,
+        schedulesRes,
+        availabilityRes,
+        attachmentsRes,
+        notesRes,
+        expensesRes
+      ] = await Promise.all([
           supabase.from("project_days").select("*").eq("project_id", project.id),
           supabase.from("project_members").select("*, user:users(*)").eq("project_id", project.id),
           supabase.from("schedule_items").select("*").eq("project_id", project.id),
@@ -227,6 +293,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           supabase.from("attachments").select("*").eq("project_id", project.id),
           supabase
             .from("project_notes")
+            .select("*")
+            .eq("project_id", project.id)
+            .order("created_at", { ascending: true }),
+          supabase
+            .from("project_expenses")
             .select("*")
             .eq("project_id", project.id)
             .order("created_at", { ascending: true })
@@ -237,20 +308,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (availabilityRes.error) throw availabilityRes.error;
       if (attachmentsRes.error) throw attachmentsRes.error;
       if (notesRes.error) throw notesRes.error;
+      // Only a database that predates migration 015 is allowed to come back
+      // empty here; any other failure is a real one.
+      if (expensesRes.error && !isMissingRelation(expensesRes.error)) throw expensesRes.error;
 
-      const loadedSchedules = ((schedulesRes.data ?? []) as ScheduleItem[]).map(
-        (schedule) => pendingScheduleUpdates.get(schedule.id) ?? schedule
-      );
+      const loadedSchedules = ((schedulesRes.data ?? []) as ScheduleItem[])
+        .map(normalizeSchedule)
+        .map((schedule) => pendingScheduleUpdates.get(schedule.id) ?? schedule);
       const loadedDays = ((daysRes.data ?? []) as ProjectDay[]).map(
         (day) => pendingDayWakeTimeUpdates.get(day.id) ?? day
       );
+
+      const loadedProject = normalizeProject(project as Project);
 
       set((state) => ({
         // Refresh in place. Hoisting the visited project to the front would
         // silently reshuffle the dashboard every time you opened a timetable.
         projects: state.projects.some((p) => p.id === project.id)
-          ? state.projects.map((p) => (p.id === project.id ? (project as Project) : p))
-          : [...state.projects, project as Project],
+          ? state.projects.map((p) => (p.id === project.id ? loadedProject : p))
+          : [...state.projects, loadedProject],
         days: [...state.days.filter((d) => d.project_id !== project.id), ...loadedDays],
         members: [
           ...state.members.filter((m) => m.project_id !== project.id),
@@ -271,10 +347,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         notes: [
           ...state.notes.filter((n) => n.project_id !== project.id),
           ...((notesRes.data ?? []) as ProjectNote[])
+        ],
+        expenses: [
+          ...state.expenses.filter((e) => e.project_id !== project.id),
+          ...((expensesRes.data ?? []) as ProjectExpense[]).map(normalizeExpense)
         ]
       }));
 
-      return project as Project;
+      return loadedProject;
     } finally {
       set({ loading: false });
     }
@@ -298,8 +378,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .insert({ project_id: project.id, user_id: userId, role: "owner" });
     if (memberError) throw memberError;
 
-    set((state) => ({ projects: [project as Project, ...state.projects] }));
-    return project as Project;
+    const created = normalizeProject(project as Project);
+    set((state) => ({ projects: [created, ...state.projects] }));
+    return created;
   },
 
   updateProject: async (projectId, patch) => {
@@ -314,8 +395,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*")
       .single();
     if (error) throw error;
+    const updated = normalizeProject(data as Project);
     set((state) => ({
-      projects: state.projects.map((project) => (project.id === projectId ? (data as Project) : project))
+      projects: state.projects.map((project) => (project.id === projectId ? updated : project))
     }));
   },
 
@@ -330,7 +412,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       projects: state.projects.filter((project) => project.id !== projectId),
       days: state.days.filter((day) => day.project_id !== projectId),
       members: state.members.filter((member) => member.project_id !== projectId),
-      schedules: state.schedules.filter((schedule) => schedule.project_id !== projectId)
+      schedules: state.schedules.filter((schedule) => schedule.project_id !== projectId),
+      expenses: state.expenses.filter((expense) => expense.project_id !== projectId)
     }));
   },
 
@@ -431,6 +514,84 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }
   },
 
+  updateProjectBudget: async (projectId, patch) => {
+    const supabase = requireClient();
+    const payload: { budget_total?: number | null; budget_currency?: string } = {};
+    if (patch.budget_total !== undefined) payload.budget_total = patch.budget_total;
+    if (patch.budget_currency !== undefined) payload.budget_currency = patch.budget_currency;
+    if (!Object.keys(payload).length) return;
+
+    const { data, error } = await supabase
+      .from("projects")
+      .update(payload)
+      .eq("id", projectId)
+      .select("*")
+      .single();
+    if (error) {
+      if (isMissingColumn(error, "budget_")) throw new Error(translate("budget.notMigrated"));
+      throw error;
+    }
+    const updated = normalizeProject(data as Project);
+    set((state) => ({
+      projects: state.projects.map((project) => (project.id === projectId ? updated : project))
+    }));
+  },
+
+  addExpense: async (projectId, input) => {
+    const supabase = requireClient();
+    const userId = get().currentUserId ?? (await get().loadCurrentUser());
+    const { data, error } = await supabase
+      .from("project_expenses")
+      .insert({
+        project_id: projectId,
+        creator_id: userId,
+        label: input.label,
+        amount: input.amount,
+        spent_on: input.spent_on ?? null
+      })
+      .select("*")
+      .single();
+    if (error) {
+      if (isMissingRelation(error)) throw new Error(translate("budget.notMigrated"));
+      throw error;
+    }
+    set((state) => ({ expenses: [...state.expenses, normalizeExpense(data as ProjectExpense)] }));
+  },
+
+  updateExpense: async (expenseId, patch) => {
+    const supabase = requireClient();
+    const payload: { label?: string; amount?: number; spent_on?: string | null } = {};
+    if (patch.label !== undefined) payload.label = patch.label;
+    if (patch.amount !== undefined) payload.amount = patch.amount;
+    if (patch.spent_on !== undefined) payload.spent_on = patch.spent_on;
+    if (!Object.keys(payload).length) return;
+
+    const { data, error } = await supabase
+      .from("project_expenses")
+      .update(payload)
+      .eq("id", expenseId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    const updated = normalizeExpense(data as ProjectExpense);
+    set((state) => ({
+      expenses: state.expenses.map((expense) => (expense.id === expenseId ? updated : expense))
+    }));
+  },
+
+  deleteExpense: async (expenseId) => {
+    const supabase = requireClient();
+    // RLS refusals come back as success with zero rows, not as an error.
+    const { data, error } = await supabase
+      .from("project_expenses")
+      .delete()
+      .eq("id", expenseId)
+      .select("id");
+    if (error) throw error;
+    if (!data?.length) throw new Error(translate("error.deleteDenied"));
+    set((state) => ({ expenses: state.expenses.filter((expense) => expense.id !== expenseId) }));
+  },
+
   addNote: async (projectId, body) => {
     const supabase = requireClient();
     const userId = get().currentUserId ?? (await get().loadCurrentUser());
@@ -525,7 +686,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   upsertSchedule: async (item) => {
     const supabase = requireClient();
-    const payload = {
+    // Split so the amount can be dropped on a database that has not yet run
+    // migration 015, the same way wake times were handled. Schedules stay
+    // saveable in that window, and amounts persist as soon as the column
+    // exists.
+    const payloadWithoutAmount = {
       project_id: item.project_id,
       day_id: item.day_id,
       title: item.title,
@@ -537,6 +702,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       all_day: item.all_day ?? false,
       end_day_id: item.end_day_id ?? null
     };
+    const payload = { ...payloadWithoutAmount, amount: item.amount ?? null };
 
     if (item.id) {
       const previous = get().schedules.find((schedule) => schedule.id === item.id);
@@ -561,23 +727,34 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       }
 
       try {
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from("schedule_items")
           .update(payload)
           .eq("id", item.id)
           .select("*")
           .single();
+        if (isMissingColumn(error, "amount")) {
+          const fallback = await supabase
+            .from("schedule_items")
+            .update(payloadWithoutAmount)
+            .eq("id", item.id)
+            .select("*")
+            .single();
+          data = fallback.data ? { ...fallback.data, amount: payload.amount } : fallback.data;
+          error = fallback.error;
+        }
         if (error) throw error;
 
+        const saved = normalizeSchedule(data as ScheduleItem);
         if (!optimistic || pendingScheduleUpdates.get(item.id) === optimistic) {
           pendingScheduleUpdates.delete(item.id);
           set((state) => ({
             schedules: state.schedules.map((schedule) =>
-              schedule.id === data.id ? (data as ScheduleItem) : schedule
+              schedule.id === saved.id ? saved : schedule
             )
           }));
         }
-        return data as ScheduleItem;
+        return saved;
       } catch (error) {
         if (historyEntry) removeScheduleHistoryEntry(historyEntry.id);
         if (optimistic && pendingScheduleUpdates.get(item.id) === optimistic) {
@@ -592,13 +769,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
     const userId = get().currentUserId ?? (await get().loadCurrentUser());
     if (!userId) throw new Error("Not authenticated.");
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("schedule_items")
       .insert({ ...payload, creator_id: userId })
       .select("*")
       .single();
+    if (isMissingColumn(error, "amount")) {
+      const fallback = await supabase
+        .from("schedule_items")
+        .insert({ ...payloadWithoutAmount, creator_id: userId })
+        .select("*")
+        .single();
+      data = fallback.data ? { ...fallback.data, amount: payload.amount } : fallback.data;
+      error = fallback.error;
+    }
     if (error) throw error;
-    const created = data as ScheduleItem;
+    const created = normalizeSchedule(data as ScheduleItem);
     set((state) => ({ schedules: [...state.schedules, created] }));
     if (!replayingScheduleIds.has(created.id)) {
       addScheduleHistory({ kind: "create", projectId: created.project_id, after: created });
@@ -693,7 +879,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       schedules: [],
       availability: [],
       attachments: [],
-      notes: []
+      notes: [],
+      expenses: []
     });
   },
 
@@ -707,8 +894,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .eq("id", projectId)
       .single();
     if (projectError) throw projectError;
-    set((state) => ({ projects: [project as Project, ...state.projects.filter((p) => p.id !== project.id)] }));
-    return (project as Project).slug;
+    const joined = normalizeProject(project as Project);
+    set((state) => ({ projects: [joined, ...state.projects.filter((p) => p.id !== joined.id)] }));
+    return joined.slug;
   },
 
   updateMemberRole: async (memberId, role) => {

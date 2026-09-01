@@ -17,6 +17,8 @@ create table if not exists public.projects (
   kind text not null default 'daterange' check (kind in ('weekly', 'daterange')),
   invite_token text unique not null default encode(gen_random_bytes(16), 'hex'),
   embed_token text unique not null default encode(gen_random_bytes(16), 'hex'),
+  budget_total numeric(14, 2) check (budget_total is null or budget_total >= 0),
+  budget_currency text not null default 'KRW' check (budget_currency ~ '^[A-Z]{3}$'),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -36,6 +38,31 @@ where embed_token is null;
 alter table public.projects
   alter column embed_token set default encode(gen_random_bytes(16), 'hex'),
   alter column embed_token set not null;
+
+-- For projects created before the budget columns existed. Spent is always
+-- derived from schedule amounts plus free-standing expenses, so only the
+-- target and its currency are stored here.
+alter table public.projects
+  add column if not exists budget_total numeric(14, 2);
+
+alter table public.projects
+  drop constraint if exists projects_budget_total_check;
+
+alter table public.projects
+  add constraint projects_budget_total_check
+  check (budget_total is null or budget_total >= 0);
+
+-- The unit belongs to the trip, not to the reader's language: a Tokyo plan
+-- stays in JPY whether it is read in Korean or English.
+alter table public.projects
+  add column if not exists budget_currency text not null default 'KRW';
+
+alter table public.projects
+  drop constraint if exists projects_budget_currency_check;
+
+alter table public.projects
+  add constraint projects_budget_currency_check
+  check (budget_currency ~ '^[A-Z]{3}$');
 
 create table if not exists public.project_members (
   id uuid primary key default gen_random_uuid(),
@@ -78,6 +105,21 @@ create table if not exists public.project_notes (
 
 create index if not exists project_notes_project_idx on public.project_notes(project_id, created_at);
 
+-- Spending that never had a schedule of its own: a taxi fare, a shared
+-- deposit, the drinks nobody put on the timetable.
+create table if not exists public.project_expenses (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  creator_id uuid references public.users(id) on delete set null,
+  label text not null,
+  amount numeric(14, 2) not null default 0 check (amount >= 0),
+  spent_on date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists project_expenses_project_idx on public.project_expenses(project_id, created_at);
+
 create table if not exists public.schedule_items (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -100,6 +142,18 @@ alter table public.schedule_items
 -- Inclusive end day for multi-day all-day items; null means a single day.
 alter table public.schedule_items
   add column if not exists end_day_id uuid references public.project_days(id) on delete set null;
+
+-- What this item costs. Null means "no amount entered", which is different
+-- from a free item at 0.
+alter table public.schedule_items
+  add column if not exists amount numeric(14, 2);
+
+alter table public.schedule_items
+  drop constraint if exists schedule_items_amount_check;
+
+alter table public.schedule_items
+  add constraint schedule_items_amount_check
+  check (amount is null or amount >= 0);
 
 create table if not exists public.availability (
   id uuid primary key default gen_random_uuid(),
@@ -159,6 +213,11 @@ create trigger project_notes_set_updated_at
 before update on public.project_notes
 for each row execute function public.set_updated_at();
 
+drop trigger if exists project_expenses_set_updated_at on public.project_expenses;
+create trigger project_expenses_set_updated_at
+before update on public.project_expenses
+for each row execute function public.set_updated_at();
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -214,6 +273,12 @@ begin
   ) then
     alter publication supabase_realtime add table public.project_members;
   end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_expenses'
+  ) then
+    alter publication supabase_realtime add table public.project_expenses;
+  end if;
 end $$;
 
 -- Deletes replicate only the primary key unless replica identity is FULL, so a
@@ -222,6 +287,78 @@ alter table public.schedule_items replica identity full;
 alter table public.project_days replica identity full;
 alter table public.availability replica identity full;
 alter table public.project_members replica identity full;
+alter table public.project_expenses replica identity full;
+
+-- Prepare public data for permanent account deletion in one transaction.
+-- Auth deletion remains a separate server-only Admin API call, so this function
+-- is idempotent and can be safely retried if that final call fails.
+create or replace function public.prepare_account_deletion(target_user_id uuid)
+returns table(transferred integer, deleted integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  owned_project record;
+  heir_user_id uuid;
+begin
+  transferred := 0;
+  deleted := 0;
+
+  for owned_project in
+    select p.id
+    from public.projects p
+    where p.owner_id = target_user_id
+    order by p.created_at, p.id
+    for update
+  loop
+    select pm.user_id
+    into heir_user_id
+    from public.project_members pm
+    where pm.project_id = owned_project.id
+      and pm.user_id <> target_user_id
+    order by
+      case pm.role
+        when 'editor' then 0
+        when 'viewer' then 1
+        else 2
+      end,
+      pm.created_at,
+      pm.user_id
+    limit 1
+    for update;
+
+    if heir_user_id is null then
+      delete from public.projects
+      where id = owned_project.id;
+
+      deleted := deleted + 1;
+    else
+      update public.project_members
+      set role = 'owner'
+      where project_id = owned_project.id
+        and user_id = heir_user_id;
+
+      update public.projects
+      set owner_id = heir_user_id
+      where id = owned_project.id;
+
+      delete from public.project_members
+      where project_id = owned_project.id
+        and user_id = target_user_id;
+
+      transferred := transferred + 1;
+    end if;
+  end loop;
+
+  return next;
+end;
+$$;
+
+revoke execute on function public.prepare_account_deletion(uuid)
+from public, anon, authenticated;
+
+grant execute on function public.prepare_account_deletion(uuid) to service_role;
 alter table public.users enable row level security;
 alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
@@ -419,6 +556,21 @@ to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
 
+alter table public.project_expenses enable row level security;
+
+drop policy if exists "members read project expenses" on public.project_expenses;
+create policy "members read project expenses"
+on public.project_expenses for select
+to authenticated
+using (public.is_project_member(project_id));
+
+drop policy if exists "editors manage project expenses" on public.project_expenses;
+create policy "editors manage project expenses"
+on public.project_expenses for all
+to authenticated
+using (public.can_edit_project(project_id))
+with check (public.can_edit_project(project_id));
+
 drop policy if exists "members read attachments" on public.attachments;
 create policy "members read attachments"
 on public.attachments for select
@@ -469,6 +621,7 @@ grant select, insert, update, delete on table
   public.project_members,
   public.project_days,
   public.project_notes,
+  public.project_expenses,
   public.schedule_items,
   public.availability,
   public.attachments
@@ -548,73 +701,3 @@ $$;
 revoke execute on function public.get_embedded_timetable(text) from public;
 grant usage on schema public to anon, authenticated;
 grant execute on function public.get_embedded_timetable(text) to anon, authenticated;
--- Prepare public data for permanent account deletion in one transaction.
--- Auth deletion remains a separate server-only Admin API call, so this function
--- is idempotent and can be safely retried if that final call fails.
-create or replace function public.prepare_account_deletion(target_user_id uuid)
-returns table(transferred integer, deleted integer)
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  owned_project record;
-  heir_user_id uuid;
-begin
-  transferred := 0;
-  deleted := 0;
-
-  for owned_project in
-    select p.id
-    from public.projects p
-    where p.owner_id = target_user_id
-    order by p.created_at, p.id
-    for update
-  loop
-    select pm.user_id
-    into heir_user_id
-    from public.project_members pm
-    where pm.project_id = owned_project.id
-      and pm.user_id <> target_user_id
-    order by
-      case pm.role
-        when 'editor' then 0
-        when 'viewer' then 1
-        else 2
-      end,
-      pm.created_at,
-      pm.user_id
-    limit 1
-    for update;
-
-    if heir_user_id is null then
-      delete from public.projects
-      where id = owned_project.id;
-
-      deleted := deleted + 1;
-    else
-      update public.project_members
-      set role = 'owner'
-      where project_id = owned_project.id
-        and user_id = heir_user_id;
-
-      update public.projects
-      set owner_id = heir_user_id
-      where id = owned_project.id;
-
-      delete from public.project_members
-      where project_id = owned_project.id
-        and user_id = target_user_id;
-
-      transferred := transferred + 1;
-    end if;
-  end loop;
-
-  return next;
-end;
-$$;
-
-revoke execute on function public.prepare_account_deletion(uuid)
-from public, anon, authenticated;
-
-grant execute on function public.prepare_account_deletion(uuid) to service_role;

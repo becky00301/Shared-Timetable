@@ -11,6 +11,9 @@ export type ScheduleItem = {
   color: string;
   all_day?: boolean;
   end_day_id?: string | null;
+  /** What this item costs. Null means no amount was entered, which is
+      different from a free item at 0. */
+  amount?: number | null;
   created_at: string;
   updated_at: string;
 };

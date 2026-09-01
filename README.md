@@ -104,6 +104,7 @@ Incremental migrations live in `sql/migrations/` and are already folded into `sq
 - `009_anonymous_guest_name.sql` — display name for guests (they have no email)
 - `011_remove_google_and_legacy.sql` — remove retired Google sync data and legacy anonymous timetable storage
 - `012_read_only_embeds.sql` — add separate read-only embed tokens
+- `015_budget.sql` — per-schedule amounts, a project budget, and free-standing expenses
 
 For an existing database that previously enabled Google Calendar sync or the legacy standalone timetable, run `sql/migrations/011_remove_google_and_legacy.sql`. This permanently deletes the retired integration tokens and legacy timetable data.
 

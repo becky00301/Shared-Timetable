@@ -19,6 +19,9 @@ export type Project = {
   kind: ProjectKind;
   invite_token: string;
   embed_token: string;
+  /** Planned budget for the whole timetable. Null means none has been set. */
+  budget_total?: number | null;
+  budget_currency?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -48,6 +51,19 @@ export type ProjectNote = {
   project_id: string;
   creator_id: string | null;
   body: string;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Money spent that never had a schedule of its own. Schedule amounts and
+    these rows are summed together into the project's spent total. */
+export type ProjectExpense = {
+  id: string;
+  project_id: string;
+  creator_id: string | null;
+  label: string;
+  amount: number;
+  spent_on?: string | null;
   created_at: string;
   updated_at: string;
 };

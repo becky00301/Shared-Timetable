@@ -10,6 +10,7 @@ import { ExportToolbar } from "@/components/export/ExportToolbar";
 import { ParticipantList } from "@/components/project/ParticipantList";
 import { RoleBadge } from "@/components/project/RoleBadge";
 import { SelectedDatesCalendar } from "@/components/project/SelectedDatesCalendar";
+import { SidebarBudget } from "@/components/project/SidebarBudget";
 import { SidebarNotes } from "@/components/project/SidebarNotes";
 import { SidebarScheduleMemos } from "@/components/project/SidebarScheduleMemos";
 import { useT } from "@/lib/i18n/locale";
@@ -130,6 +131,13 @@ export function ProjectSidebar({
 
       <div className="mt-8">
         <SelectedDatesCalendar days={days} projectId={project.id} canEdit={canEdit} />
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xs font-semibold text-muted">{t("budget.title")}</h2>
+      </div>
+      <div className="mt-2">
+        <SidebarBudget project={project} canEdit={canEdit} />
       </div>
 
       <div className="mt-8">

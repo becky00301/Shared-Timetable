@@ -195,6 +195,21 @@ to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
 
+alter table public.project_expenses enable row level security;
+
+drop policy if exists "members read project expenses" on public.project_expenses;
+create policy "members read project expenses"
+on public.project_expenses for select
+to authenticated
+using (public.is_project_member(project_id));
+
+drop policy if exists "editors manage project expenses" on public.project_expenses;
+create policy "editors manage project expenses"
+on public.project_expenses for all
+to authenticated
+using (public.can_edit_project(project_id))
+with check (public.can_edit_project(project_id));
+
 drop policy if exists "members read attachments" on public.attachments;
 create policy "members read attachments"
 on public.attachments for select
@@ -245,6 +260,7 @@ grant select, insert, update, delete on table
   public.project_members,
   public.project_days,
   public.project_notes,
+  public.project_expenses,
   public.schedule_items,
   public.availability,
   public.attachments
