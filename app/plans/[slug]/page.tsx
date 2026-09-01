@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProjectSetup } from "@/components/project/ProjectSetup";
 import { GuestLinkBanner } from "@/components/project/GuestLinkBanner";
+import { LiveChatPanel } from "@/components/project/LiveChatPanel";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
@@ -183,6 +184,7 @@ export default function ProjectPage() {
         )}
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
+      <LiveChatPanel projectId={project.id} members={members} />
       <ShareModal project={project} />
     </main>
   );
