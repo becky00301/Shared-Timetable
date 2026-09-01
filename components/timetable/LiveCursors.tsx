@@ -45,6 +45,17 @@ export function LiveCursors({ cursors }: { cursors: LiveCursor[] }) {
           >
             {cursor.name}
           </span>
+          {/* What they are typing right now. A pale bubble rather than another
+              solid colour chip: the name is an identity tag and stays loud,
+              while the message is prose and has to stay readable at length. */}
+          {cursor.chat ? (
+            <div
+              className="ml-3 mt-1 max-w-[220px] whitespace-pre-wrap break-words rounded-lg border bg-surface px-2 py-1 text-[11px] leading-4 text-foreground shadow-sm"
+              style={{ borderColor: cursor.color }}
+            >
+              {cursor.chat}
+            </div>
+          ) : null}
         </div>
       ))}
     </div>

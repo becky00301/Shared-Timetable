@@ -7,6 +7,9 @@ export type LiveCursor = {
   userId: string;
   name: string;
   color: string;
+  /** What this person is typing right now, shown beside their pointer. Empty
+      or absent means they have no cursor chat open. */
+  chat?: string;
   /** Position as a fraction of the grid's content box, so it lands on the same
       cell for everyone regardless of window size, zoom, or scroll offset. */
   x: number;
@@ -38,6 +41,9 @@ const STALE_AFTER_MS = 8000;
 // name their pointer stops, so without this their block would be pruned.
 const DRAFT_HEARTBEAT_MS = 2500;
 
+/** A line beside a pointer, not a paragraph. */
+export const MAX_CURSOR_CHAT = 120;
+
 const CURSOR_COLORS = ["#E5484D", "#F76B15", "#E2A400", "#30A46C", "#0091FF", "#8E4EC6", "#E93D82"];
 
 export function cursorColor(userId: string) {
@@ -60,22 +66,31 @@ export function useLiveCursors({
   userId,
   name,
   contentRef,
-  draft = null
+  draft = null,
+  chatText = null
 }: {
   projectId: string;
   userId: string | null;
   name: string;
   contentRef: RefObject<HTMLElement | null>;
   draft?: LocalDraft;
+  /** The local cursor-chat text, broadcast as it is typed. */
+  chatText?: string | null;
 }) {
   const [cursors, setCursors] = useState<LiveCursor[]>([]);
   const [peerDrafts, setPeerDrafts] = useState<PeerDraft[]>([]);
+  // Where this user's own pointer is, as grid fractions. Kept in a ref because
+  // it changes on every pointer move and only the chat input reads it — as
+  // state it would re-render the whole grid at pointer rate.
+  const selfPosition = useRef<{ x: number; y: number } | null>(null);
   // Keep the label and draft out of the effect deps: they change while the
   // channel is live and would otherwise tear it down and rebuild it.
   const nameRef = useRef(name);
   nameRef.current = name;
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  const chatRef = useRef(chatText);
+  chatRef.current = chatText;
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -90,7 +105,12 @@ export function useLiveCursors({
       if (!cursor?.userId || cursor.userId === userId) return;
       setCursors((prev) => [
         ...prev.filter((item) => item.userId !== cursor.userId),
-        { ...cursor, at: Date.now() }
+        {
+          ...cursor,
+          // Arrives from another client, so clamp it rather than trusting it.
+          chat: String(cursor.chat ?? "").slice(0, MAX_CURSOR_CHAT),
+          at: Date.now()
+        }
       ]);
     });
 
@@ -138,10 +158,13 @@ export function useLiveCursors({
       }
       inside = true;
       pending = { x, y };
+      selfPosition.current = pending;
     };
 
     window.addEventListener("pointermove", onPointerMove);
 
+    let lastSentChat = "";
+    let lastCursorAt = 0;
     let lastDraftKey = "";
     let lastDraftAt = 0;
     const draftKey = (d: LocalDraft) =>
@@ -150,12 +173,24 @@ export function useLiveCursors({
     const sendTimer = window.setInterval(() => {
       if (!joined) return;
 
-      if (pending && (!lastSent || lastSent.x !== pending.x || lastSent.y !== pending.y)) {
-        lastSent = pending;
+      // Chat has to reach people even when the pointer is still — someone
+      // typing a message stops moving — and an open message has to keep being
+      // re-announced or the reader would prune the cursor it hangs off.
+      const chat = (chatRef.current ?? "").slice(0, MAX_CURSOR_CHAT);
+      const target = pending ?? lastSent;
+      const moved =
+        pending && (!lastSent || lastSent.x !== pending.x || lastSent.y !== pending.y);
+      const chatChanged = chat !== lastSentChat;
+      const chatDue = chat !== "" && Date.now() - lastCursorAt > DRAFT_HEARTBEAT_MS;
+
+      if (target && (moved || chatChanged || chatDue)) {
+        lastSent = target;
+        lastSentChat = chat;
+        lastCursorAt = Date.now();
         channel.send({
           type: "broadcast",
           event: "cursor",
-          payload: { userId, name: nameRef.current, color, x: pending.x, y: pending.y }
+          payload: { userId, name: nameRef.current, color, x: target.x, y: target.y, chat }
         });
       }
 
@@ -205,5 +240,5 @@ export function useLiveCursors({
     };
   }, [projectId, userId, contentRef]);
 
-  return { cursors, peerDrafts };
+  return { cursors, peerDrafts, selfPosition };
 }

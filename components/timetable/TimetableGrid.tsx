@@ -14,12 +14,13 @@ import { toast } from "sonner";
 import { DayRouteMapDialog } from "@/components/map/DayRouteMapDialog";
 import { AllDayBand } from "@/components/timetable/AllDayBand";
 import { DateColumn } from "@/components/timetable/DateColumn";
+import { CursorChatInput } from "@/components/timetable/CursorChatInput";
 import { LiveCursors } from "@/components/timetable/LiveCursors";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { WakeTimeDialog } from "@/components/timetable/WakeTimeDialog";
 import { WakeTimePopover } from "@/components/timetable/WakeTimePopover";
 import { AlarmClock, Map as MapIcon } from "lucide-react";
-import { useLiveCursors } from "@/lib/supabase/cursors";
+import { cursorColor, useLiveCursors } from "@/lib/supabase/cursors";
 import { googleMapsApiKey } from "@/lib/maps/loader";
 import { useT } from "@/lib/i18n/locale";
 import { useDateFormat } from "@/lib/i18n/dates";
@@ -107,6 +108,8 @@ export function TimetableGrid({
     dayId: string;
     anchorPoint: { x: number; y: number };
   } | null>(null);
+  // null means no cursor chat is open; "" means it is open and still empty.
+  const [cursorChat, setCursorChat] = useState<string | null>(null);
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -130,15 +133,39 @@ export function TimetableGrid({
   // timetable.
   const currentUserId = useProjectStore((state) => state.currentUserId);
   const me = members.find((member) => member.user_id === currentUserId);
-  const { cursors, peerDrafts } = useLiveCursors({
+  const { cursors, peerDrafts, selfPosition } = useLiveCursors({
     projectId,
     userId: currentUserId,
     name: me?.user?.name || me?.user?.email?.split("@")[0] || t("role.viewer"),
     contentRef,
     draft: draft
       ? { dayId: draft.dayId, startMinutes: draft.startMinutes, endMinutes: draft.endMinutes }
-      : null
+      : null,
+    chatText: cursorChat
   });
+
+  // "/" opens a chat line on your own pointer, Figma-style. It needs a pointer
+  // to hang off, so it stays shut until the mouse has been over the grid.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+      if (!selfPosition.current) return;
+      event.preventDefault();
+      setCursorChat("");
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selfPosition]);
   // Mouse dragging stays immediate. Touch waits long enough to distinguish an
   // intentional move from tapping an item for details or scrolling the grid.
   const sensors = useSensors(
@@ -503,6 +530,18 @@ export function TimetableGrid({
       >
         <div ref={contentRef} className={cn("relative", hScroll ? "w-max min-w-full" : "min-w-full")}>
           <LiveCursors cursors={cursors} />
+          {cursorChat !== null && currentUserId ? (
+            <div className="editor-only pointer-events-none absolute inset-0 z-50 overflow-hidden">
+              <CursorChatInput
+                positionRef={selfPosition}
+                boxRef={contentRef}
+                color={cursorColor(currentUserId)}
+                value={cursorChat}
+                onChange={setCursorChat}
+                onClose={() => setCursorChat(null)}
+              />
+            </div>
+          ) : null}
           {/* Date headers */}
           <div className="sticky top-0 z-30 flex bg-surface">
             <div className="sticky left-0 z-40 h-14 w-16 shrink-0 border-b border-r border-border bg-surface" />

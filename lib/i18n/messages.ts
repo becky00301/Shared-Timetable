@@ -479,19 +479,8 @@ export const messages = {
     en: "Apply the 015_budget migration to this database to use budgets."
   },
 
-  // ------------------------------------------------------------------ chat
-  "chat.title": { ko: "실시간 채팅", en: "Live chat" },
-  "chat.open": { ko: "채팅 열기", en: "Open chat" },
-  "chat.openHint": { ko: "/ 를 눌러도 열려요", en: "Or press /" },
-  "chat.you": { ko: "나", en: "You" },
-  "chat.placeholder": { ko: "메시지 입력", en: "Message" },
-  "chat.connecting": { ko: "연결 중...", en: "Connecting…" },
-  "chat.send": { ko: "보내기", en: "Send" },
-  "chat.empty": {
-    ko: "지금 이 시간표를 보고 있는 사람끼리 나누는 대화예요. 저장되지 않아 새로고침하면 사라집니다.",
-    en: "A conversation between everyone viewing this timetable right now. Nothing is saved — it disappears on refresh."
-  },
-
+  // ----------------------------------------------------------- cursor chat
+  "cursorChat.placeholder": { ko: "메시지 입력", en: "Say something" },
   // ---------------------------------------------------------------- members
   "members.roleChanged": { ko: "권한을 변경했어요.", en: "Role updated." },
   "members.roleChangeFailed": { ko: "권한을 변경하지 못했어요.", en: "Couldn't update the role." },
