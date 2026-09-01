@@ -37,6 +37,10 @@ type ProjectStore = {
   /** Spending recorded outside the timetable. Summed with schedule amounts to
       give what the project has actually spent. */
   expenses: ProjectExpense[];
+  /** True once this database is known to predate migration 015. Amounts are
+      accepted by the UI and then dropped on the way to the server, so the
+      panels that take them say so instead of appearing to lose the input. */
+  budgetSchemaMissing: boolean;
   loadCurrentUser: () => Promise<string | null>;
   /** Signs in anonymously, creates the guest's single timetable, and returns
       its slug to navigate to. */
@@ -202,6 +206,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   attachments: [],
   notes: [],
   expenses: [],
+  budgetSchemaMissing: false,
 
   loadCurrentUser: async () => {
     const supabase = createSupabaseBrowserClient();
@@ -311,6 +316,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       // Only a database that predates migration 015 is allowed to come back
       // empty here; any other failure is a real one.
       if (expensesRes.error && !isMissingRelation(expensesRes.error)) throw expensesRes.error;
+      const budgetSchemaMissing = Boolean(expensesRes.error);
 
       const loadedSchedules = ((schedulesRes.data ?? []) as ScheduleItem[])
         .map(normalizeSchedule)
@@ -351,7 +357,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         expenses: [
           ...state.expenses.filter((e) => e.project_id !== project.id),
           ...((expensesRes.data ?? []) as ProjectExpense[]).map(normalizeExpense)
-        ]
+        ],
+        budgetSchemaMissing
       }));
 
       return loadedProject;
@@ -528,7 +535,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*")
       .single();
     if (error) {
-      if (isMissingColumn(error, "budget_")) throw new Error(translate("budget.notMigrated"));
+      if (isMissingColumn(error, "budget_")) {
+        set({ budgetSchemaMissing: true });
+        throw new Error(translate("budget.notMigrated"));
+      }
       throw error;
     }
     const updated = normalizeProject(data as Project);
@@ -552,7 +562,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*")
       .single();
     if (error) {
-      if (isMissingRelation(error)) throw new Error(translate("budget.notMigrated"));
+      if (isMissingRelation(error)) {
+        set({ budgetSchemaMissing: true });
+        throw new Error(translate("budget.notMigrated"));
+      }
       throw error;
     }
     set((state) => ({ expenses: [...state.expenses, normalizeExpense(data as ProjectExpense)] }));
@@ -734,6 +747,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           .select("*")
           .single();
         if (isMissingColumn(error, "amount")) {
+          set({ budgetSchemaMissing: true });
           const fallback = await supabase
             .from("schedule_items")
             .update(payloadWithoutAmount)
@@ -775,6 +789,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*")
       .single();
     if (isMissingColumn(error, "amount")) {
+      set({ budgetSchemaMissing: true });
       const fallback = await supabase
         .from("schedule_items")
         .insert({ ...payloadWithoutAmount, creator_id: userId })
@@ -880,7 +895,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       availability: [],
       attachments: [],
       notes: [],
-      expenses: []
+      expenses: [],
+      budgetSchemaMissing: false
     });
   },
 

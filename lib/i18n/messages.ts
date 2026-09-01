@@ -474,6 +474,10 @@ export const messages = {
   "budget.saveFailed": { ko: "예산을 저장하지 못했어요.", en: "Couldn't save the budget." },
   "budget.deleteFailed": { ko: "지출을 삭제하지 못했어요.", en: "Couldn't delete the spending." },
   "budget.invalidAmount": { ko: "금액을 다시 확인해 주세요.", en: "Check the amount." },
+  "budget.amountNotSaved": {
+    ko: "금액은 아직 저장되지 않아요.",
+    en: "Amounts aren't being saved yet."
+  },
   "budget.notMigrated": {
     ko: "예산 기능을 쓰려면 데이터베이스에 015_budget 마이그레이션을 적용해야 해요.",
     en: "Apply the 015_budget migration to this database to use budgets."

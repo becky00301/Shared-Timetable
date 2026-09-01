@@ -35,6 +35,7 @@ export function ScheduleDetailPanel({
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const schedules = useProjectStore((state) => state.schedules);
   const projects = useProjectStore((state) => state.projects);
+  const budgetSchemaMissing = useProjectStore((state) => state.budgetSchemaMissing);
   const item = schedules.find((schedule) => schedule.id === selectedScheduleId);
   const currency =
     projects.find((project) => project.id === item?.project_id)?.budget_currency || DEFAULT_CURRENCY;
@@ -352,6 +353,12 @@ export function ScheduleDetailPanel({
               }}
             />
           </div>
+          {/* The amount is dropped on its way to a database that predates
+              migration 015. It would otherwise look saved until the next
+              refresh quietly took it away. */}
+          {budgetSchemaMissing ? (
+            <span className="text-xs leading-4 text-amber-700">{t("budget.amountNotSaved")}</span>
+          ) : null}
         </label>
 
         <label className="flex min-w-0 flex-col gap-1.5 text-muted">

@@ -28,6 +28,7 @@ export function SidebarBudget({ project, canEdit }: { project: Project; canEdit:
   const schedules = useProjectStore((state) => state.schedules);
   const expenses = useProjectStore((state) => state.expenses);
   const updateProjectBudget = useProjectStore((state) => state.updateProjectBudget);
+  const budgetSchemaMissing = useProjectStore((state) => state.budgetSchemaMissing);
   const addExpense = useProjectStore((state) => state.addExpense);
   const deleteExpense = useProjectStore((state) => state.deleteExpense);
   const updateExpense = useProjectStore((state) => state.updateExpense);
@@ -86,12 +87,21 @@ export function SidebarBudget({ project, canEdit }: { project: Project; canEdit:
     updateProjectBudget(project.id, { budget_total: parsed }).catch((error) => {
       console.error(error);
       toast.error(error instanceof Error ? error.message : t("budget.saveFailed"));
-      setBudgetDraft(amountToInput(budget));
+      // What they typed stays in the field. Wiping it back to the stored value
+      // loses their work and reads as the input vanishing on its own — the
+      // notice below carries the news that it has not been saved.
     });
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Said up front, on load, rather than only after a save is refused. */}
+      {budgetSchemaMissing ? (
+        <p className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs leading-5 text-amber-800">
+          {t("budget.notMigrated")}
+        </p>
+      ) : null}
+
       <div className="rounded-lg border border-border bg-black/[0.02] p-3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-muted">{t("budget.total")}</span>
