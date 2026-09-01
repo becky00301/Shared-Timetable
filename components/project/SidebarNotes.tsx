@@ -36,18 +36,25 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
 
   return (
     <div className="flex flex-col gap-2">
+      {/* The submit button lives inside the field. Sitting below it as a quiet
+          outline, people read it as a label and never press it. */}
       {canEdit ? (
-        <form className="flex flex-col gap-2" onSubmit={submit}>
+        <form
+          className="rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          onSubmit={submit}
+        >
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={t("notes.placeholder")}
-            className="min-h-16 text-sm"
+            className="min-h-16 rounded-none border-0 bg-transparent text-sm focus:border-transparent focus:ring-0"
           />
-          <Button type="submit" size="sm" variant="outline" disabled={!draft.trim() || saving}>
-            <Plus size={15} />
-            {saving ? t("notes.adding") : t("notes.add")}
-          </Button>
+          <div className="flex justify-end px-2 pb-2">
+            <Button type="submit" size="sm" disabled={!draft.trim() || saving}>
+              <Plus size={15} />
+              {saving ? t("notes.adding") : t("notes.add")}
+            </Button>
+          </div>
         </form>
       ) : null}
 
