@@ -124,7 +124,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
           </header>
 
           <div className="mx-auto max-w-3xl px-5 pb-20 pt-16 text-center sm:pt-24">
-            <p className="mb-4 text-sm font-semibold tracking-[0.12em] text-white/90 sm:text-base">
+            <p className="mb-4 text-sm font-semibold tracking-[0.12em] text-white sm:text-base">
               {t("landing.hero.brand")}
             </p>
             {/* Pretendard at 800 turns Korean headlines into a wall of strokes;
@@ -134,8 +134,9 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
               <br />
               {t("landing.hero.line2")}
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-base font-medium leading-7 text-[#1d3769] sm:text-lg">
-              {t("landing.hero.body")}
+            <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-7 text-white sm:text-lg">
+              <span className="block">{t("landing.hero.body1")}</span>
+              <span className="block">{t("landing.hero.body2")}</span>
             </p>
             <div className="mt-9 flex justify-center">
               <Link

@@ -52,9 +52,15 @@ export const messages = {
   "landing.hero.brand": { ko: "플래너 투게더", en: "Planner Together" },
   "landing.hero.line1": { ko: "함께 만드는", en: "Timetables you" },
   "landing.hero.line2": { ko: "공유 시간표", en: "build together" },
-  "landing.hero.body": {
-    ko: "드래그로 만들고 링크 하나로 공유하세요. 여행·MT·스터디·프로젝트까지, 필요한 날짜만 골라 함께 채우는 시간표.",
-    en: "Drag to build, share with one link. Trips, study groups, projects — pick the dates that matter and fill them in together."
+  // Two sentences, two lines. Kept as separate strings rather than one with a
+  // <br>, so each language breaks where its own sentence ends.
+  "landing.hero.body1": {
+    ko: "드래그로 만들고 링크 하나로 공유하세요.",
+    en: "Drag to build, share with one link."
+  },
+  "landing.hero.body2": {
+    ko: "여행·MT·스터디·프로젝트까지, 필요한 날짜만 골라 함께 채우는 시간표",
+    en: "Trips, study groups, projects — pick the dates that matter and fill them in together."
   },
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
   "landing.cta.mine": { ko: "내 시간표로 이동", en: "Go to my timetables" },
