@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   EmbeddedTimetable,
@@ -10,9 +12,12 @@ import type { ProjectKind } from "@/types/project";
 
 export const dynamic = "force-dynamic";
 
-export default async function EmbedPage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  if (!/^[a-f0-9]{32}$/i.test(token)) notFound();
+// The metadata and the page body need the same payload, so the lookup is
+// memoised for the request rather than fetched twice. A bad token returns null
+// instead of throwing: the page turns that into a 404, while the metadata just
+// keeps the generic title.
+const loadTimetable = cache(async (token: string) => {
+  if (!/^[a-f0-9]{32}$/i.test(token)) return null;
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -21,9 +26,26 @@ export default async function EmbedPage({ params }: { params: Promise<{ token: s
   });
   if (error) {
     console.error(error);
-    notFound();
+    return null;
   }
-  const timetable = parseTimetable(data);
+  return parseTimetable(data);
+});
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const timetable = await loadTimetable(token);
+  // Falls back to the generic name so a dead link says nothing about whether
+  // the token ever existed.
+  return { title: timetable?.project.title || "공유 시간표" };
+}
+
+export default async function EmbedPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  const timetable = await loadTimetable(token);
   if (!timetable) notFound();
 
   return (
