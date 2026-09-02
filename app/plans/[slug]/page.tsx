@@ -15,6 +15,7 @@ import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 import { TimetableHeader } from "@/components/timetable/TimetableHeader";
 import { useProjectRealtime } from "@/lib/supabase/realtime";
 import { useT } from "@/lib/i18n/locale";
+import { SITE_NAME } from "@/lib/seo";
 import { canEdit as roleCanEdit } from "@/lib/permissions/roles";
 import { orderDays } from "@/lib/utils/days";
 import { useProjectStore } from "@/stores/project-store";
@@ -48,6 +49,13 @@ export default function ProjectPage() {
       setNotFound(true);
     });
   }, [params.slug, loadProject, t]);
+
+  // The layout's static title covers the load, then the tab takes the
+  // timetable's own name — which is how you tell four open plans apart. It
+  // follows a rename too, since the sidebar can retitle the project in place.
+  useEffect(() => {
+    if (project?.title) document.title = `${project.title} | ${SITE_NAME}`;
+  }, [project?.title]);
 
   useEffect(() => {
     if (!project?.embed_token) return;
