@@ -320,6 +320,7 @@ export const messages = {
   "card.renameHint": { ko: "Enter로 저장 · Esc로 취소", en: "Enter to save · Esc to cancel" },
   "card.noDates": { ko: "아직 날짜가 없어요", en: "No dates yet" },
   "card.scheduleCount": { ko: "일정 {count}개", en: "{count} schedules" },
+  "card.memberCount": { ko: "{count}명", en: "{count} people" },
   "card.contextHint": { ko: "우클릭 메뉴", en: "Right-click for menu" },
 
   // ---------------------------------------------------------------- create / setup

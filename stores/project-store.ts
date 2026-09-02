@@ -247,14 +247,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set({ loading: true });
     try {
       await get().loadCurrentUser();
-      const [projectsRes, daysRes, schedulesRes] = await Promise.all([
+      const [projectsRes, daysRes, schedulesRes, membersRes] = await Promise.all([
         supabase.from("projects").select("*").order("created_at", { ascending: false }),
         supabase.from("project_days").select("*"),
-        supabase.from("schedule_items").select("*")
+        supabase.from("schedule_items").select("*"),
+        // Unscoped: row level security already narrows this to the projects
+        // this user belongs to.
+        supabase.from("project_members").select("*, user:users(*)")
       ]);
       if (projectsRes.error) throw projectsRes.error;
       if (daysRes.error) throw daysRes.error;
       if (schedulesRes.error) throw schedulesRes.error;
+      if (membersRes.error) throw membersRes.error;
 
       set({
         projects: ((projectsRes.data ?? []) as Project[]).map(normalizeProject),
@@ -262,6 +266,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           (day) => pendingDayWakeTimeUpdates.get(day.id) ?? day
         ),
         schedules: ((schedulesRes.data ?? []) as ScheduleItem[]).map(normalizeSchedule),
+        members: (membersRes.data ?? []) as ProjectMember[],
         projectsLoaded: true
       });
     } finally {

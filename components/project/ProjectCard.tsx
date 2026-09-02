@@ -16,11 +16,15 @@ import type { ScheduleItem } from "@/types/schedule";
 export function ProjectCard({
   project,
   days,
-  schedules
+  schedules,
+  memberCount
 }: {
   project: Project;
   days: ProjectDay[];
   schedules: ScheduleItem[];
+  /** Every timetable has at least its owner, so zero means the memberships
+      have not arrived yet — show nothing rather than a wrong "0". */
+  memberCount: number;
 }) {
   const updateProject = useProjectStore((state) => state.updateProject);
   const deleteProject = useProjectStore((state) => state.deleteProject);
@@ -121,14 +125,20 @@ export function ProjectCard({
           </div>
         </div>
       )}
-      {/* Dates and schedule count are the two facts that separate one timetable
-          from another, so they share a single meta line at the foot of the card
-          instead of floating apart. */}
+      {/* Dates, schedule count and how many people are on it are the facts that
+          separate one timetable from another, so they share a single meta line
+          at the foot of the card instead of floating apart. */}
       <div className="mt-4 flex items-center justify-between gap-3 text-xs text-muted">
         <span className="truncate tabular-nums">
           {dateRange ?? t("card.noDates")}
           <span className="mx-1.5 text-border-emphasis">·</span>
           {t("card.scheduleCount", { count: schedules.length })}
+          {memberCount > 0 ? (
+            <>
+              <span className="mx-1.5 text-border-emphasis">·</span>
+              {t("card.memberCount", { count: memberCount })}
+            </>
+          ) : null}
         </span>
         {/* A hint for a hidden interaction, shown only while the pointer is on
             the card it applies to. */}

@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const projectsLoaded = useProjectStore((state) => state.projectsLoaded);
   const days = useProjectStore((state) => state.days);
   const schedules = useProjectStore((state) => state.schedules);
+  const members = useProjectStore((state) => state.members);
 
   const today = format(new Date(), "yyyy-MM-dd");
   const projectGroups = useMemo<ProjectGroup[]>(() => {
@@ -208,6 +209,9 @@ export default function DashboardPage() {
                         project={project}
                         days={days.filter((day) => day.project_id === project.id)}
                         schedules={schedules.filter((item) => item.project_id === project.id)}
+                        memberCount={
+                          members.filter((member) => member.project_id === project.id).length
+                        }
                       />
                     ))}
                   </div>
