@@ -10,7 +10,7 @@ const SECTIONS_KO: Section[] = [
     title: "제1조 개인정보의 처리 목적",
     body: [
       "회원가입, 본인 식별, 로그인 상태 유지, 비밀번호 변경 및 회원 탈퇴 처리",
-      "비회원 체험 이용자의 임시 식별과 시간표 재접속 기능 제공",
+      "종료된 비회원 체험에서 만들어진 시간표를 이용자 본인의 계정으로 이전하는 기능 제공",
       "시간표 작성·공유·초대·공동 편집·내보내기 기능 제공",
       "문의·피드백 처리, 서비스 이용 현황 분석, 오류 확인, 부정 이용 방지 및 보안 유지"
     ]
@@ -19,11 +19,11 @@ const SECTIONS_KO: Section[] = [
     title: "제2조 처리하는 개인정보의 항목 및 수집 방법",
     body: [
       "회원가입 시 필수 항목: 이메일 주소, 인증용 사용자 식별값. 비밀번호는 Supabase Auth가 인증 목적으로 처리하며, 운영자는 비밀번호 원문을 조회하거나 별도로 저장하지 않습니다.",
-      "비회원 체험 시: 임의로 생성된 익명 사용자 식별값, 게스트 표시 이름",
+      "비회원 체험은 종료되어 더 이상 익명 사용자 식별값을 새로 수집하지 않습니다. 체험 종료 전에 생성된 익명 사용자 식별값과 게스트 표시 이름은 제3조의 보유 기간에 따라 처리합니다.",
       "서비스 이용 시: 시간표 이름·설명·종류·선택 날짜, 일정 제목·날짜·시간·장소·메모·색상, 자유 메모, 첨부 링크, 참여자 이메일·역할, 초대 및 공유를 위한 식별값",
       "피드백 제출 시: 이용자가 Google Forms에 직접 입력한 피드백 내용과 선택적으로 입력한 연락 정보",
       "자동 생성 정보: 접속 IP 주소, 접속 시각, 방문 URL과 동적 경로, 필터링된 쿼리 매개변수, 이전 페이지 주소, 대략적인 접속 지역, 운영체제·브라우저·기기 유형, 서비스 이용 기록, 인증 세션 쿠키",
-      "수집 방법: 회원가입 및 서비스 입력 화면, 비회원 체험 생성, 고객 문의·피드백, 서비스 이용 중 자동 생성되는 로그와 분석 이벤트",
+      "수집 방법: 회원가입 및 서비스 입력 화면, 고객 문의·피드백, 서비스 이용 중 자동 생성되는 로그와 분석 이벤트",
       "서비스는 주민등록번호와 같은 고유식별정보나 건강·사상·정치성향과 같은 민감정보를 의도적으로 요구하지 않습니다. 일정 또는 메모에 불필요한 민감정보를 입력하지 마세요."
     ]
   },
@@ -32,7 +32,7 @@ const SECTIONS_KO: Section[] = [
     body: [
       "회원 계정 정보: 회원 탈퇴 시까지. 탈퇴 처리가 완료되면 지체 없이 삭제합니다.",
       "시간표·일정·메모·참여 정보: 이용자가 해당 시간표를 삭제할 때까지. 시간표 삭제 시 그 시간표에 속한 날짜, 일정, 메모 및 첨부 정보도 함께 삭제합니다.",
-      "비회원 체험 정보: 이용자가 해당 시간표를 삭제하거나 서비스 운영상 해당 익명 계정과 시간표를 정리할 때까지",
+      "체험 종료 전에 생성된 비회원 정보: 이용자가 해당 시간표를 본인 계정으로 이전하거나 삭제할 때까지. 이전이 완료되면 남은 익명 계정 정보는 서비스 운영상 정리 시 삭제합니다.",
       "Vercel Web Analytics 방문자 식별용 해시: 24시간 후 자동 폐기. 개인을 식별하지 않는 집계 통계는 분석 기능에서 삭제하거나 해당 서비스 이용을 종료할 때까지",
       "접속 및 오류 로그: 보안·장애 대응에 필요한 기간 또는 호스팅 제공자의 계약 및 설정에 따른 보유기간까지",
       "관계 법령에서 별도 보관을 요구하는 정보가 발생한 경우에는 해당 법령에서 정한 기간 동안 분리 보관한 후 삭제합니다. 현재 서비스는 유료 결제를 제공하지 않아 결제·거래 기록을 수집하지 않습니다."
@@ -132,8 +132,8 @@ const SECTIONS_KO: Section[] = [
     title: "제14조 개인정보처리방침의 변경",
     body: [
       "이 방침의 내용이 변경되는 경우 시행 7일 전부터 이 페이지를 통해 알립니다. 이용자 권리에 중대한 영향을 미치는 변경은 가능한 경우 시행 30일 전에 알립니다.",
-      "시행일: 2026년 8월 4일",
-      "최종 개정일: 2026년 8월 4일"
+      "시행일: 2026년 10월 13일",
+      "최종 개정일: 2026년 10월 6일"
     ]
   }
 ];
@@ -143,7 +143,7 @@ const SECTIONS_EN: Section[] = [
     title: "1. Purposes of processing",
     body: [
       "Account registration, identification, session management, password changes, and account closure",
-      "Temporary identification of guest users and access to their timetable by its saved link",
+      "Moving a timetable created under the retired guest trial into the user's own account",
       "Timetable creation, sharing, invitations, collaboration, and export",
       "Support and feedback, usage analytics, error diagnosis, abuse prevention, and security"
     ]
@@ -152,11 +152,11 @@ const SECTIONS_EN: Section[] = [
     title: "2. Data processed and how it is collected",
     body: [
       "Required at registration: email address and authentication user ID. Supabase Auth processes the password for authentication; the operator cannot read or separately store the plain-text password.",
-      "For guest trials: a randomly generated anonymous user ID and guest display name",
+      "Guest trials have ended, so no new anonymous user IDs are collected. Anonymous user IDs and guest display names created before they ended are handled under the retention periods in Section 3.",
       "While using the Service: timetable name, description, type and dates; schedule title, date, time, location, notes and color; free-form notes, attachment links, participant emails and roles, and invitation and sharing identifiers",
       "When feedback is submitted: the response and any contact details the user voluntarily enters in Google Forms",
       "Generated automatically: IP address, access time, visited URL and dynamic route, filtered query parameters, referrer, approximate location, operating system, browser and device type, service activity, and authentication session cookies",
-      "Collection methods: registration and service forms, guest creation, support and feedback, and logs and analytics events generated during use",
+      "Collection methods: registration and service forms, support and feedback, and logs and analytics events generated during use",
       "The Service does not intentionally request government-issued identifiers or sensitive data such as health, beliefs, or political opinions. Do not place unnecessary sensitive data in schedules or notes."
     ]
   },
@@ -165,7 +165,7 @@ const SECTIONS_EN: Section[] = [
     body: [
       "Member account data: until the account is closed, then deleted without undue delay",
       "Timetables, schedules, notes and participation data: until the timetable is deleted. Its dates, schedules, notes and attachments are deleted with it.",
-      "Guest trial data: until the guest deletes the timetable or it is removed as part of operational cleanup",
+      "Guest data created before trials ended: until the user moves the timetable into their own account or deletes it. Once it has been moved, the leftover anonymous account data is deleted during operational cleanup.",
       "Vercel Web Analytics visitor hash: discarded automatically after 24 hours. Non-identifying aggregate statistics remain until deleted from analytics or the analytics service is discontinued.",
       "Access and error logs: for the period needed for security and incident response, or for the retention period configured with the hosting provider",
       "If law requires a separate retention period, the applicable data is isolated and deleted when that period ends. The Service currently has no paid checkout and collects no payment or transaction records."
@@ -265,8 +265,8 @@ const SECTIONS_EN: Section[] = [
     title: "14. Changes to this policy",
     body: [
       "Changes are announced on this page at least seven days before they take effect. Where a change materially affects user rights, we aim to provide 30 days' notice.",
-      "Effective date: August 4, 2026",
-      "Last revised: August 4, 2026"
+      "Effective date: October 13, 2026",
+      "Last revised: October 6, 2026"
     ]
   }
 ];
@@ -278,9 +278,9 @@ const COPY = {
     intro:
       "Planner Together(이하 “서비스”)는 개인정보 보호법 제30조에 따라 이용자의 개인정보를 보호하고 관련 요청과 고충을 신속하게 처리하기 위해 다음과 같이 개인정보처리방침을 공개합니다.",
     effectiveLabel: "시행일",
-    effectiveDate: "2026년 8월 4일",
+    effectiveDate: "2026년 10월 13일",
     revisedLabel: "최종 개정일",
-    revisedDate: "2026년 8월 4일",
+    revisedDate: "2026년 10월 6일",
     footer:
       "이 방침은 서비스의 실제 운영 방식과 적용 법령을 기준으로 작성한 안내입니다. 서비스 기능이나 외부 처리업체가 변경되면 이 페이지도 함께 갱신합니다.",
     sections: SECTIONS_KO
@@ -291,9 +291,9 @@ const COPY = {
     intro:
       "Planner Together (the “Service”) publishes this policy to protect personal data and handle privacy requests and complaints under Article 30 of Korea's Personal Information Protection Act.",
     effectiveLabel: "Effective",
-    effectiveDate: "August 4, 2026",
+    effectiveDate: "October 13, 2026",
     revisedLabel: "Last revised",
-    revisedDate: "August 4, 2026",
+    revisedDate: "October 6, 2026",
     footer:
       "This notice reflects the Service's current operation and applicable law. It will be updated when service features or external processors change.",
     sections: SECTIONS_EN

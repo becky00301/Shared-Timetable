@@ -236,6 +236,10 @@ export type Database = {
         Args: { token: string };
         Returns: string;
       };
+      claim_guest_project: {
+        Args: { project_slug: string };
+        Returns: string;
+      };
       get_embedded_timetable: {
         Args: { embed_token_value: string };
         Returns: Json;

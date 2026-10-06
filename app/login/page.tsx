@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
+import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { getSafeNextPath } from "@/lib/utils/navigation";
 import { useProjectStore } from "@/stores/project-store";
 
@@ -24,6 +25,9 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = getSafeNextPath(searchParams.get("next"));
+  // Set when someone arrives from a retired trial timetable: once they have an
+  // account, that timetable is moved across before they land anywhere.
+  const claimSlug = parseProjectSlug(searchParams.get("claim") ?? "");
   const supabase = createSupabaseBrowserClient();
   const t = useT();
 
@@ -31,28 +35,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [guestLoading, setGuestLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
-
-  async function startGuest() {
-    if (!supabase) {
-      toast.info(t("auth.error.notConfigured"));
-      return;
-    }
-    setGuestLoading(true);
-    try {
-      // Guests get one timetable and no dashboard, so ignore `next` and go
-      // straight into the timetable that was just created for them.
-      const slug = await useProjectStore.getState().signInAsGuest();
-      router.replace(`/plans/${slug}`);
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      toast.error(t("auth.guest.failed"));
-    } finally {
-      setGuestLoading(false);
-    }
-  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -82,6 +65,20 @@ function LoginForm() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+      }
+      // A failed claim must not strand someone who has just signed in, so it
+      // only redirects the landing spot — it never blocks the login itself.
+      if (claimSlug) {
+        try {
+          const slug = await useProjectStore.getState().claimGuestProject(claimSlug);
+          toast.success(t("claim.success"));
+          router.push(`/plans/${slug}`);
+          router.refresh();
+          return;
+        } catch (error) {
+          console.error(error);
+          toast.error(t("claim.error.generic"));
+        }
       }
       router.push(next);
       router.refresh();
@@ -192,16 +189,6 @@ function LoginForm() {
           </button>
         </p>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-muted">
-          <span className="h-px flex-1 bg-border" />
-          {t("auth.guest.divider")}
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <Button type="button" variant="outline" className="w-full" disabled={guestLoading} onClick={startGuest}>
-          {guestLoading ? t("auth.guest.starting") : t("auth.guest.cta")}
-        </Button>
-        <p className="mt-2 text-center text-xs leading-5 text-muted">{t("auth.guest.hint")}</p>
       </div>
     </main>
   );

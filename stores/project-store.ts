@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
+import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
 import { DEFAULT_SCHEDULE_COLOR } from "@/lib/utils/schedule-colors";
@@ -42,11 +43,11 @@ type ProjectStore = {
       panels that take them say so instead of appearing to lose the input. */
   budgetSchemaMissing: boolean;
   loadCurrentUser: () => Promise<string | null>;
-  /** Signs in anonymously, creates the guest's single timetable, and returns
-      its slug to navigate to. */
-  signInAsGuest: () => Promise<string>;
-  /** Slug of the timetable a guest owns, for redirecting them out of pages
-      that assume an account. */
+  /** Takes over a timetable left behind by the retired guest mode, given the
+      link its guest was told to save. Returns the slug to navigate to. */
+  claimGuestProject: (link: string) => Promise<string>;
+  /** Slug of the timetable a leftover guest session owns, for pointing it at
+      the claim flow instead of pages that assume an account. */
   findGuestProjectSlug: () => Promise<string | null>;
   loadDashboard: () => Promise<void>;
   loadProject: (slug: string) => Promise<Project | null>;
@@ -98,6 +99,26 @@ const slugify = (input: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "")
     .slice(0, 64);
+
+/** Why a claim was refused, so the caller can say which of these it was
+    rather than showing a raw database message. */
+export type ClaimFailure = "invalid-link" | "not-found" | "owned" | "needs-account" | "unknown";
+
+export class ClaimProjectError extends Error {
+  constructor(readonly reason: ClaimFailure) {
+    super(reason);
+    this.name = "ClaimProjectError";
+  }
+}
+
+// claim_guest_project raises with an explicit SQLSTATE for each refusal, which
+// PostgREST hands back as the error code.
+function claimFailureFor(code: string | undefined): ClaimFailure {
+  if (code === "P0002") return "not-found";
+  if (code === "42501") return "owned";
+  if (code === "28000") return "needs-account";
+  return "unknown";
+}
 
 function requireClient() {
   const supabase = createSupabaseBrowserClient();
@@ -217,17 +238,21 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     return id;
   },
 
-  // Guest mode is a trial: one timetable, no dashboard. The project is created
-  // up front so the guest lands straight in the editor, and its slug is the
-  // only handle they have on it — hence the "save your link" warning there.
-  signInAsGuest: async () => {
+  // Guest mode is gone, but the timetables it created are not. The link the
+  // guest saved is the only handle on one, so claiming reads the slug out of
+  // it and asks the server to move the timetable across. The server refuses
+  // anything that already belongs to an account, so a shared link cannot be
+  // turned into a takeover.
+  claimGuestProject: async (link) => {
+    const slug = parseProjectSlug(link);
+    if (!slug) throw new ClaimProjectError("invalid-link");
     const supabase = requireClient();
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) throw error;
-    const id = data.user?.id ?? null;
-    set({ currentUserId: id, isGuest: true });
-    const project = await get().createProject(translate("guest.projectTitle"));
-    return project.slug;
+    const { data, error } = await supabase.rpc("claim_guest_project", { project_slug: slug });
+    if (error) throw new ClaimProjectError(claimFailureFor(error.code));
+    const claimed = typeof data === "string" ? data : slug;
+    // The dashboard list is now stale by exactly one timetable.
+    await get().loadDashboard();
+    return claimed;
   },
 
   findGuestProjectSlug: async () => {

@@ -240,7 +240,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
                   href="/login"
                   className="w-full whitespace-nowrap rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
                 >
-                  {t("landing.final.guest")}
+                  {t("landing.final.login")}
                 </Link>
               )}
             </div>

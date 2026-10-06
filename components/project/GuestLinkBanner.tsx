@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 
-/** Collapse state is per timetable: a guest with several timetables needs the
-    warning available for each link they have to keep. */
+/** Shown to the sessions left over from the retired guest mode: the timetable
+    is still here, but it only survives if they copy the link and claim it from
+    an account. Collapse state is per timetable, since a guest can hold more
+    than one link. */
 const collapseKey = (slug: string) => `plantogether.guestBannerDismissed.${slug}`;
 
 export function GuestLinkBanner({ slug }: { slug: string }) {
@@ -52,7 +54,9 @@ export function GuestLinkBanner({ slug }: { slug: string }) {
             {/* Converting a guest to an account is worth more than them
                 bookmarking the link, so signup carries the primary weight. */}
             <Button size="sm" asChild>
-              <Link href="/login">{t("guest.banner.signup")}</Link>
+              <Link href={`/login?claim=${encodeURIComponent(slug)}`}>
+                {t("guest.banner.signup")}
+              </Link>
             </Button>
             <Button size="sm" variant="outline" onClick={copyLink}>
               <Copy size={14} />

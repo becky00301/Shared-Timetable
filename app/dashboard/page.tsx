@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { ClaimProjectCard } from "@/components/project/ClaimProjectCard";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -112,8 +113,9 @@ export default function DashboardPage() {
         router.replace("/login?next=%2Fdashboard");
         return;
       }
-      // Guests are a single-timetable trial with no dashboard. Send them back
-      // to their one timetable rather than showing an account-shaped page.
+      // Sessions left over from the retired guest mode have no dashboard to
+      // show. Send them back to the timetable they still hold, where the
+      // banner explains how to claim it from an account.
       if (data.user.is_anonymous) {
         const slug = await useProjectStore.getState().findGuestProjectSlug();
         if (cancelled) return;
@@ -230,6 +232,9 @@ export default function DashboardPage() {
             {t("dashboard.empty")}
           </div>
         )}
+        {/* Only worth showing once the list is in: before that it would sit
+            under a loading box with nothing to belong to. */}
+        {projectsLoaded ? <ClaimProjectCard /> : null}
       </main>
       <CreateProjectModal />
     </AppShell>

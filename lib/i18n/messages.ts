@@ -69,10 +69,10 @@ export const messages = {
     en: "Ready to plan it together?"
   },
   "landing.final.body": {
-    ko: "필요한 날짜만 골라 드래그로 채우고, 링크 하나로 공유하세요. 계정 없이 먼저 만들어볼 수도 있어요.",
-    en: "Pick just the dates you need, drag to fill them in, and share with one link. You can try it without an account first."
+    ko: "필요한 날짜만 골라 드래그로 채우고, 링크 하나로 공유하세요. 가입하면 바로 시작할 수 있어요.",
+    en: "Pick just the dates you need, drag to fill them in, and share with one link. Sign up and start right away."
   },
-  "landing.final.guest": { ko: "로그인 없이 체험하기", en: "Try it without an account" },
+  "landing.final.login": { ko: "로그인", en: "Log in" },
   "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
   "landing.how.title": {
     ko: "네 가지만 알면 끝이에요",
@@ -231,34 +231,59 @@ export const messages = {
     en: "That link has expired or was already used. Please request a new one."
   },
 
-  "auth.guest.divider": { ko: "또는", en: "or" },
-  "auth.guest.cta": { ko: "로그인 없이 체험하기", en: "Try it without an account" },
-  "auth.guest.hint": {
-    ko: "계정 없이 시간표 하나를 바로 만들어볼 수 있어요. 대신 링크를 꼭 저장해두세요.",
-    en: "Build one timetable right away, no account needed. Just be sure to save your link."
-  },
-  "auth.guest.starting": { ko: "시간표를 만드는 중...", en: "Creating your timetable…" },
-  "auth.guest.failed": {
-    ko: "체험을 시작하지 못했어요. 다시 시도해주세요.",
-    en: "Couldn't start the trial. Please try again."
-  },
-
-  // ---------------------------------------------------------------- guest mode
+  // -------------------------------------------------------- retired guest mode
+  // Guest (anonymous) sign-in is gone. What is left is the timetables it
+  // created and the sessions still holding one, both of which are pointed at
+  // the claim flow.
   "guest.badge": { ko: "체험 중", en: "Trial" },
-  "guest.projectTitle": { ko: "내 시간표", en: "My timetable" },
-  "guest.banner.title": { ko: "링크를 꼭 저장해두세요", en: "Save this link" },
-  "guest.banner.body": {
-    ko: "로그인 없이 체험 중이에요. 이 링크가 시간표에 다시 들어올 수 있는 유일한 방법이라, 잃어버리면 되찾을 수 없어요. 북마크하거나 나에게 보내두세요. 계정을 만들면 시간표를 여러 개 만들고 어느 기기에서든 열 수 있어요.",
-    en: "You're trying Planner Together without an account. This link is the only way back into your timetable — if you lose it, it can't be recovered. Bookmark it or send it to yourself. Create an account to make more timetables and open them from any device."
+  "guest.banner.title": {
+    ko: "체험 모드가 종료됐어요",
+    en: "Trial mode has ended"
   },
-  "grid.zoomIn": { ko: "확대", en: "Zoom in" },
-  "grid.zoomOut": { ko: "축소", en: "Zoom out" },
-  "grid.zoomReset": { ko: "기본 배율로", en: "Reset zoom" },
-
+  "guest.banner.body": {
+    ko: "이제 계정으로만 시간표를 쓸 수 있어요. 지금 보고 있는 이 링크를 복사해두고 계정을 만든 뒤, 대시보드에서 붙여넣으면 이 시간표가 그대로 넘어와요. 링크를 잃어버리면 되찾을 수 없으니 먼저 복사해주세요.",
+    en: "Timetables now need an account. Copy this link, create an account, then paste the link on your dashboard and this timetable comes with you. It can't be recovered without the link, so copy it first."
+  },
   "guest.banner.copy": { ko: "링크 복사", en: "Copy link" },
   "guest.banner.collapse": { ko: "안내 접기", en: "Collapse notice" },
   "guest.banner.expand": { ko: "안내 펼치기", en: "Expand notice" },
   "guest.banner.signup": { ko: "계정 만들기", en: "Create an account" },
+
+  "grid.zoomIn": { ko: "확대", en: "Zoom in" },
+  "grid.zoomOut": { ko: "축소", en: "Zoom out" },
+  "grid.zoomReset": { ko: "기본 배율로", en: "Reset zoom" },
+
+  // ------------------------------------------------------------------- claim
+  "claim.title": { ko: "체험으로 만든 시간표 가져오기", en: "Bring in a trial timetable" },
+  "claim.body": {
+    ko: "로그인 없이 만들었던 시간표가 있다면, 저장해둔 링크를 붙여넣어 주세요. 이 계정으로 그대로 옮겨드려요.",
+    en: "Made a timetable before you had an account? Paste the link you saved and it moves into this account, as it is."
+  },
+  "claim.inputLabel": { ko: "시간표 링크", en: "Timetable link" },
+  "claim.placeholder": { ko: "https://… /plans/…", en: "https://… /plans/…" },
+  "claim.submit": { ko: "가져오기", en: "Bring it in" },
+  "claim.submitting": { ko: "가져오는 중...", en: "Bringing it in…" },
+  "claim.success": { ko: "시간표를 가져왔어요.", en: "The timetable is yours now." },
+  "claim.error.invalidLink": {
+    ko: "시간표 링크가 아니에요. 주소에 /plans/ 가 들어간 링크를 붙여넣어 주세요.",
+    en: "That isn't a timetable link. Paste one with /plans/ in the address."
+  },
+  "claim.error.notFound": {
+    ko: "그 링크로 시간표를 찾지 못했어요. 주소를 다시 확인해주세요.",
+    en: "No timetable matches that link. Please check the address."
+  },
+  "claim.error.owned": {
+    ko: "이미 다른 계정의 시간표예요. 가져오는 대신 소유자에게 초대를 받아주세요.",
+    en: "That timetable already belongs to an account. Ask its owner for an invite instead."
+  },
+  "claim.error.needsAccount": {
+    ko: "계정으로 로그인한 뒤에 가져올 수 있어요.",
+    en: "Log in with an account first."
+  },
+  "claim.error.generic": {
+    ko: "가져오지 못했어요. 잠시 후 다시 시도해주세요.",
+    en: "Couldn't bring it in. Please try again in a moment."
+  },
 
   "auth.signupComplete": {
     ko: "가입이 완료됐어요. 이제 로그인해주세요.",
