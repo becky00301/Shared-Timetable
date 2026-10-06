@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { ReactElement, ReactNode } from "react";
 import {
   CalendarRange,
   FileDown,
@@ -25,6 +26,214 @@ const FEATURES: { icon: typeof Share2; title: MessageKey; body: MessageKey }[] =
   { icon: Users, title: "landing.feature.collab.title", body: "landing.feature.collab.body" },
   { icon: Share2, title: "landing.feature.share.title", body: "landing.feature.share.body" }
 ];
+
+/** A use case, illustrated. The drawing carries the situation at a glance;
+    the words underneath only have to add the detail it cannot show. */
+type UseCase = { art: () => ReactElement; title: MessageKey; body: MessageKey };
+
+// One flat ink for every silhouette, so six separate drawings read as one set.
+// One flat ink for every silhouette and one tint behind every drawing, so six
+// separate illustrations read as a single set. Fills only — no strokes.
+const ART_INK = "#2F3847";
+const ART_TINT = "#ECEEF1";
+
+/** Shared frame: same canvas, same tinted panel behind every illustration. */
+function CaseArt({ children }: { children: ReactNode }) {
+  return (
+    <svg viewBox="0 0 200 110" aria-hidden className="h-auto w-full">
+      <rect width="200" height="110" rx="14" fill={ART_TINT} />
+      {children}
+    </svg>
+  );
+}
+
+/** The route and the weekly loop are both drawn as dots, so the two cards
+    that need to show movement share one motif. */
+const TRIP_TRAIL: [number, number, number][] = [
+  [40, 80, 2],
+  [57, 71, 2.4],
+  [74, 62, 2.8],
+  [91, 54, 3.1],
+  [108, 47, 3.4]
+];
+
+function TripArt() {
+  return (
+    <CaseArt>
+      <g fill="#FFFFFF">
+        <ellipse cx="44" cy="30" rx="17" ry="9" />
+        <ellipse cx="58" cy="27" rx="11" ry="7" />
+        <ellipse cx="158" cy="84" rx="15" ry="8" />
+      </g>
+      <g fill="#7FA6DE">
+        {TRIP_TRAIL.map(([cx, cy, r]) => (
+          <circle key={cx} cx={cx} cy={cy} r={r} />
+        ))}
+      </g>
+      <g transform="translate(24 60)">
+        <path d="M8 0A8 8 0 0 0 0 8c0 5.6 8 14 8 14s8-8.4 8-14A8 8 0 0 0 8 0Z" fill="#DE9095" />
+        <circle cx="8" cy="8" r="3" fill={ART_TINT} />
+      </g>
+      <g transform="translate(130 18) rotate(-10)">
+        <path d="M0 13 36 0 17 18Z" fill="#B9CFF0" />
+        <path d="M17 18 36 0 24 28Z" fill="#3F5F94" />
+      </g>
+    </CaseArt>
+  );
+}
+
+function RetreatArt() {
+  return (
+    <CaseArt>
+      <path d="M0 86h200v10a14 14 0 0 1-14 14H14A14 14 0 0 1 0 96Z" fill="#C2DCB6" />
+      <path d="M44 86 74 36l30 50Z" fill="#8FBF7E" />
+      <path d="M74 36 86 86H62Z" fill="#4A7040" />
+      {/* Campfire, with two people sat the way people sit at one. */}
+      <g transform="translate(132 54)">
+        <path d="M14 0c7 8 10 14 10 19a10 10 0 0 1-20 0c0-4 2-6 4-9 1 4 3 5 4 5-1-5 0-11 2-15Z" fill="#DCB05E" />
+        <rect x="0" y="26" width="28" height="5" rx="2.5" fill={ART_INK} transform="rotate(-8 14 28)" />
+        <rect x="0" y="26" width="28" height="5" rx="2.5" fill={ART_INK} transform="rotate(8 14 28)" />
+      </g>
+      <g fill={ART_INK}>
+        <circle cx="112" cy="70" r="7" />
+        <path d="M103 86a9 9 0 0 1 18 0Z" />
+        <circle cx="176" cy="70" r="7" />
+        <path d="M167 86a9 9 0 0 1 18 0Z" />
+      </g>
+    </CaseArt>
+  );
+}
+
+/** Hung along the curve a string of bunting makes, so the flags still read as
+    bunting now that the string itself is gone. */
+const EVENT_FLAGS: [number, number, string][] = [
+  [34, 22, "#DE9095"],
+  [60, 27, "#EDD3A1"],
+  [86, 30, "#8FBF7E"],
+  [112, 30, "#7FA6DE"],
+  [138, 27, "#EFC3C5"],
+  [164, 22, "#DCB05E"]
+];
+
+function EventArt() {
+  return (
+    <CaseArt>
+      {EVENT_FLAGS.map(([x, y, fill]) => (
+        <path key={x} d={`M${x - 7} ${y}h14l-7 16Z`} fill={fill} />
+      ))}
+      {/* A booth: striped awning over an open counter. */}
+      <g transform="translate(56 54)">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <rect
+            key={i}
+            x={i * 17.6}
+            y="0"
+            width="17.6"
+            height="12"
+            fill={i % 2 ? "#FFFFFF" : "#DE9095"}
+          />
+        ))}
+        <rect x="0" y="12" width="88" height="32" fill="#FFFFFF" />
+        <rect x="0" y="40" width="88" height="4" fill="#D8DCE2" />
+      </g>
+      <g fill={ART_INK}>
+        <circle cx="32" cy="70" r="7" />
+        <path d="M22 100V84a10 10 0 0 1 20 0v16Z" />
+        <circle cx="168" cy="76" r="6.5" />
+        <path d="M159 100V89a9 9 0 0 1 18 0v11Z" />
+      </g>
+    </CaseArt>
+  );
+}
+
+function ClassArt() {
+  return (
+    <CaseArt>
+      {/* A stack of books, widest at the bottom the way a stack settles. */}
+      <rect x="46" y="76" width="108" height="14" rx="4" fill="#3F5F94" />
+      <rect x="52" y="60" width="96" height="14" rx="4" fill="#DE9095" />
+      <rect x="58" y="44" width="84" height="14" rx="4" fill="#DCB05E" />
+      <g fill="#FFFFFF" opacity="0.6">
+        <rect x="52" y="80" width="10" height="6" rx="2" />
+        <rect x="58" y="64" width="10" height="6" rx="2" />
+        <rect x="64" y="48" width="10" height="6" rx="2" />
+      </g>
+      <g transform="translate(150 26) rotate(28)">
+        <rect x="0" y="0" width="9" height="34" fill="#EDD3A1" />
+        <rect x="0" y="0" width="9" height="7" fill="#EFC3C5" />
+        <path d="M0 34h9l-4.5 9Z" fill={ART_INK} />
+      </g>
+    </CaseArt>
+  );
+}
+
+function HolidayArt() {
+  return (
+    <CaseArt>
+      {/* Rays as tapered wedges rather than strokes, rotated around the sun. */}
+      <g fill="#DCB05E">
+        {[-62, -31, 0, 31, 62].map((angle) => (
+          <path key={angle} d="M97 40h6l-3 -16Z" transform={`rotate(${angle} 100 72)`} />
+        ))}
+      </g>
+      <circle cx="100" cy="72" r="26" fill="#DCB05E" />
+      {/* The horizon the sun is still coming up over. */}
+      <path d="M0 82h200v14a14 14 0 0 1-14 14H14A14 14 0 0 1 0 96Z" fill="#EDD3A1" />
+      <g fill="#FFFFFF">
+        <ellipse cx="40" cy="36" rx="15" ry="8" />
+        <ellipse cx="52" cy="33" rx="10" ry="6" />
+      </g>
+    </CaseArt>
+  );
+}
+
+/** Sixteen dots around the dumbbell: the same slot coming back every week. */
+const ROUTINE_LOOP = Array.from({ length: 16 }, (_, i) => {
+  const angle = (i / 16) * Math.PI * 2;
+  return [100 + 46 * Math.sin(angle), 55 - 46 * Math.cos(angle)] as const;
+});
+
+function RoutineArt() {
+  return (
+    <CaseArt>
+      <g fill="#6FBDB2">
+        {ROUTINE_LOOP.map(([cx, cy]) => (
+          <circle key={`${cx}-${cy}`} cx={cx.toFixed(1)} cy={cy.toFixed(1)} r="2.6" />
+        ))}
+        <path d="M100 2l10 7-10 7Z" />
+      </g>
+      <g transform="translate(100 55)">
+        <rect x="-18" y="-4" width="36" height="8" rx="4" fill={ART_INK} />
+        <rect x="-30" y="-13" width="11" height="26" rx="4" fill="#2F6E68" />
+        <rect x="19" y="-13" width="11" height="26" rx="4" fill="#2F6E68" />
+        <rect x="-38" y="-7.5" width="8" height="15" rx="3" fill={ART_INK} />
+        <rect x="30" y="-7.5" width="8" height="15" rx="3" fill={ART_INK} />
+      </g>
+    </CaseArt>
+  );
+}
+
+/** Two groups, one per timetable kind, so a reader lands on the mode that
+    fits them before the create dialog ever asks. */
+const USE_CASE_GROUPS: { label: MessageKey; cases: UseCase[] }[] = [
+  {
+    label: "landing.cases.rangeLabel",
+    cases: [
+      { art: TripArt, title: "landing.cases.trip.title", body: "landing.cases.trip.body" },
+      { art: RetreatArt, title: "landing.cases.mt.title", body: "landing.cases.mt.body" },
+      { art: EventArt, title: "landing.cases.event.title", body: "landing.cases.event.body" }
+    ]
+  },
+  {
+    label: "landing.cases.weeklyLabel",
+    cases: [
+      { art: ClassArt, title: "landing.cases.school.title", body: "landing.cases.school.body" },
+      { art: HolidayArt, title: "landing.cases.vacation.title", body: "landing.cases.vacation.body" },
+      { art: RoutineArt, title: "landing.cases.routine.title", body: "landing.cases.routine.body" }
+    ]
+  }
+];
+
 
 const FEATURE_ACCENTS = [
   {
@@ -200,6 +409,43 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
           <DetailSection id="feature-3" n={4} reverse title={t("landing.feature.share.title")} body={t("landing.detail.share.body")}>
             <ShareMockup />
           </DetailSection>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ use cases */}
+      <section className="border-t border-border bg-black/[0.015]">
+        <div className="mx-auto max-w-5xl px-5 py-20 sm:py-28">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+              {t("landing.cases.eyebrow")}
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              {t("landing.cases.title")}
+            </h2>
+          </div>
+
+          <div className="mt-12 flex flex-col gap-10">
+            {USE_CASE_GROUPS.map((group) => (
+              <div key={group.label}>
+                <div className="flex items-center gap-3">
+                  <h3 className="shrink-0 text-sm font-semibold text-foreground">{t(group.label)}</h3>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {group.cases.map((useCase) => (
+                    <div
+                      key={useCase.title}
+                      className="flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
+                    >
+                      <useCase.art />
+                      <h4 className="mt-4 font-semibold text-foreground">{t(useCase.title)}</h4>
+                      <p className="mt-1.5 text-sm leading-6 text-muted">{t(useCase.body)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

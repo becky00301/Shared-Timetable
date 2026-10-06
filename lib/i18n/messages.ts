@@ -62,6 +62,50 @@ export const messages = {
     ko: "여행·MT·스터디·프로젝트까지, 필요한 날짜만 골라 함께 채우는 시간표",
     en: "Trips, study groups, projects — pick the dates that matter and fill them in together."
   },
+  // ------------------------------------------------------------- use cases
+  // Grouped by the two timetable kinds, because that is the first thing the
+  // create dialog asks for. Seeing their own situation under one of the two
+  // answers the question before it is posed.
+  "landing.cases.eyebrow": { ko: "이럴 때 써요", en: "What people use it for" },
+  "landing.cases.title": {
+    ko: "날짜가 정해진 일이든, 매주 반복되는 일이든",
+    en: "For the trip next month and the week that repeats"
+  },
+  "landing.cases.rangeLabel": { ko: "날짜를 골라서", en: "Pick the dates" },
+  "landing.cases.weeklyLabel": { ko: "매주 반복으로", en: "Repeat every week" },
+
+  "landing.cases.trip.title": { ko: "여행", en: "Trips" },
+  "landing.cases.trip.body": {
+    ko: "2박 3일 동선을 시간대별로. 비행기·숙소·맛집에 지출까지 한 화면에서 정리돼요.",
+    en: "Lay out each day by the hour — flights, hotels, places to eat, and what it all costs, on one screen."
+  },
+  "landing.cases.mt.title": { ko: "MT·워크숍", en: "Retreats and offsites" },
+  "landing.cases.mt.body": {
+    ko: "단체 일정을 다 같이 채우고, 링크 하나로 공유하세요. 누가 뭘 맡았는지 바로 보여요.",
+    en: "Fill the group's schedule together and share it with one link. Everyone sees who has what."
+  },
+  "landing.cases.event.title": { ko: "행사·축제", en: "Events and festivals" },
+  "landing.cases.event.body": {
+    ko: "부스 운영과 스태프 교대를 한눈에. 바뀐 일정은 모두에게 바로 반영돼요.",
+    en: "Booth hours and staff shifts at a glance, with every change landing for everyone at once."
+  },
+
+  "landing.cases.school.title": { ko: "학교 시간표", en: "Class schedules" },
+  "landing.cases.school.body": {
+    ko: "요일별 수업을 드래그로 채우고 친구와 공유하세요. 공강도 바로 눈에 들어와요.",
+    en: "Drag your classes onto the week and share it with friends — the gaps show themselves."
+  },
+  "landing.cases.vacation.title": { ko: "방학 계획", en: "Holiday plans" },
+  "landing.cases.vacation.body": {
+    ko: "기상 시간부터 하루 루틴까지. 계획이 쌓이는 게 눈에 보여요.",
+    en: "From what time you get up to how the day runs, laid out where you can see it hold."
+  },
+  "landing.cases.routine.title": { ko: "스터디·운동", en: "Study and training" },
+  "landing.cases.routine.body": {
+    ko: "매주 같은 시간에 모이는 일정을 한 번만 만들어두면 끝이에요.",
+    en: "Set the weekly slot once and it is there every week."
+  },
+
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
   "landing.cta.mine": { ko: "내 시간표로 이동", en: "Go to my timetables" },
   "landing.final.title": {
