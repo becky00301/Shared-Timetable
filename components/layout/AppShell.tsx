@@ -95,8 +95,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Button>
               </>
             ) : (
+              // A signed-out visitor is already inside the app — the dashboard
+              // is the only page they can reach — so the action here is the
+              // account, not another way in.
               <Button asChild size="sm">
-                <Link href="/dashboard">{t("common.openApp")}</Link>
+                <Link href="/login?mode=signup&next=%2Fdashboard">{t("common.signup")}</Link>
               </Button>
             )}
           </div>

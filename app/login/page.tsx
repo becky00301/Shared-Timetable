@@ -31,7 +31,10 @@ function LoginForm() {
   const supabase = createSupabaseBrowserClient();
   const t = useT();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  // Arriving from "make a timetable" should land on sign-up, not sign-in.
+  const [mode, setMode] = useState<"signin" | "signup">(
+    searchParams.get("mode") === "signup" ? "signup" : "signin"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

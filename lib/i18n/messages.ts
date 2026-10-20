@@ -107,6 +107,9 @@ export const messages = {
   },
 
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
+  // The header pill now opens the dashboard rather than the sign-up form, so
+  // it says so; the ask for an account comes once they try to make something.
+  "landing.nav.start": { ko: "시작하기", en: "Get started" },
   "landing.cta.mine": { ko: "내 시간표로 이동", en: "Go to my timetables" },
   "landing.final.title": {
     ko: "이제 같이 계획해볼까요?",
@@ -339,6 +342,22 @@ export const messages = {
   "dashboard.subtitle": {
     ko: "함께 만드는 공유 시간표 목록이에요.",
     en: "Timetables you're building with others."
+  },
+  // Shown to a visitor who walked in through the landing page. The ask for an
+  // account comes here, at the point they try to make something, rather than
+  // at the front door.
+  "dashboard.anon.title": {
+    ko: "아직 시간표가 없어요",
+    en: "No timetables yet"
+  },
+  "dashboard.anon.body": {
+    ko: "시간표를 만들려면 계정이 필요해요. 만든 시간표는 어느 기기에서든 열 수 있고, 링크 하나로 함께 채울 수 있어요.",
+    en: "Making one needs an account. After that it opens on any device, and one link is enough to fill it in together."
+  },
+  "dashboard.anon.cta": { ko: "가입하고 시간표 만들기", en: "Sign up and make one" },
+  "dashboard.anon.hint": {
+    ko: "이메일과 비밀번호만 있으면 됩니다.",
+    en: "An email and a password is all it takes."
   },
   "dashboard.new": { ko: "새 시간표", en: "New timetable" },
   "dashboard.projectsView": { ko: "시간표 목록", en: "Timetables" },

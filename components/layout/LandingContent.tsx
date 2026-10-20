@@ -16,6 +16,7 @@ import {
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
+import { getScheduleInkColor } from "@/lib/utils/schedule-colors";
 import { useLocale, useT } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { useProjectStore } from "@/stores/project-store";
@@ -237,20 +238,20 @@ const USE_CASE_GROUPS: { label: MessageKey; cases: UseCase[] }[] = [
 
 const FEATURE_ACCENTS = [
   {
-    card: "border-[#cfe0ff] bg-[#f7faff] hover:border-[#a9c6ff]",
-    icon: "bg-[#dce9ff] text-[#2864cf]"
+    card: "border-[#B9CFF0] bg-[#F5F8FC] hover:border-[#7FA6DE]",
+    icon: "bg-[#DCE7F8] text-[#3F5F94]"
   },
   {
-    card: "border-[#f4dfa0] bg-[#fffdf5] hover:border-[#ebc95f]",
-    icon: "bg-[#fff0b8] text-[#9b5b00]"
+    card: "border-[#EDD3A1] bg-[#FCFAF4] hover:border-[#DCB05E]",
+    icon: "bg-[#F6E9CF] text-[#8A6224]"
   },
   {
-    card: "border-[#bfe7d7] bg-[#f6fcf9] hover:border-[#83cfb4]",
-    icon: "bg-[#d8f3e8] text-[#14765a]"
+    card: "border-[#ADDCD6] bg-[#F4FAF9] hover:border-[#6FBDB2]",
+    icon: "bg-[#D6EDEA] text-[#2F6E68]"
   },
   {
-    card: "border-[#f4cbc5] bg-[#fff8f7] hover:border-[#e99a90]",
-    icon: "bg-[#ffe1dc] text-[#bd493e]"
+    card: "border-[#EFC3C5] bg-[#FDF7F7] hover:border-[#DE9095]",
+    icon: "bg-[#F7DFE0] text-[#8C4249]"
   }
 ] as const;
 
@@ -265,7 +266,9 @@ const DOTS = [
 export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   const t = useT();
   const router = useRouter();
-  const appHref = loggedIn ? "/dashboard" : "/login";
+  // Signed out visitors land in the dashboard too: it asks for an account
+  // at the point they try to make something, not at the door.
+  const appHref = "/dashboard";
   const finalBodySentences = t("landing.final.body").match(/[^.!?。！？]+[.!?。！？]+/g) ?? [
     t("landing.final.body")
   ];
@@ -284,9 +287,12 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   return (
     <main className="bg-[#fbfcff] text-foreground">
       {/* ---------------------------------------------------------------- hero */}
-      {/* A clear blue carries the product's calendar identity, then softens into
-          the page background so the timetable preview remains the focal point. */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#315fe8] via-[#76a6ef] to-[#fbfcff]">
+      {/* Same hue family as the schedule palette, but deepened: the palette is
+          built for small blocks under dark text, and at the size of a hero its
+          mid tones leave white text at about 2.5:1. Holding the dark end until
+          60% keeps every line of hero text above 5:1 before the blue melts
+          into the page background. */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#21407A] via-[#5B84C6] via-60% to-[#fbfcff]">
         {/* starfield */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           {DOTS.map(([top, left, size], i) => (
@@ -325,9 +331,9 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
               )}
               <Link
                 href={appHref}
-                className="shrink-0 whitespace-nowrap rounded-full bg-[#fff1a8] px-3 py-2 text-xs font-semibold text-[#253353] shadow-sm transition hover:bg-[#ffe77a] sm:px-4 sm:text-sm"
+                className="shrink-0 whitespace-nowrap rounded-full bg-[#FFE09A] px-3 py-2 text-xs font-semibold text-[#2F3847] shadow-sm transition hover:bg-[#FFEFC4] sm:px-4 sm:text-sm"
               >
-                {loggedIn ? t("landing.cta.mine") : t("common.signup")}
+                {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
               </Link>
             </nav>
           </header>
@@ -350,7 +356,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <div className="mt-9 flex justify-center">
               <Link
                 href={appHref}
-                className="whitespace-nowrap rounded-full bg-[#ffd15c] px-7 py-3.5 text-sm font-semibold text-[#1d2944] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffc83d] hover:shadow-xl active:translate-y-0"
+                className="whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#FFB92E] hover:shadow-xl active:translate-y-0"
               >
                 {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
               </Link>
@@ -451,7 +457,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
 
       {/* ------------------------------------------------------------ final cta */}
       <section className="px-5 pb-20 sm:pb-28">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#315fe8] via-[#1f74ad] to-[#137563] px-6 py-16 text-center sm:px-12 sm:py-20">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#21407A] via-[#265C73] to-[#1E5A53] px-6 py-16 text-center sm:px-12 sm:py-20">
           {/* Same starfield as the hero, so the page closes where it opened. */}
           <div aria-hidden className="pointer-events-none absolute inset-0">
             {DOTS.map(([top, left, size], i) => (
@@ -477,7 +483,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href={appHref}
-                className="w-full whitespace-nowrap rounded-full bg-[#fff1a8] px-7 py-3.5 text-sm font-semibold text-[#253353] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffe77a] hover:shadow-xl active:translate-y-0 sm:w-auto"
+                className="w-full whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#FFB92E] hover:shadow-xl active:translate-y-0 sm:w-auto"
               >
                 {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
               </Link>
@@ -562,27 +568,27 @@ function DragMockup() {
   const { locale } = useLocale();
   const label = locale === "ko" ? "저녁 식사" : "Dinner";
   return (
-    <div className="relative h-44 overflow-hidden rounded-xl border border-neutral-100 bg-white">
+    <div className="relative h-44 overflow-hidden rounded-xl border border-[#ECEEF1] bg-white">
       <div className="grid h-full grid-cols-3">
         {[0, 1, 2].map((c) => (
-          <div key={c} className="border-r border-neutral-100 last:border-r-0">
+          <div key={c} className="border-r border-[#ECEEF1] last:border-r-0">
             {[0, 1, 2, 3].map((r) => (
-              <div key={r} className="h-1/4 border-b border-neutral-50 last:border-b-0" />
+              <div key={r} className="h-1/4 border-b border-[#F3F5F7] last:border-b-0" />
             ))}
           </div>
         ))}
       </div>
       <div className="absolute left-[37%] top-4 w-[26%]">
         <div
-          className="flex h-24 origin-top items-start rounded-[4px] bg-[#7FA6DE] px-2 py-1.5 text-[11px] font-semibold text-[#111827] shadow-sm"
-          style={{ animation: `lp-draw 4s ${EASE} infinite` }}
+          className="flex h-24 origin-top items-start rounded-[4px] bg-[#B9CFF0] px-2 py-1.5 text-[11px] font-semibold shadow-sm"
+          style={{ color: getScheduleInkColor("#B9CFF0"), animation: `lp-draw 4s ${EASE} infinite` }}
         >
           {label}
         </div>
       </div>
       <MousePointer2
         size={18}
-        className="absolute left-[59%] top-4 fill-neutral-800 text-neutral-800 drop-shadow"
+        className="absolute left-[59%] top-4 fill-[#2F3847] text-[#2F3847] drop-shadow"
         style={{ animation: `lp-cursor-down 4s ${EASE} infinite` }}
       />
     </div>
@@ -596,8 +602,8 @@ function DatesMockup() {
   const range = [16, 17, 18, 19, 20]; // grid indices to select in sequence
   const start = 3; // first cell shows day 1 at index 3
   return (
-    <div className="rounded-xl border border-neutral-100 bg-white p-4">
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium text-neutral-400">
+    <div className="rounded-xl border border-[#ECEEF1] bg-white p-4">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium text-[#8A919E]">
         {dows.map((d, i) => (
           <div key={i} className="py-1">
             {d}
@@ -617,7 +623,7 @@ function DatesMockup() {
                   style={{ animation: `lp-cell-on 4s ${EASE} infinite`, animationDelay: `${range.indexOf(i) * 130}ms` }}
                 />
               ) : null}
-              <span className={cn("relative", sel ? "font-semibold text-white" : "text-neutral-500")}>
+              <span className={cn("relative", sel ? "font-semibold text-white" : "text-[#59616F]")}>
                 {show ? day : ""}
               </span>
             </div>
@@ -635,26 +641,36 @@ function CollabMockup() {
   const b1 = locale === "ko" ? "회의" : "Meeting";
   const b2 = locale === "ko" ? "점심" : "Lunch";
   return (
-    <div className="relative h-44 overflow-hidden rounded-xl border border-neutral-100 bg-white">
+    <div className="relative h-44 overflow-hidden rounded-xl border border-[#ECEEF1] bg-white">
       <div className="grid h-full grid-cols-3">
         {[0, 1, 2].map((c) => (
-          <div key={c} className="border-r border-neutral-100 last:border-r-0">
+          <div key={c} className="border-r border-[#ECEEF1] last:border-r-0">
             {[0, 1, 2, 3].map((r) => (
-              <div key={r} className="h-1/4 border-b border-neutral-50 last:border-b-0" />
+              <div key={r} className="h-1/4 border-b border-[#F3F5F7] last:border-b-0" />
             ))}
           </div>
         ))}
       </div>
       {/* blocks the two people drop in */}
       <div
-        className="absolute left-[6%] top-6 w-[26%] rounded-[4px] bg-[#DE9095] px-2 py-1 text-[11px] font-semibold text-[#111827] shadow-sm"
-        style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "200ms" }}
+        className="absolute left-[6%] top-6 w-[26%] rounded-[4px] bg-[#EFC3C5] px-2 py-1 text-[11px] font-semibold shadow-sm"
+        style={{
+          color: getScheduleInkColor("#EFC3C5"),
+          height: 44,
+          animation: `lp-pop 4s ${EASE} infinite`,
+          animationDelay: "200ms"
+        }}
       >
         {b1}
       </div>
       <div
-        className="absolute left-[68%] top-16 w-[26%] rounded-[4px] bg-[#7FA6DE] px-2 py-1 text-[11px] font-semibold text-[#111827] shadow-sm"
-        style={{ height: 44, animation: `lp-pop 4s ${EASE} infinite`, animationDelay: "1400ms" }}
+        className="absolute left-[68%] top-16 w-[26%] rounded-[4px] bg-[#B9CFF0] px-2 py-1 text-[11px] font-semibold shadow-sm"
+        style={{
+          color: getScheduleInkColor("#B9CFF0"),
+          height: 44,
+          animation: `lp-pop 4s ${EASE} infinite`,
+          animationDelay: "1400ms"
+        }}
       >
         {b2}
       </div>
@@ -683,20 +699,20 @@ function ShareMockup() {
     { icon: Sheet, label: ko ? "엑셀" : "Excel" }
   ];
   return (
-    <div className="relative rounded-xl border border-neutral-100 bg-white p-4">
+    <div className="relative rounded-xl border border-[#ECEEF1] bg-white p-4">
       <div className="flex items-center gap-2">
-        <div className="flex-1 truncate rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[11px] text-neutral-400">
+        <div className="flex-1 truncate rounded-lg border border-[#E1E3E7] bg-[#F7F8F9] px-3 py-2 text-[11px] text-[#8A919E]">
           plannertogether.app/invite/8f2a…
         </div>
-        <span className="rounded-lg bg-[#14161c] px-3 py-2 text-xs font-medium text-white">{copy}</span>
+        <span className="rounded-lg bg-[#2F3847] px-3 py-2 text-xs font-medium text-white">{copy}</span>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {tiles.map(({ icon: Icon, label }) => (
           <div
             key={label}
-            className="flex flex-col items-center gap-1 rounded-lg bg-neutral-100 py-3 text-[11px] font-medium text-neutral-600"
+            className="flex flex-col items-center gap-1 rounded-lg bg-[#ECEEF1] py-3 text-[11px] font-medium text-[#59616F]"
           >
-            <Icon size={18} className="text-neutral-500" />
+            <Icon size={18} className="text-[#59616F]" />
             {label}
           </div>
         ))}
@@ -715,6 +731,7 @@ function ShareMockup() {
 /** One 9s loop shared by every cursor and block; each peer is offset within it
     so the three of them take turns rather than moving in unison. */
 const HERO_LOOP = "9s";
+const HERO_HOURS = ["09", "11", "13", "15", "17"];
 
 function HeroMockup() {
   const { locale } = useLocale();
@@ -725,12 +742,12 @@ function HeroMockup() {
   // Cursors keep the bright identity colours the app assigns to people, while
   // the blocks they leave behind use the schedule palette — the same split the
   // real timetable has.
-  const settled = { col: 0, top: 14, height: 40, color: "#7FA6DE", label: ko ? "출발" : "Depart" };
+  const settled = { col: 0, top: 14, height: 40, color: "#B9CFF0", label: ko ? "출발" : "Depart" };
   const peers = [
     {
       name: ko ? "민지" : "Minji",
       color: "#8E4EC6",
-      blockColor: "#DE9095",
+      blockColor: "#EFC3C5",
       from: ["-70px", "-46px"],
       delay: "0s",
       block: { col: 1, top: 30, height: 56, label: ko ? "로마 구경" : "Rome tour" }
@@ -738,7 +755,7 @@ function HeroMockup() {
     {
       name: ko ? "지훈" : "Alex",
       color: "#30A46C",
-      blockColor: "#8FBF7E",
+      blockColor: "#C2DCB6",
       from: ["84px", "-34px"],
       delay: "1.2s",
       block: { col: 2, top: 8, height: 32, label: ko ? "체크인" : "Check-in" }
@@ -746,7 +763,7 @@ function HeroMockup() {
     {
       name: ko ? "나" : "Me",
       color: "#E2A400",
-      blockColor: "#DCB05E",
+      blockColor: "#EDD3A1",
       from: ["48px", "72px"],
       delay: "2.4s",
       block: { col: 2, top: 52, height: 44, label: ko ? "저녁" : "Dinner" }
@@ -762,75 +779,100 @@ function HeroMockup() {
 
   return (
     <div className="relative mx-auto mt-14 max-w-lg">
-      <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-white text-left shadow-2xl">
-        <div className="grid grid-cols-3 border-b border-neutral-100 bg-neutral-50/70 text-center text-xs font-medium text-neutral-500">
-          {days.map((d) => (
-            <div key={d} className="py-2.5">
-              {d}
-            </div>
-          ))}
-        </div>
-        <div className="relative grid h-52 grid-cols-3">
-          {[0, 1, 2].map((c) => (
-            <div key={c} className="relative border-r border-neutral-100 last:border-r-0">
-              {[0, 1, 2, 3, 4].map((r) => (
-                <div key={r} className="h-[20%] border-b border-neutral-50 last:border-b-0" />
-              ))}
-            </div>
-          ))}
-
-          <div
-            className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold text-[#111827] shadow-sm"
-            style={{ ...blockBox(settled), backgroundColor: settled.color }}
-          >
-            {settled.label}
+      <div className="relative overflow-hidden rounded-2xl border border-[#E1E3E7] bg-white text-left shadow-xl">
+        {/* Two columns, four cells: the hour gutter and the day header share
+            their row heights with the grid instead of being pinned to a
+            hand-measured offset. */}
+        <div className="grid" style={{ gridTemplateColumns: "2.25rem 1fr" }}>
+          <div className="border-b border-r border-[#ECEEF1] bg-[#ECEEF1]" />
+          <div className="grid grid-cols-3 border-b border-[#ECEEF1] bg-[#ECEEF1] text-center text-xs font-medium text-[#59616F]">
+            {days.map((d) => (
+              <div key={d} className="py-2.5">
+                {d}
+              </div>
+            ))}
           </div>
 
-          {peers.map((peer) => (
-            <div
-              key={peer.name}
-              className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold text-[#111827] shadow-sm"
+          {/* The hours are what make this read as a timetable rather than three
+              columns of coloured boxes. */}
+          <div className="h-52 border-r border-[#ECEEF1]">
+            {HERO_HOURS.map((hour) => (
+              <div
+                key={hour}
+                className="flex h-[20%] items-start justify-end pr-1.5 pt-1 text-[9px] font-medium tabular-nums text-[#8A919E]"
+              >
+                {hour}
+              </div>
+            ))}
+          </div>
+
+          <div className="relative grid h-52 grid-cols-3">
+            {[0, 1, 2].map((c) => (
+              <div key={c} className="relative border-r border-[#ECEEF1] last:border-r-0">
+                {[0, 1, 2, 3, 4].map((r) => (
+                  <div key={r} className="h-[20%] border-b border-[#F3F5F7] last:border-b-0" />
+                ))}
+              </div>
+            ))}
+
+          <div
+              className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold shadow-sm"
               style={{
-                ...blockBox(peer.block),
-                backgroundColor: peer.blockColor,
-                animation: `hero-block ${HERO_LOOP} ease-out ${peer.delay} infinite`
+                ...blockBox(settled),
+                backgroundColor: settled.color,
+                color: getScheduleInkColor(settled.color)
               }}
             >
-              {peer.block.label}
+              {settled.label}
             </div>
-          ))}
 
-          {/* Cursors sit at the corner of the block they just drew. */}
-          {peers.map((peer) => (
-            <div
-              key={peer.name}
-              aria-hidden
-              className="pointer-events-none absolute z-10 flex items-start gap-1"
-              style={
-                {
-                  // Anchored inside the column, not on its edge, so the name
-                  // label has room instead of being clipped by the card.
-                  left: `calc(${((peer.block.col + 0.5) / 3) * 100}% - 8px)`,
-                  // Capped so a cursor on a block that reaches the bottom of
-                  // the grid isn't clipped by the card's overflow-hidden.
-                  top: `${Math.min(peer.block.top + peer.block.height, 82)}%`,
-                  "--from-x": peer.from[0],
-                  "--from-y": peer.from[1],
-                  animation: `hero-cursor ${HERO_LOOP} cubic-bezier(0.23, 1, 0.32, 1) ${peer.delay} infinite`
-                } as React.CSSProperties
-              }
-            >
-              <MousePointer2 size={15} className="shrink-0 drop-shadow" style={{ color: peer.color }} fill={peer.color} />
-              {/* White ring keeps the label legible even when it lands on a
-                  block of the same colour. */}
-              <span
-                className="whitespace-nowrap rounded-full border border-white/80 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm"
-                style={{ backgroundColor: peer.color }}
+            {peers.map((peer) => (
+              <div
+                key={peer.name}
+                className="absolute rounded-[4px] px-1.5 py-1 text-[10px] font-semibold shadow-sm"
+                style={{
+                  ...blockBox(peer.block),
+                  backgroundColor: peer.blockColor,
+                  color: getScheduleInkColor(peer.blockColor),
+                  animation: `hero-block ${HERO_LOOP} ease-out ${peer.delay} infinite`
+                }}
               >
-                {peer.name}
-              </span>
-            </div>
-          ))}
+                {peer.block.label}
+              </div>
+            ))}
+
+            {/* Cursors sit at the corner of the block they just drew. */}
+            {peers.map((peer) => (
+              <div
+                key={peer.name}
+                aria-hidden
+                className="pointer-events-none absolute z-10 flex items-start gap-1"
+                style={
+                  {
+                    // Anchored inside the column, not on its edge, so the name
+                    // label has room instead of being clipped by the card.
+                    left: `calc(${((peer.block.col + 0.5) / 3) * 100}% - 8px)`,
+                    // Capped so a cursor on a block that reaches the bottom of
+                    // the grid isn't clipped by the card's overflow-hidden.
+                    top: `${Math.min(peer.block.top + peer.block.height, 82)}%`,
+                    "--from-x": peer.from[0],
+                    "--from-y": peer.from[1],
+                    animation: `hero-cursor ${HERO_LOOP} cubic-bezier(0.23, 1, 0.32, 1) ${peer.delay} infinite`
+                  } as React.CSSProperties
+                }
+              >
+                <MousePointer2 size={15} className="shrink-0 drop-shadow" style={{ color: peer.color }} fill={peer.color} />
+                {/* White ring keeps the label legible even when it lands on a
+                    block of the same colour. */}
+                <span
+                  className="whitespace-nowrap rounded-full border border-white/80 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm"
+                  style={{ backgroundColor: peer.color }}
+                >
+                  {peer.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

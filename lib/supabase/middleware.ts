@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
 
-const PROTECTED_PREFIXES = ["/account", "/dashboard", "/plans"];
+const PROTECTED_PREFIXES = ["/account", "/plans"];
 const EMBED_TOKEN_PATTERN = /^[A-Fa-f0-9]{32}$/;
 const FRAME_ANCESTORS =
   "frame-ancestors https://notion.so https://*.notion.so https://notion.site https://*.notion.site https://notion.com https://*.notion.com https://iframe.ly https://*.iframe.ly";

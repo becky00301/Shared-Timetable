@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { CalendarDays, LayoutGrid, Plus } from "lucide-react";
@@ -17,6 +18,10 @@ import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { Project } from "@/types/project";
+
+/** Sign-up rather than sign-in, and back to the dashboard once they have an
+    account, so the trip they came to make is one click away again. */
+const SIGNUP_HREF = "/login?mode=signup&next=%2Fdashboard";
 
 type ProjectGroup = {
   key: "ongoing" | "upcoming" | "past";
@@ -97,10 +102,13 @@ export default function DashboardPage() {
   const setCreateProjectOpen = useUiStore((state) => state.setCreateProjectOpen);
   const [loadError, setLoadError] = useState(false);
   const [dashboardView, setDashboardView] = useState<"projects" | "calendar">("projects");
+  // null while the session is still being read, so the page doesn't flash the
+  // signed-out pitch at someone who is signed in.
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
-  // This page is prerendered, so a client-side navigation can reach it without
-  // passing through middleware. Verify the session here too, and clear any
-  // cached data before redirecting.
+  // The dashboard is now the front door, so a signed-out visitor is expected
+  // rather than turned away. The page is prerendered, so the session is read
+  // here as well as in middleware.
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
@@ -109,10 +117,12 @@ export default function DashboardPage() {
     supabase.auth.getUser().then(async ({ data }) => {
       if (cancelled) return;
       if (!data.user) {
+        // Any cached data belongs to whoever was signed in before.
         useProjectStore.getState().reset();
-        router.replace("/login?next=%2Fdashboard");
+        setSignedIn(false);
         return;
       }
+      setSignedIn(true);
       // Sessions left over from the retired guest mode have no dashboard to
       // show. Send them back to the timetable they still hold, where the
       // banner explains how to claim it from an account.
@@ -144,14 +154,29 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-foreground">{t("dashboard.title")}</h1>
             <p className="mt-1 text-sm text-muted">{t("dashboard.subtitle")}</p>
           </div>
-          <Button onClick={() => setCreateProjectOpen(true)}>
-            <Plus size={16} />
-            {t("dashboard.new")}
-          </Button>
+          {signedIn === false ? (
+            <Button asChild>
+              <Link href={SIGNUP_HREF}>
+                <Plus size={16} />
+                {t("dashboard.new")}
+              </Link>
+            </Button>
+          ) : (
+            <Button onClick={() => setCreateProjectOpen(true)}>
+              <Plus size={16} />
+              {t("dashboard.new")}
+            </Button>
+          )}
         </div>
         {/* Same segmented control as the timetable header, so switching views
-            looks like the same gesture in both places. */}
-        <div className="mt-6 inline-grid grid-cols-2 gap-0.5 rounded-[10px] bg-black/[0.05] p-0.5">
+            looks like the same gesture in both places. Nothing to switch
+            between until there is an account behind it. */}
+        <div
+          className={cn(
+            "mt-6 inline-grid grid-cols-2 gap-0.5 rounded-[10px] bg-black/[0.05] p-0.5",
+            signedIn === false && "hidden"
+          )}
+        >
           <button
             type="button"
             onClick={() => setDashboardView("projects")}
@@ -182,7 +207,27 @@ export default function DashboardPage() {
         {/* Wait for the full list. Opening a single timetable leaves just that
             project cached, and rendering that would flash a one-card dashboard
             before the rest arrived. */}
-        {!projectsLoaded && !loadError ? (
+        {signedIn === false ? (
+          <section className="mt-10 rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
+            <h2 className="text-xl font-semibold text-foreground">{t("dashboard.anon.title")}</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+              {t("dashboard.anon.body")}
+            </p>
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Button asChild>
+                <Link href={SIGNUP_HREF}>{t("dashboard.anon.cta")}</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/login?next=%2Fdashboard">{t("common.login")}</Link>
+              </Button>
+            </div>
+            <p className="mt-5 text-xs text-muted">{t("dashboard.anon.hint")}</p>
+          </section>
+        ) : signedIn === null ? (
+          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+            {t("common.loading")}
+          </div>
+        ) : !projectsLoaded && !loadError ? (
           <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("common.loading")}
           </div>
@@ -234,7 +279,7 @@ export default function DashboardPage() {
         )}
         {/* Only worth showing once the list is in: before that it would sit
             under a loading box with nothing to belong to. */}
-        {projectsLoaded ? <ClaimProjectCard /> : null}
+        {signedIn && projectsLoaded ? <ClaimProjectCard /> : null}
       </main>
       <CreateProjectModal />
     </AppShell>

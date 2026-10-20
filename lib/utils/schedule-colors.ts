@@ -28,3 +28,93 @@ export function getScheduleTextColor(backgroundColor?: string | null) {
 
   return luminance > 0.179 ? "#111827" : "#FFFFFF";
 }
+
+/**
+ * Ink in the block's own colour family rather than flat black: same hue, a
+ * little more saturated so it stays a colour, and taken only as dark as it
+ * needs to be to stay comfortably legible on that block.
+ *
+ * Black on a pastel block reads as a sticker stuck on top of it. This reads as
+ * the block's own writing. The search walks from the lightest end down and
+ * stops at the first value clearing the target, so the ink keeps as much of
+ * its colour as legibility allows.
+ */
+const INK_TARGET_RATIO = 7;
+const inkCache = new Map<string, string>();
+
+function channels(hex: string) {
+  const h = hex.trim().replace(/^#/, "");
+  const full = h.length === 3 ? h.split("").map((d) => `${d}${d}`).join("") : h;
+  return [0, 2, 4].map((o) => Number.parseInt(full.slice(o, o + 2), 16) / 255);
+}
+
+function relativeLuminance([r, g, b]: number[]) {
+  const [lr, lg, lb] = [r, g, b].map((c) =>
+    c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  );
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+}
+
+function contrast(a: number[], b: number[]) {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Minimal HSL round trip; the palette is plain sRGB so this is enough.
+function toHsl([r, g, b]: number[]) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h =
+    max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, s, l];
+}
+
+function fromHsl([h, s, l]: number[]) {
+  if (s === 0) return [l, l, l];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const channel = (t: number) => {
+    let x = t;
+    if (x < 0) x += 1;
+    if (x > 1) x -= 1;
+    if (x < 1 / 6) return p + (q - p) * 6 * x;
+    if (x < 1 / 2) return q;
+    if (x < 2 / 3) return p + (q - p) * (2 / 3 - x) * 6;
+    return p;
+  };
+  return [channel(h + 1 / 3), channel(h), channel(h - 1 / 3)];
+}
+
+const toHex = (rgb: number[]) =>
+  "#" + rgb.map((c) => Math.round(c * 255).toString(16).padStart(2, "0")).join("").toUpperCase();
+
+export function getScheduleInkColor(backgroundColor?: string | null) {
+  const normalized = backgroundColor?.trim().replace(/^#/, "");
+  if (!normalized || !/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(normalized)) return "#FFFFFF";
+  const cached = inkCache.get(normalized);
+  if (cached) return cached;
+
+  const bg = channels(normalized);
+  const [h, s] = toHsl(bg);
+  const saturated = Math.min(1, s * 1.35);
+  // A dark block needs its ink lighter, not darker, so walk the other way.
+  const darkBlock = relativeLuminance(bg) <= 0.179;
+  const steps = darkBlock
+    ? Array.from({ length: 101 }, (_, i) => i / 100)
+    : Array.from({ length: 101 }, (_, i) => 1 - i / 100);
+
+  let ink = darkBlock ? "#FFFFFF" : "#111827";
+  for (const l of steps) {
+    const candidate = fromHsl([h, saturated, l]);
+    if (contrast(candidate, bg) >= INK_TARGET_RATIO) {
+      ink = toHex(candidate);
+      break;
+    }
+  }
+  inkCache.set(normalized, ink);
+  return ink;
+}
