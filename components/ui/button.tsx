@@ -17,6 +17,14 @@ const VARIANT_MAP: Record<AppVariant, NonNullable<AppicaButtonProps["variant"]>>
   danger: "destructive"
 };
 
+// The main action is the same colour here as on the landing page, so "the
+// button that starts something" looks like one thing across the product.
+//
+// Only the button: --primary still drives focus rings, tab underlines and
+// selected states, and sand at those sizes on white is too faint to see.
+const PRIMARY_SAND =
+  "bg-[#FFC94F] text-[#2F3847] hover:bg-[#FFB92E] active:bg-[#FFB92E] disabled:bg-[#FFC94F]";
+
 const SIZE_MAP: Record<AppSize, NonNullable<AppicaButtonProps["size"]>> = {
   default: "md",
   sm: "sm",
@@ -42,7 +50,7 @@ export function Button({
   const mapped = {
     variant: VARIANT_MAP[variant],
     size: SIZE_MAP[size],
-    className: cn("whitespace-nowrap", className)
+    className: cn("whitespace-nowrap", variant === "default" && PRIMARY_SAND, className)
   };
 
   // asChild: hand the child element to Appica's `render` prop and lift its

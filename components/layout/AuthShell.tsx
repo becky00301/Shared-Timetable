@@ -31,7 +31,7 @@ export function AuthShell({
         animate={reduced ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: REVEAL_EASE }}
         className={cn(
-          "w-full rounded-3xl border border-border bg-white p-7 shadow-[0_10px_40px_oklch(0_0_0/6%)] sm:p-8",
+          "w-full rounded-2xl border border-border bg-white p-7 shadow-[0_10px_40px_oklch(0_0_0/6%)] sm:p-8",
           wide ? "max-w-lg" : "max-w-md",
           className
         )}

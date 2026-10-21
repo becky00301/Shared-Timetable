@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -44,11 +43,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-white text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-          <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
-              <CalendarClock size={18} />
-            </span>
-            <span className="hidden whitespace-nowrap sm:inline">Planner Together</span>
+          {/* Same lockup as the landing nav — plain wordmark, no tile — so the
+              two headers read as the same product in different clothes. */}
+          <Link href="/" className="shrink-0 whitespace-nowrap font-semibold text-foreground">
+            Planner<span className="hidden sm:inline"> Together</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             {/* Guests are a single-timetable trial with no dashboard. */}

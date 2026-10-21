@@ -416,7 +416,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
               <motion.div
                 key={panel.title}
                 className={cn(
-                  "flex flex-col overflow-hidden rounded-3xl border border-border p-6",
+                  "flex flex-col overflow-hidden rounded-2xl border border-border p-6",
                   panel.span,
                   panel.tint
                 )}
@@ -521,7 +521,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
 
       {/* ------------------------------------------------------------ final cta */}
       <section className="px-5 pb-24 sm:pb-32">
-        <Reveal className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#15181E] px-6 py-16 text-center sm:px-12 sm:py-20">
+        <Reveal className="mx-auto max-w-5xl overflow-hidden rounded-2xl bg-[#15181E] px-6 py-16 text-center sm:px-12 sm:py-20">
           <h2 className="text-3xl font-semibold tracking-[-0.02em] text-white sm:text-4xl">
             {t("landing.final.title")}
           </h2>
