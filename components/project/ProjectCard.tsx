@@ -82,7 +82,7 @@ export function ProjectCard({
 
   return (
     <div
-      className="group relative flex min-h-36 flex-col justify-between rounded-xl border border-border bg-card p-4 transition hover:border-border-strong hover:bg-black/[0.02]"
+      className="group relative flex min-h-36 flex-col justify-between rounded-2xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-[0_8px_24px_oklch(0_0_0/6%)]"
       onContextMenu={onContextMenu}
     >
       {menu}
@@ -111,7 +111,7 @@ export function ProjectCard({
           <Link
             href={`/plans/${project.slug}`}
             aria-label={project.title}
-            className="absolute inset-0 z-0 rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+            className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-primary"
           />
           {/* The old card carried a calendar icon on every tile — identical
               across the grid, so it added weight without telling anyone

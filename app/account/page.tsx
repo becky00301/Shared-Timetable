@@ -48,7 +48,7 @@ export default function AccountPage() {
     <AppShell>
       <main className="mx-auto max-w-5xl px-5 py-10">
         <header className="border-b border-border pb-7">
-          <h1 className="text-3xl font-semibold text-foreground">{t("account.page.title")}</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("account.page.title")}</h1>
           <p className="mt-2 text-muted">{t("account.page.subtitle")}</p>
           {email ? (
             <p className="mt-5 text-sm text-muted">

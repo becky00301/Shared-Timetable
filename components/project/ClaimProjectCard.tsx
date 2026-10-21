@@ -49,7 +49,7 @@ export function ClaimProjectCard() {
   }
 
   return (
-    <section className="mt-10 rounded-xl border border-border bg-card p-5">
+    <section className="mt-10 rounded-2xl border border-border bg-card p-5">
       <div className="flex items-start gap-3">
         <Download size={18} className="mt-0.5 shrink-0 text-muted" />
         <div className="min-w-0 flex-1">

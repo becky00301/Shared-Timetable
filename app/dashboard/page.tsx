@@ -183,7 +183,7 @@ function Dashboard() {
             every timetable listed below it. */}
         <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">{t("dashboard.title")}</h1>
+            <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">{t("dashboard.title")}</h1>
             <p className="mt-1 text-sm text-muted">{t("dashboard.subtitle")}</p>
           </div>
           {signedIn === false ? (
@@ -240,7 +240,7 @@ function Dashboard() {
             project cached, and rendering that would flash a one-card dashboard
             before the rest arrived. */}
         {signedIn === false ? (
-          <section className="mt-10 rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
+          <section className="mt-10 rounded-2xl border border-dashed border-border bg-card px-6 py-14 text-center">
             <h2 className="text-xl font-semibold text-foreground">{t("dashboard.anon.title")}</h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
               {t("dashboard.anon.body")}
@@ -256,15 +256,15 @@ function Dashboard() {
             <p className="mt-5 text-xs text-muted">{t("dashboard.anon.hint")}</p>
           </section>
         ) : signedIn === null ? (
-          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("common.loading")}
           </div>
         ) : !projectsLoaded && !loadError ? (
-          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("common.loading")}
           </div>
         ) : loadError ? (
-          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("dashboard.loadFailedRetry")}
           </div>
         ) : projects.length && dashboardView === "projects" ? (
@@ -305,7 +305,7 @@ function Dashboard() {
         ) : projects.length ? (
           <DashboardCalendar projects={projects} days={days} schedules={schedules} />
         ) : (
-          <div className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-muted">
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted">
             {t("dashboard.empty")}
           </div>
         )}
