@@ -46,8 +46,8 @@ export const messages = {
   },
   "landing.feature.share.title": { ko: "링크로 공유", en: "Share anywhere" },
   "landing.feature.share.body": {
-    ko: "PNG·PDF로 내보내거나 링크만 보내 누구에게나 보여줄 수 있어요.",
-    en: "Export to PNG or PDF, or just send a link anyone can open."
+    ko: "PNG·PDF·엑셀·HTML로 내보내거나 링크만 보내 누구에게나 보여줄 수 있어요.",
+    en: "Export to PNG, PDF, Excel or HTML, or just send a link anyone can open."
   },
   "landing.hero.brand": { ko: "플래너 투게더", en: "Planner Together" },
   "landing.hero.line1": { ko: "함께 만드는", en: "Timetables you" },
@@ -172,8 +172,8 @@ export const messages = {
   },
   "landing.faq.q5": { ko: "다른 데로 내보낼 수 있나요?", en: "Can I export it?" },
   "landing.faq.a5": {
-    ko: "PNG 이미지, PDF, 엑셀 세 가지로 내보낼 수 있습니다.",
-    en: "You can export it as a PNG image, a PDF, or an Excel file."
+    ko: "PNG 이미지, PDF, 엑셀, HTML 네 가지로 내보낼 수 있습니다. HTML은 글자가 그대로 남아서 검색도 되고 블로그나 문서에 붙이기도 좋아요.",
+    en: "As a PNG image, a PDF, an Excel file, or HTML. The HTML keeps everything as text, so it stays searchable and drops neatly into a blog or a doc."
   },
 
   "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
@@ -194,8 +194,8 @@ export const messages = {
     en: "Invite friends with one link and fill the same timetable together, live. Every change shows up for everyone instantly."
   },
   "landing.detail.share.body": {
-    ko: "완성한 시간표는 링크로 보내거나 PNG·PDF·엑셀로 내보낼 수 있어요. 계정이 없는 사람에게도 보여줄 수 있습니다.",
-    en: "Send the finished timetable as a link, or export it to PNG, PDF, or Excel. Even people without an account can view it."
+    ko: "완성한 시간표는 링크로 보내거나 PNG·PDF·엑셀·HTML로 내보낼 수 있어요. 계정이 없는 사람에게도 보여줄 수 있습니다.",
+    en: "Send the finished timetable as a link, or export it to PNG, PDF, Excel or HTML. Even people without an account can view it."
   },
 
   // ---------------------------------------------------------------- auth
@@ -678,6 +678,7 @@ export const messages = {
   "export.tile.png": { ko: "이미지", en: "Image" },
   "export.tile.pdf": { ko: "PDF", en: "PDF" },
   "export.tile.excel": { ko: "엑셀", en: "Excel" },
+  "export.tile.html": { ko: "HTML", en: "HTML" },
 
   // ---------------------------------------------------------------- map
   "map.title": { ko: "이동 경로", en: "Route" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown, ImageDown, Sheet, Upload, type LucideIcon } from "lucide-react";
+import { Code2, FileDown, ImageDown, Sheet, Upload, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -44,6 +44,15 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
         // Built server-side, so the xlsx writer never ships to the browser.
         window.location.href = `/api/export/excel?projectId=${encodeURIComponent(project.id)}&locale=${locale}`;
       }
+    },
+    {
+      key: "export.tile.html",
+      icon: Code2,
+      run: () => {
+        // Written from the data rather than captured from the screen, so the
+        // file is text someone can read, search and print — not a picture.
+        window.location.href = `/api/export/html?projectId=${encodeURIComponent(project.id)}&locale=${locale}`;
+      }
     }
   ];
 
@@ -61,7 +70,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
             <DialogDescription className="text-sm text-muted">{t("export.subtitle")}</DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {tiles.map(({ key, icon: Icon, run }) => (
               <button
                 key={key}
