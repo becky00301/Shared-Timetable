@@ -121,6 +121,12 @@ export const messages = {
   },
   "landing.final.login": { ko: "로그인", en: "Log in" },
   // ---------------------------------------------------------- landing: nav
+  "landing.feature.chat.title": { ko: "말하려고 멈추지 않아도 돼요", en: "Say it without leaving the grid" },
+  "landing.feature.chat.body": {
+    ko: "시간표를 보다가 / 를 누르면 마우스 커서에 채팅 줄이 열립니다. 치는 글자가 그대로 상대 화면에 나타나서 보내기 버튼이 없어요. 입력창을 찾아 시선을 옮길 필요 없이, 지금 보고 있는 그 칸 옆에서 이야기하면 됩니다.",
+    en: "Press / while you are looking at the timetable and a chat line opens at your cursor. The letters land on everyone else's screen as you type them, so there is nothing to send. You talk beside the slot you are both looking at, without going to find a box."
+  },
+
   "landing.nav.features": { ko: "기능", en: "Features" },
   "landing.nav.cases": { ko: "쓰임새", en: "Use cases" },
   "landing.nav.faq": { ko: "자주 묻는 질문", en: "FAQ" },
@@ -184,8 +190,8 @@ export const messages = {
     en: "Start from a weekly template, or pick a trip's dates on the calendar — only the days you need, no empty clutter."
   },
   "landing.detail.collab.body": {
-    ko: "초대 링크 하나로 친구를 부르면 같은 시간표를 실시간으로 함께 채워요. 누가 무엇을 바꿔도 모두의 화면에 바로 반영됩니다. 할 말이 있으면 / 를 누르세요 — 커서에 채팅 줄이 열리고, 치는 그대로 상대 화면에 보여서 보내기 버튼이 없습니다.",
-    en: "Invite friends with one link and fill the same timetable together, live. Every change shows up for everyone instantly. Press / when you want to say something: a chat line opens at your cursor, and what you type is already on their screen — there is no send button."
+    ko: "초대 링크 하나로 친구를 부르면 같은 시간표를 실시간으로 함께 채워요. 누가 무엇을 바꿔도 모두의 화면에 바로 반영됩니다.",
+    en: "Invite friends with one link and fill the same timetable together, live. Every change shows up for everyone instantly."
   },
   "landing.detail.share.body": {
     ko: "완성한 시간표는 링크로 보내거나 PNG·PDF·엑셀로 내보낼 수 있어요. 계정이 없는 사람에게도 보여줄 수 있습니다.",

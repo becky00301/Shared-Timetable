@@ -207,6 +207,9 @@ const BENTO: {
   body: MessageKey;
   span: string;
   tint: string;
+  /** Full-width panels read better with the copy beside the picture than
+      stacked above it. */
+  wide?: boolean;
   Mockup: () => ReactElement;
 }[] = [
   {
@@ -236,6 +239,14 @@ const BENTO: {
     span: "lg:col-span-4",
     tint: "bg-[#F4FAF9]",
     Mockup: CollabMockup
+  },
+  {
+    title: "landing.feature.chat.title",
+    body: "landing.feature.chat.body",
+    span: "lg:col-span-6",
+    tint: "bg-[#FBF6F7]",
+    wide: true,
+    Mockup: CursorChatMockup
   }
 ];
 
@@ -414,11 +425,23 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, delay: i * 0.07, ease: REVEAL_EASE }}
               >
-                <h3 className="text-lg font-semibold text-foreground">{t(panel.title)}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted">{t(panel.body)}</p>
-                <div className="mt-6 flex-1">
-                  <panel.Mockup />
-                </div>
+                {panel.wide ? (
+                  <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">{t(panel.title)}</h3>
+                      <p className="mt-2 text-sm leading-6 text-muted">{t(panel.body)}</p>
+                    </div>
+                    <panel.Mockup />
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-semibold text-foreground">{t(panel.title)}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted">{t(panel.body)}</p>
+                    <div className="mt-6 flex-1">
+                      <panel.Mockup />
+                    </div>
+                  </>
+                )}
               </motion.div>
             ))}
           </div>
@@ -619,9 +642,6 @@ function CollabMockup() {
   const [meA, meB] = locale === "ko" ? ["민지", "나"] : ["Minji", "You"];
   const b1 = locale === "ko" ? "회의" : "Meeting";
   const b2 = locale === "ko" ? "점심" : "Lunch";
-  // One person is talking, the other is just moving — the two states the grid
-  // actually shows at once.
-  const said = locale === "ko" ? "이때 출발할까?" : "Leave around then?";
   return (
     <div className="relative h-44 overflow-hidden rounded-xl border border-[#ECEEF1] bg-white">
       <div className="grid h-full grid-cols-3">
@@ -657,14 +677,9 @@ function CollabMockup() {
         {b2}
       </div>
       {/* live cursors */}
-      {/* The chat line hangs off the pointer in that person's colour, which is
-          what "/" opens in the real grid. */}
       <div className="absolute left-[10%] top-2" style={{ animation: `lp-cursor-a 4s ${EASE} infinite` }}>
         <MousePointer2 size={16} className="fill-[#E93D82] text-[#E93D82]" />
-        <span className="ml-2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-[#E93D82] px-2 py-0.5 text-[9px] text-white">
-          <span className="font-semibold">{meA}</span>
-          <span className="opacity-90">{said}</span>
-        </span>
+        <span className="ml-2 rounded bg-[#E93D82] px-1.5 py-0.5 text-[9px] font-medium text-white">{meA}</span>
       </div>
       <div className="absolute right-[10%] top-4" style={{ animation: `lp-cursor-b 4s ${EASE} infinite` }}>
         <MousePointer2 size={16} className="fill-[#0091FF] text-[#0091FF]" />
@@ -717,6 +732,35 @@ function ShareMockup() {
 /** A soft, floating timetable preview — the landing's product visual. */
 /** One 9s loop shared by every cursor and block; each peer is offset within it
     so the three of them take turns rather than moving in unison. */
+/** Keycap, then the line it opens. Wide and horizontal, because this panel
+    runs the full width of the grid. */
+function CursorChatMockup() {
+  const { locale } = useLocale();
+  const ko = locale === "ko";
+  const said = ko ? "이때 출발할까?" : "Leave around then?";
+  const hint = ko ? "누르면" : "opens";
+
+  return (
+    <div className="relative flex h-40 items-center justify-center gap-5 overflow-hidden rounded-xl border border-[#ECEEF1] bg-white px-5">
+      <div aria-hidden className="absolute inset-0 grid grid-cols-4">
+        {[0, 1, 2, 3].map((c) => (
+          <div key={c} className="border-r border-[#F3F5F7] last:border-r-0" />
+        ))}
+      </div>
+      <kbd className="relative flex size-12 shrink-0 items-center justify-center rounded-xl border border-[#E1E3E7] bg-[#F7F8F9] text-xl font-semibold text-[#2F3847] shadow-[0_2px_0_#E1E3E7]">
+        /
+      </kbd>
+      <span className="relative shrink-0 text-xs text-[#8A919E]">{hint}</span>
+      <div className="relative flex shrink-0 items-start">
+        <MousePointer2 size={18} className="fill-[#E93D82] text-[#E93D82]" />
+        <span className="ml-2 whitespace-nowrap rounded-full bg-[#E93D82] px-3 py-1 text-[11px] text-white">
+          {said}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 const HERO_LOOP = "9s";
 const HERO_HOURS = ["09", "11", "13", "15", "17"];
 
