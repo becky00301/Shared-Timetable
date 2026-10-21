@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
+import { getUserWithin } from "@/lib/supabase/session";
 
 const PROTECTED_PREFIXES = ["/account", "/plans"];
 const EMBED_TOKEN_PATTERN = /^[A-Fa-f0-9]{32}$/;
@@ -49,6 +50,12 @@ export async function updateSession(request: NextRequest) {
     return rewriteToEmbed(request, embedToken);
   }
 
+  const isProtected = PROTECTED_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
+  // Everything else is public, and asking the auth server about a visitor who
+  // is only reading the landing page buys nothing while costing a round trip
+  // that can take the whole site down when it is slow.
+  if (!isProtected && !embedToken) return supabaseResponse;
+
   const { url, key, configured } = getSupabasePublicConfig();
   if (!configured) {
     if (embedToken) return rewriteToEmbed(request, embedToken);
@@ -68,11 +75,7 @@ export async function updateSession(request: NextRequest) {
     }
   });
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  const isProtected = PROTECTED_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
+  const user = await getUserWithin(supabase);
 
   if (!user && embedToken) {
     return rewriteToEmbed(request, embedToken);

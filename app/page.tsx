@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LandingContent } from "@/components/layout/LandingContent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getUserWithin } from "@/lib/supabase/session";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +28,9 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user }
-  } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+  // Bounded: this only decides whether the nav says "my timetables" or
+  // "get started", which is not worth making the page wait on auth.
+  const user = supabase ? await getUserWithin(supabase) : null;
 
   return <LandingContent loggedIn={Boolean(user)} />;
 }
