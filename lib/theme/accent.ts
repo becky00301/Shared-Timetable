@@ -39,11 +39,76 @@ export function darken(hex: string, amount = 0.12) {
     deep one gets white without anybody choosing. */
 export const accentForeground = (hex: string) => getScheduleTextColor(hex);
 
+/**
+ * The app icon, drawn in the chosen accent. The calendar face uses the derived
+ * foreground rather than a fixed white, so a pale accent keeps the same
+ * contrast inside the icon that the button has.
+ */
+export function accentIconSvg(hex: string) {
+  const fg = accentForeground(hex);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="${hex}" />
+  <rect x="14" y="17" width="36" height="32" rx="5" fill="${fg}" />
+  <path d="M14 25h36" stroke="${hex}" stroke-width="4" />
+  <path d="M23 13v9M41 13v9" stroke="${fg}" stroke-width="5" stroke-linecap="round" />
+  <path d="M24 38l6 6 12-15" fill="none" stroke="${hex}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>`;
+}
+
+const FAVICON_MARK = "data-accent-favicon";
+
+/**
+ * Leaves exactly one icon link in the head, drawn in the accent.
+ *
+ * Next re-inserts its own link for app/icon.svg during hydration, and a
+ * browser given two will generally take the last — so the static file would
+ * win and the icon would never change. Any link that is not ours is removed.
+ */
+export function applyAccentFavicon(hex: string) {
+  const href = `data:image/svg+xml,${encodeURIComponent(accentIconSvg(hex))}`;
+  document
+    .querySelectorAll<HTMLLinkElement>(`link[rel~="icon"]:not([${FAVICON_MARK}])`)
+    .forEach((link) => link.remove());
+
+  let link = document.querySelector<HTMLLinkElement>(`link[${FAVICON_MARK}]`);
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    link.type = "image/svg+xml";
+    link.setAttribute(FAVICON_MARK, "");
+    document.head.appendChild(link);
+  }
+  if (link.href !== href) link.href = href;
+}
+
+/**
+ * Keeps it that way. Next can add its link back on a route change, so the head
+ * is watched and the accent icon reasserted — only when a foreign one appears,
+ * so this never reacts to its own work.
+ */
+export function watchAccentFavicon(hex: string) {
+  applyAccentFavicon(hex);
+  const observer = new MutationObserver((records) => {
+    const foreign = records.some((record) =>
+      [...record.addedNodes].some(
+        (node) =>
+          node instanceof HTMLLinkElement &&
+          node.rel.split(/\s+/).includes("icon") &&
+          !node.hasAttribute(FAVICON_MARK)
+      )
+    );
+    if (foreign) applyAccentFavicon(hex);
+  });
+  observer.observe(document.head, { childList: true });
+  return () => observer.disconnect();
+}
+
 export function applyAccent(hex: string) {
   const root = document.documentElement;
   root.style.setProperty("--accent", hex);
   root.style.setProperty("--accent-hover", darken(hex));
   root.style.setProperty("--accent-foreground", accentForeground(hex));
+  applyAccentFavicon(hex);
 }
 
 export function readStoredAccent() {

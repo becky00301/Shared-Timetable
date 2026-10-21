@@ -3,6 +3,7 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import { ThemeProvider } from "@appica/ui-react/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
+import { AccentEffect } from "@/components/layout/AccentEffect";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { LocaleProvider } from "@/lib/i18n/locale";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -79,6 +80,7 @@ export default function RootLayout({
             />
           </noscript>
         ) : null}
+        <AccentEffect />
         <ThemeProvider defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <LocaleProvider>
             {children}
