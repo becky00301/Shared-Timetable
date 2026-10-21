@@ -332,7 +332,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             ) : null}
             <Link
               href={appHref}
-              className="whitespace-nowrap rounded-full bg-[#FFC94F] px-4 py-2 text-xs font-semibold text-[#2F3847] transition hover:bg-[#FFB92E] sm:text-sm"
+              className="whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-4 py-2 text-xs font-semibold transition sm:text-sm"
             >
               {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
             </Link>
@@ -359,7 +359,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={appHref}
-              className="w-full whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#FFB92E] active:translate-y-0 sm:w-auto"
+              className="w-full whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-7 py-3.5 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 active:translate-y-0 sm:w-auto"
             >
               {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
             </Link>
@@ -529,7 +529,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={appHref}
-              className="w-full whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] transition hover:-translate-y-0.5 hover:bg-[#FFB92E] active:translate-y-0 sm:w-auto"
+              className="w-full whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-7 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5 active:translate-y-0 sm:w-auto"
             >
               {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
             </Link>

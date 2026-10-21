@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { AccentPicker } from "@/components/layout/AccentPicker";
 import { ClaimProjectCard } from "@/components/project/ClaimProjectCard";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
 import { ProjectCard } from "@/components/project/ProjectCard";
@@ -235,6 +236,12 @@ function Dashboard() {
             <CalendarDays size={15} />
             {t("dashboard.calendar")}
           </button>
+        </div>
+
+        {/* Beside the view switch rather than in the header: both are about
+            how this page looks, not about the timetables on it. */}
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 sm:mt-0 sm:justify-end">
+          <AccentPicker />
         </div>
         {/* Wait for the full list. Opening a single timetable leaves just that
             project cached, and rendering that would flash a one-card dashboard

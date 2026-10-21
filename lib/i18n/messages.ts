@@ -667,6 +667,17 @@ export const messages = {
   "share.copied": { ko: "링크를 복사했어요.", en: "Link copied." },
   "share.button": { ko: "공유", en: "Share" },
   "share.openCta": { ko: "프로젝트 공유하기", en: "Share project" },
+  // ------------------------------------------------------------ accent colour
+  "accent.label": { ko: "메인 색상", en: "Accent" },
+  "accent.blue": { ko: "파랑", en: "Blue" },
+  "accent.navy": { ko: "네이비", en: "Navy" },
+  "accent.teal": { ko: "청록", en: "Teal" },
+  "accent.green": { ko: "초록", en: "Green" },
+  "accent.sand": { ko: "노랑", en: "Sand" },
+  "accent.rose": { ko: "자주", en: "Rose" },
+  "accent.violet": { ko: "보라", en: "Violet" },
+  "accent.ink": { ko: "먹색", en: "Ink" },
+
   "export.excel": { ko: "엑셀", en: "Excel" },
   "export.notReady": { ko: "아직 내보낼 준비가 안 됐어요.", en: "Nothing to export yet." },
   "export.open": { ko: "내보내기", en: "Export" },

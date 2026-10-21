@@ -49,6 +49,16 @@ export default function RootLayout({
 
   return (
     <html lang="ko" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* Applies the saved accent before the first paint. Without it every
+            page would flash the default blue and then repaint. Deliberately
+            inline and dependency-free: it has to run ahead of React. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var v=localStorage.getItem("plantogether.accent");if(!/^#[0-9a-f]{6}$/i.test(v||""))return;var r=document.documentElement,n=v.slice(1),c=[0,2,4].map(function(o){return parseInt(n.slice(o,o+2),16)});r.style.setProperty("--accent",v);r.style.setProperty("--accent-hover","#"+c.map(function(x){return Math.max(0,Math.round(x*0.88)).toString(16).padStart(2,"0")}).join(""));var l=c.map(function(x){x/=255;return x<=0.04045?x/12.92:Math.pow((x+0.055)/1.055,2.4)});r.style.setProperty("--accent-foreground",0.2126*l[0]+0.7152*l[1]+0.0722*l[2]>0.179?"#111827":"#FFFFFF")}catch(e){}})()`
+          }}
+        />
+      </head>
       <body>
         {/* Pretendard, dynamic-subset: the browser pulls only the unicode
             ranges a page actually renders, so Korean copy gets a real typeface

@@ -42,6 +42,15 @@
 
   --border: oklch(0.916 0.005 264);
   --border-muted: oklch(0.951 0.003 264);
+
+  /* The accent is the one colour people can change, so it lives as a variable
+     rather than in class names. These are the defaults; a script in the
+     document head overwrites them before paint when a choice was saved.
+     --accent-foreground is derived from the accent's luminance, so a pale
+     choice gets dark text and a deep one gets white. */
+  --accent: #2F62C4;
+  --accent-hover: #29569d;
+  --accent-foreground: #FFFFFF;
 }
 
 * {

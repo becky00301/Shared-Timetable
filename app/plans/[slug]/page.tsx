@@ -124,7 +124,7 @@ export default function ProjectPage() {
             {notFound ? t("project.notFoundBody") : t("project.loadingBody")}
           </p>
           {notFound ? (
-            <Link className="mt-5 inline-flex rounded-lg bg-[#FFC94F] px-4 py-2 text-sm font-medium text-[#2F3847] transition hover:bg-[#FFB92E]" href="/dashboard">
+            <Link className="mt-5 inline-flex rounded-lg bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-4 py-2 text-sm font-medium transition" href="/dashboard">
               {t("project.backToDashboard")}
             </Link>
           ) : null}
