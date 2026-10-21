@@ -3,30 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactElement, ReactNode } from "react";
-import {
-  CalendarRange,
-  FileDown,
-  ImageDown,
-  MousePointer2,
-  MousePointerClick,
-  Share2,
-  Sheet,
-  Users
-} from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { ChevronDown, FileDown, ImageDown, MousePointer2, Sheet } from "lucide-react";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
+import { REVEAL_EASE, Reveal } from "@/components/ui/reveal";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { getScheduleInkColor } from "@/lib/utils/schedule-colors";
 import { useLocale, useT } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { useProjectStore } from "@/stores/project-store";
-
-const FEATURES: { icon: typeof Share2; title: MessageKey; body: MessageKey }[] = [
-  { icon: MousePointerClick, title: "landing.feature.drag.title", body: "landing.feature.drag.body" },
-  { icon: CalendarRange, title: "landing.feature.dates.title", body: "landing.feature.dates.body" },
-  { icon: Users, title: "landing.feature.collab.title", body: "landing.feature.collab.body" },
-  { icon: Share2, title: "landing.feature.share.title", body: "landing.feature.share.body" }
-];
 
 /** A use case, illustrated. The drawing carries the situation at a glance;
     the words underneath only have to add the detail it cannot show. */
@@ -214,6 +200,53 @@ function RoutineArt() {
   );
 }
 
+/** The feature grid. Uneven spans and a tint per family, each panel showing
+    the thing it describes rather than an icon standing in for it. */
+const BENTO: {
+  title: MessageKey;
+  body: MessageKey;
+  span: string;
+  tint: string;
+  Mockup: () => ReactElement;
+}[] = [
+  {
+    title: "landing.feature.drag.title",
+    body: "landing.detail.drag.body",
+    span: "lg:col-span-4",
+    tint: "bg-[#F5F8FC]",
+    Mockup: DragMockup
+  },
+  {
+    title: "landing.feature.dates.title",
+    body: "landing.feature.dates.body",
+    span: "lg:col-span-2",
+    tint: "bg-[#FCFAF4]",
+    Mockup: DatesMockup
+  },
+  {
+    title: "landing.feature.share.title",
+    body: "landing.feature.share.body",
+    span: "lg:col-span-2",
+    tint: "bg-[#FDF7F7]",
+    Mockup: ShareMockup
+  },
+  {
+    title: "landing.feature.collab.title",
+    body: "landing.detail.collab.body",
+    span: "lg:col-span-4",
+    tint: "bg-[#F4FAF9]",
+    Mockup: CollabMockup
+  }
+];
+
+const FAQ: [MessageKey, MessageKey][] = [
+  ["landing.faq.q1", "landing.faq.a1"],
+  ["landing.faq.q2", "landing.faq.a2"],
+  ["landing.faq.q3", "landing.faq.a3"],
+  ["landing.faq.q4", "landing.faq.a4"],
+  ["landing.faq.q5", "landing.faq.a5"]
+];
+
 /** Two groups, one per timetable kind, so a reader lands on the mode that
     fits them before the create dialog ever asks. */
 const USE_CASE_GROUPS: { label: MessageKey; cases: UseCase[] }[] = [
@@ -236,42 +269,16 @@ const USE_CASE_GROUPS: { label: MessageKey; cases: UseCase[] }[] = [
 ];
 
 
-const FEATURE_ACCENTS = [
-  {
-    card: "border-[#B9CFF0] bg-[#F5F8FC] hover:border-[#7FA6DE]",
-    icon: "bg-[#DCE7F8] text-[#3F5F94]"
-  },
-  {
-    card: "border-[#EDD3A1] bg-[#FCFAF4] hover:border-[#DCB05E]",
-    icon: "bg-[#F6E9CF] text-[#8A6224]"
-  },
-  {
-    card: "border-[#ADDCD6] bg-[#F4FAF9] hover:border-[#6FBDB2]",
-    icon: "bg-[#D6EDEA] text-[#2F6E68]"
-  },
-  {
-    card: "border-[#EFC3C5] bg-[#FDF7F7] hover:border-[#DE9095]",
-    icon: "bg-[#F7DFE0] text-[#8C4249]"
-  }
-] as const;
-
 // Fixed positions so the starfield renders identically on server and client.
-const DOTS = [
-  [6, 18, 2], [14, 62, 1], [22, 30, 2], [31, 76, 1], [38, 12, 2], [44, 48, 1],
-  [52, 84, 2], [58, 22, 1], [66, 58, 2], [72, 34, 1], [79, 72, 2], [86, 16, 1],
-  [92, 46, 2], [9, 88, 1], [27, 8, 1], [48, 66, 1], [63, 90, 2], [83, 54, 1],
-  [95, 80, 1], [17, 40, 1], [40, 92, 1], [70, 6, 1], [88, 34, 2], [3, 52, 1]
-] as const;
-
 export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   const t = useT();
+  // Honoured by hand here rather than only in Reveal, because these cards
+  // animate inline instead of being wrapped.
+  const reduceMotion = useReducedMotion();
   const router = useRouter();
   // Signed out visitors land in the dashboard too: it asks for an account
   // at the point they try to make something, not at the door.
   const appHref = "/dashboard";
-  const finalBodySentences = t("landing.final.body").match(/[^.!?。！？]+[.!?。！？]+/g) ?? [
-    t("landing.final.body")
-  ];
 
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
@@ -285,150 +292,150 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
   }
 
   return (
-    <main className="bg-[#fbfcff] text-foreground">
+    <main className="bg-white text-foreground">
+      {/* ----------------------------------------------------------------- nav */}
+      {/* Floats over the page rather than sitting in a bar, so the hero starts
+          at the top of the window instead of under a strip of chrome. */}
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
+        <nav className="pointer-events-auto flex w-full max-w-3xl items-center justify-between gap-4 rounded-full bg-[#15181E] py-2 pl-5 pr-2 text-sm text-white/75 shadow-[0_8px_30px_oklch(0_0_0/18%)]">
+          <Link href="/" className="shrink-0 font-semibold text-white">
+            Planner<span className="hidden sm:inline"> Together</span>
+          </Link>
+          <div className="hidden items-center gap-6 md:flex">
+            <a href="#features" className="whitespace-nowrap transition hover:text-white">
+              {t("landing.nav.features")}
+            </a>
+            <a href="#cases" className="whitespace-nowrap transition hover:text-white">
+              {t("landing.nav.cases")}
+            </a>
+            <a href="#faq" className="whitespace-nowrap transition hover:text-white">
+              {t("landing.nav.faq")}
+            </a>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <LocaleToggle className="border-white/20 bg-white/10" invert />
+            {loggedIn ? (
+              <button type="button" onClick={signOut} className="hidden px-2 transition hover:text-white sm:block">
+                <span className="text-sm">{t("common.logout")}</span>
+              </button>
+            ) : null}
+            <Link
+              href={appHref}
+              className="whitespace-nowrap rounded-full bg-[#FFC94F] px-4 py-2 text-xs font-semibold text-[#2F3847] transition hover:bg-[#FFB92E] sm:text-sm"
+            >
+              {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
+            </Link>
+          </div>
+        </nav>
+      </div>
+
       {/* ---------------------------------------------------------------- hero */}
-      {/* Same hue family as the schedule palette, but deepened: the palette is
-          built for small blocks under dark text, and at the size of a hero its
-          mid tones leave white text at about 2.5:1. Holding the dark end until
-          60% keeps every line of hero text above 5:1 before the blue melts
-          into the page background. */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#21407A] via-[#5B84C6] via-60% to-[#fbfcff]">
-        {/* starfield */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          {DOTS.map(([top, left, size], i) => (
-            <span
-              key={i}
-              className="absolute rounded-full bg-white/50"
-              style={{ top: `${top}%`, left: `${left}%`, width: size, height: size }}
-            />
-          ))}
+      {/* White, so the only colour on screen is the timetable itself. */}
+      <section className="relative overflow-hidden px-5 pt-32 sm:pt-40">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold tracking-[0.12em] text-muted">{t("landing.hero.brand")}</p>
+          {/* Grey line, then black: the sentence lands on the second half.
+              Tracking stays at -0.02em — Korean letterforms run together at
+              the tighter settings Latin display type can take. */}
+          <h1 className="mt-5 text-[2.75rem] font-semibold leading-[1.12] tracking-[-0.02em] sm:text-6xl">
+            <span className="block text-[#A2A9B4]">{t("landing.hero.line1")}</span>
+            <span className="block text-[#101317]">{t("landing.hero.line2")}</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-muted sm:text-lg">
+            <span className="block">{t("landing.hero.body1")}</span>
+            <span className="block">{t("landing.hero.body2")}</span>
+          </p>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href={appHref}
+              className="w-full whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#FFB92E] active:translate-y-0 sm:w-auto"
+            >
+              {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+            </Link>
+            {loggedIn ? null : (
+              <Link
+                href="/login"
+                className="w-full whitespace-nowrap rounded-full border border-border px-7 py-3.5 text-sm font-semibold text-foreground transition hover:bg-black/[0.03] sm:w-auto"
+              >
+                {t("landing.final.login")}
+              </Link>
+            )}
+          </div>
         </div>
 
-        <div className="relative">
-          <header className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
-            <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-white sm:text-lg">
-              Planner<span className="hidden min-[360px]:inline"> Together</span>
-            </span>
-            <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-              <LocaleToggle className="border-white/30 bg-white/10 backdrop-blur" invert />
-              {loggedIn ? (
-                <button
-                  type="button"
-                  onClick={signOut}
-                  className="hidden px-3 py-2 text-white/90 transition hover:text-white sm:block"
-                >
-                  {/* `button { font: inherit }` in globals.css beats any
-                      text-size utility on the button itself. */}
-                  <span className="text-sm font-medium">{t("common.logout")}</span>
-                </button>
-              ) : (
-                <Link
-                  href={appHref}
-                  className="hidden px-3 py-2 text-sm font-medium text-white/90 transition hover:text-white sm:block"
-                >
-                  {t("common.login")}
-                </Link>
-              )}
-              <Link
-                href={appHref}
-                className="shrink-0 whitespace-nowrap rounded-full bg-[#FFE09A] px-3 py-2 text-xs font-semibold text-[#2F3847] shadow-sm transition hover:bg-[#FFEFC4] sm:px-4 sm:text-sm"
-              >
-                {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
-              </Link>
-            </nav>
-          </header>
-
-          <div className="mx-auto max-w-3xl px-5 pb-20 pt-16 text-center sm:pt-24">
-            <p className="mb-4 text-sm font-semibold tracking-[0.12em] text-white sm:text-base">
-              {t("landing.hero.brand")}
-            </p>
-            {/* Pretendard at 800 turns Korean headlines into a wall of strokes;
-                700 at a slightly smaller size stays emphatic and readable. */}
-            <h1 className="text-[2.75rem] font-bold leading-[1.12] tracking-[-0.02em] text-white sm:text-6xl">
-              {t("landing.hero.line1")}
-              <br />
-              {t("landing.hero.line2")}
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-7 text-white sm:text-lg">
-              <span className="block">{t("landing.hero.body1")}</span>
-              <span className="block">{t("landing.hero.body2")}</span>
-            </p>
-            <div className="mt-9 flex justify-center">
-              <Link
-                href={appHref}
-                className="whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#FFB92E] hover:shadow-xl active:translate-y-0"
-              >
-                {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
-              </Link>
-            </div>
-
+        {/* Tilted and running off the bottom edge, so the page reads as a
+            window onto the product rather than a brochure of it. */}
+        <div className="relative mx-auto mt-16 max-w-xl">
+          <div className="origin-top -rotate-[1.5deg]">
             <HeroMockup />
           </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-white"
+          />
         </div>
       </section>
 
+      {/* ----------------------------------------------------------- statement */}
+      <section className="px-5 py-24 sm:py-32">
+        <Reveal className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+            {t("landing.statement.eyebrow")}
+          </p>
+          <p className="mt-6 text-2xl font-semibold leading-[1.5] tracking-[-0.015em] sm:text-[1.75rem]">
+            <span className="text-[#A2A9B4]">{t("landing.statement.problem")}</span>{" "}
+            <span className="text-[#101317]">{t("landing.statement.answer")}</span>
+          </p>
+        </Reveal>
+      </section>
+
       {/* ------------------------------------------------------------- features */}
-      <section className="mx-auto max-w-5xl px-5 py-20 sm:py-28">
-        <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-muted">{t("landing.how.eyebrow")}</p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {t("landing.how.title")}
-          </h2>
-        </div>
+      <section id="features" className="scroll-mt-24 px-5 pb-24 sm:pb-32">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">{t("landing.how.eyebrow")}</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+              {t("landing.how.title")}
+            </h2>
+          </Reveal>
 
-        {/* overview cards — the table of contents */}
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((feature, i) => (
-            <a
-              key={feature.title}
-              href={`#feature-${i}`}
-              className={cn(
-                "rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:shadow-glow",
-                FEATURE_ACCENTS[i].card
-              )}
-            >
-              <span
+          {/* Uneven on purpose: equal cards read as a spec sheet. */}
+          <div className="mt-12 grid gap-4 lg:grid-cols-6">
+            {BENTO.map((panel, i) => (
+              <motion.div
+                key={panel.title}
                 className={cn(
-                  "flex size-10 items-center justify-center rounded-xl",
-                  FEATURE_ACCENTS[i].icon
+                  "flex flex-col overflow-hidden rounded-3xl border border-border p-6",
+                  panel.span,
+                  panel.tint
                 )}
+                initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+                whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.45, delay: i * 0.07, ease: REVEAL_EASE }}
               >
-                <feature.icon size={18} />
-              </span>
-              <h3 className="mt-3 font-semibold text-foreground">{t(feature.title)}</h3>
-              <p className="mt-1 text-sm leading-6 text-muted">{t(feature.body)}</p>
-            </a>
-          ))}
-        </div>
-
-        {/* detailed sections with animated mockups */}
-        <div className="mt-24 flex flex-col gap-24 sm:mt-32 sm:gap-32">
-          <DetailSection id="feature-0" n={1} title={t("landing.feature.drag.title")} body={t("landing.detail.drag.body")}>
-            <DragMockup />
-          </DetailSection>
-          <DetailSection id="feature-1" n={2} reverse title={t("landing.feature.dates.title")} body={t("landing.detail.dates.body")}>
-            <DatesMockup />
-          </DetailSection>
-          <DetailSection id="feature-2" n={3} title={t("landing.feature.collab.title")} body={t("landing.detail.collab.body")}>
-            <CollabMockup />
-          </DetailSection>
-          <DetailSection id="feature-3" n={4} reverse title={t("landing.feature.share.title")} body={t("landing.detail.share.body")}>
-            <ShareMockup />
-          </DetailSection>
+                <h3 className="text-lg font-semibold text-foreground">{t(panel.title)}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{t(panel.body)}</p>
+                <div className="mt-6 flex-1">
+                  <panel.Mockup />
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------------ use cases */}
-      <section className="border-t border-border bg-black/[0.015]">
-        <div className="mx-auto max-w-5xl px-5 py-20 sm:py-28">
-          <div className="text-center">
+      <section id="cases" className="scroll-mt-24 border-t border-border px-5 py-24 sm:py-32">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="text-center">
             <p className="text-sm font-semibold uppercase tracking-wide text-muted">
               {t("landing.cases.eyebrow")}
             </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
               {t("landing.cases.title")}
             </h2>
-          </div>
+          </Reveal>
 
           <div className="mt-12 flex flex-col gap-10">
             {USE_CASE_GROUPS.map((group) => (
@@ -438,15 +445,20 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
                   <span className="h-px flex-1 bg-border" />
                 </div>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  {group.cases.map((useCase) => (
-                    <div
+                  {group.cases.map((useCase, index) => (
+                    <motion.div
                       key={useCase.title}
-                      className="flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
+                      className="flex flex-col rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-glow"
+                      initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+                      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.25 }}
+                      transition={{ duration: 0.45, delay: index * 0.07, ease: REVEAL_EASE }}
+                      whileHover={reduceMotion ? undefined : { y: -4 }}
                     >
                       <useCase.art />
                       <h4 className="mt-4 font-semibold text-foreground">{t(useCase.title)}</h4>
                       <p className="mt-1.5 text-sm leading-6 text-muted">{t(useCase.body)}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -455,49 +467,59 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         </div>
       </section>
 
-      {/* ------------------------------------------------------------ final cta */}
-      <section className="px-5 pb-20 sm:pb-28">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#21407A] via-[#265C73] to-[#1E5A53] px-6 py-16 text-center sm:px-12 sm:py-20">
-          {/* Same starfield as the hero, so the page closes where it opened. */}
-          <div aria-hidden className="pointer-events-none absolute inset-0">
-            {DOTS.map(([top, left, size], i) => (
-              <span
-                key={i}
-                className="absolute rounded-full bg-white/40"
-                style={{ top: `${top}%`, left: `${left}%`, width: size, height: size }}
-              />
+      {/* ------------------------------------------------------------------ faq */}
+      <section id="faq" className="scroll-mt-24 border-t border-border px-5 py-24 sm:py-32">
+        <div className="mx-auto max-w-3xl">
+          <Reveal className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">{t("landing.faq.eyebrow")}</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+              {t("landing.faq.title")}
+            </h2>
+          </Reveal>
+          {/* <details> so a question can be opened before the page has
+              hydrated, and so the browser's own find-in-page reaches it. */}
+          <div className="mt-12 border-t border-border">
+            {FAQ.map(([question, answer]) => (
+              <details key={question} className="group border-b border-border py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-medium text-foreground [&::-webkit-details-marker]:hidden">
+                  {t(question)}
+                  <ChevronDown
+                    size={18}
+                    aria-hidden
+                    className="shrink-0 text-muted transition-transform group-open:rotate-180"
+                  />
+                </summary>
+                <p className="mt-3 pr-8 text-sm leading-7 text-muted">{t(answer)}</p>
+              </details>
             ))}
           </div>
-
-          <div className="relative">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              {t("landing.final.title")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/85">
-              {finalBodySentences.map((sentence) => (
-                <span key={sentence} className="block sm:whitespace-nowrap">
-                  {sentence.trim()}
-                </span>
-              ))}
-            </p>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href={appHref}
-                className="w-full whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#FFB92E] hover:shadow-xl active:translate-y-0 sm:w-auto"
-              >
-                {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
-              </Link>
-              {loggedIn ? null : (
-                <Link
-                  href="/login"
-                  className="w-full whitespace-nowrap rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
-                >
-                  {t("landing.final.login")}
-                </Link>
-              )}
-            </div>
-          </div>
         </div>
+      </section>
+
+      {/* ------------------------------------------------------------ final cta */}
+      <section className="px-5 pb-24 sm:pb-32">
+        <Reveal className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#15181E] px-6 py-16 text-center sm:px-12 sm:py-20">
+          <h2 className="text-3xl font-semibold tracking-[-0.02em] text-white sm:text-4xl">
+            {t("landing.final.title")}
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/70">{t("landing.final.body")}</p>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href={appHref}
+              className="w-full whitespace-nowrap rounded-full bg-[#FFC94F] px-7 py-3.5 text-sm font-semibold text-[#2F3847] transition hover:-translate-y-0.5 hover:bg-[#FFB92E] active:translate-y-0 sm:w-auto"
+            >
+              {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+            </Link>
+            {loggedIn ? null : (
+              <Link
+                href="/login"
+                className="w-full whitespace-nowrap rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+              >
+                {t("landing.final.login")}
+              </Link>
+            )}
+          </div>
+        </Reveal>
       </section>
 
       {/* --------------------------------------------------------------- footer */}
@@ -515,49 +537,6 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         </div>
       </footer>
     </main>
-  );
-}
-
-/** One feature: number + copy on one side, an animated mockup on the other. */
-function DetailSection({
-  id,
-  n,
-  title,
-  body,
-  reverse,
-  children
-}: {
-  id: string;
-  n: number;
-  title: string;
-  body: string;
-  reverse?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      id={id}
-      className={cn(
-        // Side-by-side from `tablet` up: stacking these until `lg` left the
-        // 800-1023px range with a narrow centered mockup and wide empty
-        // margins on both sides.
-        "flex scroll-mt-24 flex-col gap-8 tablet:flex-row tablet:items-center tablet:gap-10 lg:gap-16",
-        reverse && "tablet:flex-row-reverse"
-      )}
-    >
-      <div className="flex-1">
-        <span className="text-sm font-semibold text-muted">{`0${n}`}</span>
-        <h3 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h3>
-        <p className="mt-3 max-w-md text-base leading-7 text-muted">{body}</p>
-      </div>
-      <div className="flex-1">
-        {/* Only capped while stacked — once the row kicks in, the flex column
-            sizes it, which keeps the calendar's aspect-square cells sane. */}
-        <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-glow tablet:mx-0 tablet:max-w-none tablet:p-5 lg:p-6">
-          {children}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -640,6 +619,9 @@ function CollabMockup() {
   const [meA, meB] = locale === "ko" ? ["민지", "나"] : ["Minji", "You"];
   const b1 = locale === "ko" ? "회의" : "Meeting";
   const b2 = locale === "ko" ? "점심" : "Lunch";
+  // One person is talking, the other is just moving — the two states the grid
+  // actually shows at once.
+  const said = locale === "ko" ? "이때 출발할까?" : "Leave around then?";
   return (
     <div className="relative h-44 overflow-hidden rounded-xl border border-[#ECEEF1] bg-white">
       <div className="grid h-full grid-cols-3">
@@ -675,9 +657,14 @@ function CollabMockup() {
         {b2}
       </div>
       {/* live cursors */}
+      {/* The chat line hangs off the pointer in that person's colour, which is
+          what "/" opens in the real grid. */}
       <div className="absolute left-[10%] top-2" style={{ animation: `lp-cursor-a 4s ${EASE} infinite` }}>
         <MousePointer2 size={16} className="fill-[#E93D82] text-[#E93D82]" />
-        <span className="ml-2 rounded bg-[#E93D82] px-1.5 py-0.5 text-[9px] font-medium text-white">{meA}</span>
+        <span className="ml-2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-[#E93D82] px-2 py-0.5 text-[9px] text-white">
+          <span className="font-semibold">{meA}</span>
+          <span className="opacity-90">{said}</span>
+        </span>
       </div>
       <div className="absolute right-[10%] top-4" style={{ animation: `lp-cursor-b 4s ${EASE} infinite` }}>
         <MousePointer2 size={16} className="fill-[#0091FF] text-[#0091FF]" />
@@ -778,7 +765,7 @@ function HeroMockup() {
   });
 
   return (
-    <div className="relative mx-auto mt-14 max-w-lg">
+    <div className="relative mx-auto max-w-lg">
       <div className="relative overflow-hidden rounded-2xl border border-[#E1E3E7] bg-white text-left shadow-xl">
         {/* Two columns, four cells: the hour gutter and the day header share
             their row heights with the grid instead of being pinned to a

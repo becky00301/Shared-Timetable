@@ -2,16 +2,24 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { AuthShell } from "@/components/layout/AuthShell";
 import { Button } from "@/components/ui/button";
+import { GoogleMark } from "@/components/ui/google-mark";
 import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
+import { cn } from "@/lib/utils/cn";
 import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { getSafeNextPath } from "@/lib/utils/navigation";
 import { useProjectStore } from "@/stores/project-store";
+
+// Google sign-in needs a client set up in Google Cloud and the provider
+// enabled in Supabase. Until both are done the button would fail on click, so
+// it only appears once the deployment says the provider is live.
+const GOOGLE_AUTH_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_AUTH === "1";
 
 export default function LoginPage() {
   return (
@@ -38,7 +46,40 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+
+  // /auth/callback sends failures back here rather than leaving someone on a
+  // blank screen wondering whether it worked.
+  const authError = searchParams.get("error");
+  useEffect(() => {
+    if (authError) toast.error(t("auth.error.generic"));
+  }, [authError, t]);
+
+  async function signInWithGoogle() {
+    if (!supabase) {
+      toast.info(t("auth.error.notConfigured"));
+      return;
+    }
+    setGoogleLoading(true);
+    try {
+      // The browser leaves the app for Google, so where to land afterwards has
+      // to travel with the request. A pending claim rides along as a query on
+      // the destination, which the dashboard picks up.
+      const destination = claimSlug ? `/dashboard?claim=${encodeURIComponent(claimSlug)}` : next;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error(error);
+      toast.error(t("auth.error.generic"));
+      setGoogleLoading(false);
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -102,22 +143,42 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-5">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
+    <AuthShell>
         <div className="flex items-center justify-between">
           <Link href="/" className="text-sm text-muted transition hover:text-foreground">
             Planner Together
           </Link>
           <LocaleToggle />
         </div>
-        <h1 className="mt-6 text-3xl font-semibold text-foreground">
+        <h1 className="mt-6 text-3xl font-semibold tracking-[-0.02em] text-foreground">
           {mode === "signin" ? t("auth.signin.title") : t("auth.signup.title")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted">
           {mode === "signin" ? t("auth.signin.subtitle") : t("auth.signup.subtitle")}
         </p>
 
-        <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
+        {GOOGLE_AUTH_ENABLED ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-6 w-full"
+              disabled={googleLoading}
+              onClick={signInWithGoogle}
+            >
+              <GoogleMark />
+              {googleLoading ? t("auth.submitting") : t("auth.google")}
+            </Button>
+
+            <div className="my-5 flex items-center gap-3 text-xs text-muted">
+              <span className="h-px flex-1 bg-border" />
+              {t("auth.or")}
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        ) : null}
+
+        <form className={cn("flex flex-col gap-4", GOOGLE_AUTH_ENABLED || "mt-6")} onSubmit={submit}>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
             {t("auth.email")}
             <Input
@@ -192,7 +253,6 @@ function LoginForm() {
           </button>
         </p>
 
-      </div>
-    </main>
+    </AuthShell>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AuthShell } from "@/components/layout/AuthShell";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
@@ -50,17 +51,16 @@ export default function InvitePage() {
   const loginHref = `/login?next=${encodeURIComponent(`/invite/${params.token}`)}`;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-5">
-      <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 text-center shadow-glow">
+    <AuthShell wide className="text-center">
         <p className="text-sm text-muted">{t("invite.eyebrow")}</p>
         {status === "checking" || status === "joining" ? (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-foreground">{t("invite.joining")}</h1>
+            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("invite.joining")}</h1>
             <p className="mt-3 text-sm leading-6 text-muted">{t("invite.joiningBody")}</p>
           </>
         ) : status === "needs-login" ? (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-foreground">{t("invite.needLogin")}</h1>
+            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("invite.needLogin")}</h1>
             <p className="mt-3 text-sm leading-6 text-muted">{t("invite.needLoginBody")}</p>
             <Button className="mt-6" asChild>
               <Link href={loginHref}>{t("invite.loginOrSignup")}</Link>
@@ -68,14 +68,13 @@ export default function InvitePage() {
           </>
         ) : (
           <>
-            <h1 className="mt-4 text-3xl font-semibold text-foreground">{t("invite.failed")}</h1>
+            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("invite.failed")}</h1>
             <p className="mt-3 text-sm leading-6 text-muted">{t("invite.failedBody")}</p>
             <Button className="mt-6" asChild>
               <Link href="/dashboard">{t("invite.goDashboard")}</Link>
             </Button>
           </>
         )}
-      </div>
-    </main>
+    </AuthShell>
   );
 }

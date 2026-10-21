@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { CalendarDays, LayoutGrid, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { ClaimProjectCard } from "@/components/project/ClaimProjectCard";
 import { CreateProjectModal } from "@/components/project/CreateProjectModal";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { useT } from "@/lib/i18n/locale";
 import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
@@ -31,7 +32,16 @@ type ProjectGroup = {
 };
 
 export default function DashboardPage() {
+  return (
+    <Suspense>
+      <Dashboard />
+    </Suspense>
+  );
+}
+
+function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useT();
   const allProjects = useProjectStore((state) => state.projects);
   const projectsLoaded = useProjectStore((state) => state.projectsLoaded);
@@ -143,6 +153,28 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [loadDashboard, router, t]);
+
+  // Signing in through Google leaves the app, so a claim started from a
+  // retired trial link arrives here as a query instead of being finished on
+  // the login page. Runs once: the parameter is dropped either way.
+  const claimParam = searchParams.get("claim");
+  useEffect(() => {
+    if (!signedIn || !claimParam) return;
+    const slug = parseProjectSlug(claimParam);
+    router.replace("/dashboard");
+    if (!slug) return;
+    useProjectStore
+      .getState()
+      .claimGuestProject(slug)
+      .then((claimed) => {
+        toast.success(t("claim.success"));
+        router.push(`/plans/${claimed}`);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(t("claim.error.generic"));
+      });
+  }, [signedIn, claimParam, router, t]);
 
   return (
     <AppShell>

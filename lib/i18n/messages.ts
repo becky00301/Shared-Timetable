@@ -120,6 +120,56 @@ export const messages = {
     en: "Pick just the dates you need, drag to fill them in, and share with one link. Sign up and start right away."
   },
   "landing.final.login": { ko: "로그인", en: "Log in" },
+  // ---------------------------------------------------------- landing: nav
+  "landing.nav.features": { ko: "기능", en: "Features" },
+  "landing.nav.cases": { ko: "쓰임새", en: "Use cases" },
+  "landing.nav.faq": { ko: "자주 묻는 질문", en: "FAQ" },
+
+  // --------------------------------------------------- landing: the problem
+  // Grey up to the turn, black after it — the sentence carries the section's
+  // rhythm instead of a coloured panel doing it.
+  "landing.statement.eyebrow": { ko: "왜 필요한가요", en: "Why it exists" },
+  "landing.statement.problem": {
+    ko: "날짜를 정하는 건 단톡방에서, 일정은 메모장에, 예산은 또 다른 곳에 적어두죠.",
+    en: "The dates get decided in a group chat, the plan lives in someone's notes, and the budget sits somewhere else again."
+  },
+  "landing.statement.answer": {
+    ko: "플래너 투게더는 그 셋을 한 장에 모읍니다. 필요한 날짜만 골라 드래그로 채우고, 링크 하나로 함께 보는 시간표.",
+    en: "Planner Together puts all three on one page. Pick only the dates you need, drag to fill them in, and share one link."
+  },
+
+  // ---------------------------------------------------------- landing: FAQ
+  "landing.faq.eyebrow": { ko: "자주 묻는 질문", en: "FAQ" },
+  "landing.faq.title": { ko: "궁금할 만한 것들", en: "The usual questions" },
+  "landing.faq.q1": { ko: "무료인가요?", en: "Is it free?" },
+  "landing.faq.a1": {
+    ko: "네. 지금은 모든 기능이 무료이고, 결제 수단을 받지 않습니다.",
+    en: "Yes. Everything is free right now, and we don't take payment details at all."
+  },
+  "landing.faq.q2": { ko: "같이 쓰려면 상대도 가입해야 하나요?", en: "Does everyone need an account?" },
+  "landing.faq.a2": {
+    ko: "함께 편집하려면 계정이 필요해요. 다만 읽기 전용 링크는 로그인 없이 볼 수 있어서, 보기만 할 사람은 그냥 링크만 열면 됩니다.",
+    en: "Editing together does. But a read-only link opens without logging in, so anyone who just needs to look can simply open it."
+  },
+  // Embedding is deliberately not advertised here: the production database is
+  // still missing migration 012, so embed links 404. Put it back once that
+  // has been applied and the link actually resolves.
+  "landing.faq.q3": { ko: "날짜를 나중에 바꿔도 되나요?", en: "Can I change the dates later?" },
+  "landing.faq.a3": {
+    ko: "네. 날짜를 다시 고르면 그대로 남는 날의 일정과 메모는 건드리지 않고, 빠진 날만 정리됩니다.",
+    en: "Yes. Pick a different set of dates and the days that stay keep their schedules and notes — only the ones you dropped go."
+  },
+  "landing.faq.q4": { ko: "휴대폰에서도 쓸 수 있나요?", en: "Does it work on a phone?" },
+  "landing.faq.a4": {
+    ko: "됩니다. 좁은 화면에서는 촘촘한 격자 대신 세로 타임라인으로 바뀌어서 읽기 편해요.",
+    en: "It does. On a narrow screen the dense grid becomes a vertical timeline that is easier to read."
+  },
+  "landing.faq.q5": { ko: "다른 데로 내보낼 수 있나요?", en: "Can I export it?" },
+  "landing.faq.a5": {
+    ko: "PNG 이미지, PDF, 엑셀 세 가지로 내보낼 수 있습니다.",
+    en: "You can export it as a PNG image, a PDF, or an Excel file."
+  },
+
   "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
   "landing.how.title": {
     ko: "네 가지만 알면 끝이에요",
@@ -134,8 +184,8 @@ export const messages = {
     en: "Start from a weekly template, or pick a trip's dates on the calendar — only the days you need, no empty clutter."
   },
   "landing.detail.collab.body": {
-    ko: "초대 링크 하나로 친구를 부르면 같은 시간표를 실시간으로 함께 채워요. 누가 무엇을 바꿔도 모두의 화면에 바로 반영됩니다.",
-    en: "Invite friends with one link and fill the same timetable together, live. Every change shows up for everyone instantly."
+    ko: "초대 링크 하나로 친구를 부르면 같은 시간표를 실시간으로 함께 채워요. 누가 무엇을 바꿔도 모두의 화면에 바로 반영됩니다. 할 말이 있으면 / 를 누르세요 — 커서에 채팅 줄이 열리고, 치는 그대로 상대 화면에 보여서 보내기 버튼이 없습니다.",
+    en: "Invite friends with one link and fill the same timetable together, live. Every change shows up for everyone instantly. Press / when you want to say something: a chat line opens at your cursor, and what you type is already on their screen — there is no send button."
   },
   "landing.detail.share.body": {
     ko: "완성한 시간표는 링크로 보내거나 PNG·PDF·엑셀로 내보낼 수 있어요. 계정이 없는 사람에게도 보여줄 수 있습니다.",
@@ -331,6 +381,9 @@ export const messages = {
     ko: "가져오지 못했어요. 잠시 후 다시 시도해주세요.",
     en: "Couldn't bring it in. Please try again in a moment."
   },
+
+  "auth.google": { ko: "Google로 계속하기", en: "Continue with Google" },
+  "auth.or": { ko: "또는", en: "or" },
 
   "auth.signupComplete": {
     ko: "가입이 완료됐어요. 이제 로그인해주세요.",
@@ -674,6 +727,10 @@ export const messages = {
   "embed.readOnly": { ko: "읽기 전용", en: "Read only" },
   "embed.openProject": { ko: "프로젝트 열기", en: "Open project" },
   "embed.empty": { ko: "아직 선택한 날짜가 없어요.", en: "No dates have been selected yet." },
+  // Shown when the public link is opened as a page rather than inside an
+  // iframe: the reader is a person, not a Notion block.
+  "embed.makeOwn": { ko: "나도 만들기", en: "Make my own" },
+  "embed.memberLogin": { ko: "멤버 로그인", en: "Member log in" },
 
   // ---------------------------------------------------------------- project page
   "project.notFound": { ko: "시간표를 찾을 수 없어요", en: "Timetable not found" },

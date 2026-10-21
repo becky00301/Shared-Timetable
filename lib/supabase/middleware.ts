@@ -26,10 +26,16 @@ function withProjectFrameHeaders(response: NextResponse, embedAllowed: boolean) 
   return response;
 }
 
+function isIframe(request: NextRequest) {
+  return request.headers.get("sec-fetch-dest") === "iframe";
+}
+
+// Outside an iframe the reader is a person who followed a link, so the embed
+// renders as a page with something they can act on rather than as a block.
 function rewriteToEmbed(request: NextRequest, token: string) {
   const embedUrl = request.nextUrl.clone();
   embedUrl.pathname = `/embed/${token}`;
-  embedUrl.search = "";
+  embedUrl.search = isIframe(request) ? "" : "?view=page";
   return withProjectFrameHeaders(NextResponse.rewrite(embedUrl), true);
 }
 
@@ -39,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/plans" || request.nextUrl.pathname.startsWith("/plans/");
   const embedToken = projectEmbedToken(request);
 
-  if (embedToken && request.headers.get("sec-fetch-dest") === "iframe") {
+  if (embedToken && isIframe(request)) {
     return rewriteToEmbed(request, embedToken);
   }
 

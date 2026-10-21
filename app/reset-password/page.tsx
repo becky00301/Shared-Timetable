@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { AuthShell } from "@/components/layout/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
@@ -57,15 +58,14 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-5">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-glow">
+    <AuthShell>
         <div className="flex items-center justify-between">
           <Link href="/" className="text-sm text-muted transition hover:text-foreground">
             Planner Together
           </Link>
           <LocaleToggle />
         </div>
-        <h1 className="mt-6 text-3xl font-semibold text-foreground">{t("auth.reset.title")}</h1>
+        <h1 className="mt-6 text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("auth.reset.title")}</h1>
         <p className="mt-2 text-sm leading-6 text-muted">{t("auth.reset.subtitle")}</p>
 
         {hasSession === null ? null : hasSession ? (
@@ -111,7 +111,6 @@ export default function ResetPasswordPage() {
             {t("auth.forgot.back")}
           </Link>
         </p>
-      </div>
-    </main>
+    </AuthShell>
   );
 }

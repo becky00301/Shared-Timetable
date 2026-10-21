@@ -43,8 +43,15 @@ export async function generateMetadata({
   return { title: timetable?.project.title || "공유 시간표" };
 }
 
-export default async function EmbedPage({ params }: { params: Promise<{ token: string }> }) {
+export default async function EmbedPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ token: string }>;
+  searchParams: Promise<{ view?: string }>;
+}) {
   const { token } = await params;
+  const { view } = await searchParams;
   const timetable = await loadTimetable(token);
   if (!timetable) notFound();
 
@@ -55,6 +62,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ token: s
       kind={timetable.project.kind}
       days={timetable.days}
       schedules={timetable.schedules}
+      standalone={view === "page"}
     />
   );
 }

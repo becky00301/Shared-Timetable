@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useT } from "@/lib/i18n/locale";
@@ -114,13 +116,19 @@ export function EmbeddedTimetable({
   slug,
   kind,
   days,
-  schedules
+  schedules,
+  standalone = false
 }: {
   title: string;
   slug: string;
   kind: ProjectKind;
   days: EmbeddedDay[];
   schedules: EmbeddedSchedule[];
+  /** Opened as a page in someone's browser rather than inside an iframe.
+      Embedded, the whole surface is a link into the project — in a tab that
+      only throws a signed-out reader at the login screen, so the page gets a
+      header they can act on instead. */
+  standalone?: boolean;
 }) {
   const router = useRouter();
   const fmt = useDateFormat();
@@ -155,21 +163,39 @@ export function EmbeddedTimetable({
   const projectHref = `/plans/${slug}`;
   const minWidth = 64 + sortedDays.length * MIN_DAY_WIDTH;
 
-  return (
-    <a
-      href={projectHref}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={t("embed.openProject")}
-      className="flex h-dvh cursor-pointer flex-col overflow-hidden bg-background text-foreground no-underline"
-    >
-      <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4">
+  const frameClass = "flex h-dvh flex-col overflow-hidden bg-background text-foreground";
+  const header = standalone ? (
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-surface px-4 py-3">
+      <div className="flex min-w-0 items-center gap-2">
         <h1 className="min-w-0 truncate text-base font-semibold">{title}</h1>
-        <div className="flex shrink-0 items-center gap-3 text-xs text-muted">
-          <span className="rounded-full border border-border bg-background px-2.5 py-1">{t("embed.readOnly")}</span>
-          <ExternalLink size={17} aria-hidden="true" />
-        </div>
-      </header>
+        <span className="shrink-0 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted">
+          {t("embed.readOnly")}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {/* Editing this timetable takes an invite from its owner, so the
+            prominent action is the one a stranger can actually take. */}
+        <Button asChild size="sm">
+          <Link href="/dashboard">{t("embed.makeOwn")}</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href={`/login?next=${encodeURIComponent(projectHref)}`}>{t("embed.memberLogin")}</Link>
+        </Button>
+      </div>
+    </header>
+  ) : (
+    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4">
+      <h1 className="min-w-0 truncate text-base font-semibold">{title}</h1>
+      <div className="flex shrink-0 items-center gap-3 text-xs text-muted">
+        <span className="rounded-full border border-border bg-background px-2.5 py-1">{t("embed.readOnly")}</span>
+        <ExternalLink size={17} aria-hidden="true" />
+      </div>
+    </header>
+  );
+
+  const body = (
+    <>
+      {header}
 
       {sortedDays.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-5 text-sm text-muted">{t("embed.empty")}</div>
@@ -241,6 +267,22 @@ export function EmbeddedTimetable({
           </div>
         </div>
       )}
+    </>
+  );
+
+  // In an iframe the whole surface stays a link into the project, which is how
+  // a Notion reader gets from the preview to the real thing.
+  return standalone ? (
+    <div className={frameClass}>{body}</div>
+  ) : (
+    <a
+      href={projectHref}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t("embed.openProject")}
+      className={`${frameClass} cursor-pointer no-underline`}
+    >
+      {body}
     </a>
   );
 }
