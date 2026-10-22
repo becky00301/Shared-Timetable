@@ -334,7 +334,10 @@ function ExpenseForm({
       className="rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
       onSubmit={submit}
     >
-      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      {/* Stacked, not side by side: this column is 280px wide, and splitting
+          it left the label cramped and the amount narrower than the numbers
+          people put in it. */}
+      <div className="flex flex-col">
         <Input
           value={label}
           className="h-9 rounded-none border-0 bg-transparent text-sm focus:border-transparent focus:ring-0"
@@ -346,7 +349,7 @@ function ExpenseForm({
           inputMode="decimal"
           min={0}
           step={currencyFractionDigits(currency) === 0 ? 1 : 0.01}
-          className="h-9 rounded-none border-0 border-l border-border bg-transparent text-sm tabular-nums focus:border-transparent focus:ring-0"
+          className="h-9 rounded-none border-0 border-t border-border bg-transparent text-sm tabular-nums focus:border-transparent focus:ring-0"
           value={amount}
           placeholder={t("budget.expenseAmountPlaceholder")}
           onChange={(event) => setAmount(event.target.value)}
