@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
+import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/is-bot";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   typedRoutes: false,
+  // Kakao's preview crawler needs OG tags in <head>, before streamed content.
+  // Extend Next's list so existing Google, Facebook, X, and other bots retain
+  // their default metadata handling.
+  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|kakaotalk|kakaostory`, "i"),
   async headers() {
     return [
       {

@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import { AccentEffect } from "@/components/layout/AccentEffect";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { LocaleProvider } from "@/lib/i18n/locale";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_DISPLAY_NAME, SITE_URL } from "@/lib/seo";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_DISPLAY_NAME, SITE_NAME_KO, SITE_SHARE_IMAGE, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +17,19 @@ export const metadata: Metadata = {
   },
   description: HOME_DESCRIPTION,
   applicationName: SITE_DISPLAY_NAME,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME_KO,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [SITE_SHARE_IMAGE]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [SITE_SHARE_IMAGE.url]
+  },
   keywords: [
     "플래너 투게더",
     "플래너투게더",
