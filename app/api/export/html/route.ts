@@ -6,6 +6,7 @@ import {
   type Day,
   type Item
 } from "@/lib/export/timetable-html";
+import { exportFilename } from "@/lib/export/filename";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
     locale
   );
 
-  const filename = encodeURIComponent(`${project.slug || "timetable"}.html`);
+  const filename = encodeURIComponent(exportFilename(project.title, "html"));
   return new NextResponse(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",

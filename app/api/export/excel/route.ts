@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import writeXlsxFile, { getSheetData, type CellObject, type Column, type SheetData } from "write-excel-file/node";
+import { exportFilename } from "@/lib/export/filename";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -485,7 +486,7 @@ export async function GET(request: Request) {
   ]);
   const buffer = await file.toBuffer();
 
-  const filename = encodeURIComponent(`${project.title}.xlsx`);
+  const filename = encodeURIComponent(exportFilename(project.title, "xlsx"));
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -73,28 +73,85 @@ export type Item = {
   color: string | null;
 };
 
+/** Pixels per hour in the exported sheet. Small enough that a few days fit a
+    printed page, large enough that a 30-minute item still shows its title. */
+const HOUR_PX = 44;
+const MIN_BLOCK_PX = 18;
+const FALLBACK_WINDOW: [number, number] = [9 * 60, 18 * 60];
+
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
 function formatDate(date: string, labels: Labels) {
   const parsed = new Date(`${date}T00:00:00`);
-  const weekday = labels.weekdays[parsed.getDay()] ?? "";
-  return `${date} (${weekday})`;
+  return { date, weekday: labels.weekdays[parsed.getDay()] ?? "" };
 }
 
-function renderItem(item: Item, labels: Labels) {
-  const time = item.all_day
-    ? esc(labels.allDay)
-    : `${esc(item.start_time.slice(0, 5))} – ${esc(item.end_time.slice(0, 5))}`;
-  const location = item.location
-    ? `<p class="meta">${esc(labels.location)} · ${esc(item.location)}</p>`
-    : "";
-  const memo = item.description ? `<p class="memo">${esc(item.description)}</p>` : "";
-  return `          <li class="item" style="border-left-color:${safeColor(item.color)}">
-            <p class="time">${time}</p>
-            <div>
-              <p class="title">${esc(item.title)}</p>
-              ${location}
-              ${memo}
-            </div>
-          </li>`;
+/**
+ * The window of hours the sheet covers. Exporting all 24 would be mostly
+ * blank, so it runs from the hour before the first item to the hour after the
+ * last, and falls back to a working day when there is nothing timed.
+ */
+function hourWindow(items: Item[]): [number, number] {
+  const timed = items.filter((item) => !item.all_day);
+  if (!timed.length) return FALLBACK_WINDOW;
+  const earliest = Math.min(...timed.map((item) => toMinutes(item.start_time)));
+  const latest = Math.max(...timed.map((item) => toMinutes(item.end_time)));
+  const start = Math.max(0, Math.floor(earliest / 60) * 60);
+  const end = Math.min(24 * 60, Math.ceil(latest / 60) * 60);
+  return end - start < 60 ? [start, Math.min(24 * 60, start + 60)] : [start, end];
+}
+
+/** Overlapping items share the column rather than hiding each other, the way
+    they do in the app. */
+function packLanes(items: Item[]) {
+  const sorted = [...items].sort(
+    (a, b) => toMinutes(a.start_time) - toMinutes(b.start_time) || a.title.localeCompare(b.title)
+  );
+  const laneEnds: number[] = [];
+  const placed = sorted.map((item) => {
+    const start = toMinutes(item.start_time);
+    const end = toMinutes(item.end_time);
+    let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(end);
+    } else {
+      laneEnds[lane] = end;
+    }
+    return { item, lane };
+  });
+  return { placed, laneCount: Math.max(1, laneEnds.length) };
+}
+
+function renderBlock(item: Item, lane: number, laneCount: number, windowStart: number) {
+  const start = toMinutes(item.start_time);
+  const end = toMinutes(item.end_time);
+  const top = ((start - windowStart) / 60) * HOUR_PX;
+  const height = Math.max(((end - start) / 60) * HOUR_PX, MIN_BLOCK_PX);
+  const width = 100 / laneCount;
+  const fill = safeColor(item.color);
+  const ink = readableInk(fill);
+  const time = `${esc(item.start_time.slice(0, 5))}–${esc(item.end_time.slice(0, 5))}`;
+  const where = item.location ? `<span class="where">${esc(item.location)}</span>` : "";
+  return `<div class="block" style="top:${top}px;height:${height}px;left:${lane * width}%;width:${width}%;background:${fill};color:${ink}" title="${esc(item.title)}">
+            <span class="btitle">${esc(item.title)}</span>
+            <span class="btime">${time}</span>
+            ${where}
+          </div>`;
+}
+
+/** Same rule the app uses on a schedule block: dark text on a light colour,
+    white on a dark one. */
+function readableInk(hex: string) {
+  const n = hex.replace("#", "");
+  const channels = [0, 2, 4].map((o) => Number.parseInt(n.slice(o, o + 2), 16) / 255);
+  const [r, g, b] = channels.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179 ? "#111827" : "#FFFFFF";
 }
 
 export function renderDocument(
@@ -105,41 +162,92 @@ export function renderDocument(
   labels: Labels,
   locale: Locale
 ) {
-  const byDay = new Map<string, Item[]>();
-  for (const item of items) {
-    const list = byDay.get(item.day_id) ?? [];
-    list.push(item);
-    byDay.set(item.day_id, list);
-  }
-
   const sortedDays = [...days].sort(
     (a, b) => a.sort_order - b.sort_order || a.date.localeCompare(b.date)
   );
+  const dayIndex = new Map(sortedDays.map((day, i) => [day.id, i]));
 
-  const sections = sortedDays
+  const timedByDay = new Map<string, Item[]>();
+  for (const item of items) {
+    if (item.all_day) continue;
+    const list = timedByDay.get(item.day_id) ?? [];
+    list.push(item);
+    timedByDay.set(item.day_id, list);
+  }
+
+  // An all-day item shows on every day it covers, not only where it starts.
+  const allDayByDay = new Map<string, Item[]>();
+  for (const item of items) {
+    if (!item.all_day) continue;
+    const from = dayIndex.get(item.day_id);
+    if (from === undefined) continue;
+    const to = item.end_day_id ? dayIndex.get(item.end_day_id) ?? from : from;
+    for (let i = Math.min(from, to); i <= Math.max(from, to); i++) {
+      const day = sortedDays[i];
+      if (!day) continue;
+      const list = allDayByDay.get(day.id) ?? [];
+      list.push(item);
+      allDayByDay.set(day.id, list);
+    }
+  }
+
+  const [windowStart, windowEnd] = hourWindow(items);
+  const hours: number[] = [];
+  for (let m = windowStart; m < windowEnd; m += 60) hours.push(m);
+  const bodyHeight = hours.length * HOUR_PX;
+  const hasAllDay = allDayByDay.size > 0;
+
+  const headCells = sortedDays
     .map((day) => {
-      const dayItems = (byDay.get(day.id) ?? []).sort(
-        (a, b) =>
-          Number(b.all_day) - Number(a.all_day) || a.start_time.localeCompare(b.start_time)
-      );
-      const body = dayItems.length
-        ? `<ul class="items">\n${dayItems.map((item) => renderItem(item, labels)).join("\n")}\n          </ul>`
-        : `<p class="empty">${esc(labels.emptyDay)}</p>`;
-      return `      <section class="day">
-        <h2>${esc(formatDate(day.date, labels))}</h2>
-        ${body}
-      </section>`;
+      const { date, weekday } = formatDate(day.date, labels);
+      return `<div class="dayhead"><span class="d">${esc(date)}</span><span class="w">${esc(weekday)}</span></div>`;
     })
-    .join("\n");
+    .join("");
+
+  const allDayCells = sortedDays
+    .map((day) => {
+      const chips = (allDayByDay.get(day.id) ?? [])
+        .map((item) => {
+          const fill = safeColor(item.color);
+          return `<span class="chip" style="background:${fill};color:${readableInk(fill)}">${esc(item.title)}</span>`;
+        })
+        .join("");
+      return `<div class="allday">${chips}</div>`;
+    })
+    .join("");
+
+  const gutter = hours
+    .map((m) => `<div class="hour"><span>${pad2(Math.floor(m / 60))}:${pad2(m % 60)}</span></div>`)
+    .join("");
+
+  const bodyCells = sortedDays
+    .map((day) => {
+      const { placed, laneCount } = packLanes(timedByDay.get(day.id) ?? []);
+      const blocks = placed
+        .map(({ item, lane }) => renderBlock(item, lane, laneCount, windowStart))
+        .join("");
+      return `<div class="col">${blocks}</div>`;
+    })
+    .join("");
 
   const noteBlock = notes.length
-    ? `      <section class="notes">
-        <h2>${esc(labels.notes)}</h2>
-        <ul>
-${notes.map((note) => `          <li>${esc(note)}</li>`).join("\n")}
-        </ul>
-      </section>`
+    ? `    <section class="notes">
+      <h2>${esc(labels.notes)}</h2>
+      <ul>
+${notes.map((note) => `        <li>${esc(note)}</li>`).join("\n")}
+      </ul>
+    </section>`
     : "";
+
+  const sheet = sortedDays.length
+    ? `    <div class="sheet" style="--days:${sortedDays.length};--hour:${HOUR_PX}px;--body:${bodyHeight}px">
+      <div class="corner"></div>
+      ${headCells}
+      ${hasAllDay ? `<div class="alldaylabel">${esc(labels.allDay)}</div>${allDayCells}` : ""}
+      <div class="gutter">${gutter}</div>
+      ${bodyCells}
+    </div>`
+    : `    <p class="empty">${esc(labels.empty)}</p>`;
 
   const exported = new Date().toISOString().slice(0, 10);
 
@@ -155,38 +263,76 @@ ${notes.map((note) => `          <li>${esc(note)}</li>`).join("\n")}
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 40px 20px; background: #fff; color: #2d333e;
-    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+    margin: 0; padding: 32px 20px; background: #fff; color: #2d333e;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
       "Malgun Gothic", Roboto, sans-serif;
   }
-  main { max-width: 760px; margin: 0 auto; }
-  h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.02em; }
-  .exported { margin: 0 0 36px; color: #69707f; font-size: 13px; }
-  .day { margin-bottom: 28px; }
-  .day h2 {
-    margin: 0 0 12px; padding-bottom: 8px; font-size: 15px; font-weight: 600;
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.02em; }
+  .exported { margin: 0 0 24px; color: #69707f; font-size: 13px; }
+
+  .sheet {
+    display: grid;
+    grid-template-columns: 52px repeat(var(--days), minmax(104px, 1fr));
+    border: 1px solid #e1e3e7; border-radius: 12px; overflow: hidden;
+  }
+  .corner, .alldaylabel { background: #f7f8f9; border-right: 1px solid #e1e3e7; }
+  .corner { border-bottom: 1px solid #e1e3e7; }
+  .dayhead {
+    background: #f7f8f9; border-bottom: 1px solid #e1e3e7; border-right: 1px solid #e1e3e7;
+    padding: 8px 6px; text-align: center;
+  }
+  .dayhead:last-child, .allday:last-child, .col:last-child { border-right: 0; }
+  .dayhead .d { display: block; font-size: 12px; font-weight: 600; }
+  .dayhead .w { display: block; margin-top: 2px; font-size: 11px; color: #69707f; }
+
+  .alldaylabel {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 0 6px; font-size: 11px; color: #69707f;
     border-bottom: 1px solid #e1e3e7;
   }
-  .items { margin: 0; padding: 0; list-style: none; }
-  .item {
-    display: flex; gap: 16px; padding: 10px 0 10px 14px; margin-bottom: 8px;
-    border-left: 4px solid #d8dce2; border-radius: 2px;
+  .allday {
+    border-bottom: 1px solid #e1e3e7; border-right: 1px solid #e1e3e7;
+    padding: 4px; display: flex; flex-direction: column; gap: 3px; min-height: 26px;
   }
-  .time {
-    flex: 0 0 104px; margin: 0; color: #69707f; font-size: 13px;
-    font-variant-numeric: tabular-nums;
+  .chip {
+    border-radius: 4px; padding: 2px 5px; font-size: 10px; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .title { margin: 0; font-weight: 600; }
-  .meta { margin: 2px 0 0; color: #69707f; font-size: 13px; }
-  .memo { margin: 6px 0 0; color: #59616f; font-size: 13px; white-space: pre-wrap; }
-  .empty { margin: 0; color: #8a919e; font-size: 13px; }
-  .notes { margin-top: 40px; padding-top: 24px; border-top: 1px solid #e1e3e7; }
-  .notes h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+
+  .gutter { border-right: 1px solid #e1e3e7; height: var(--body); }
+  .hour { height: var(--hour); position: relative; }
+  .hour span {
+    position: absolute; top: -6px; right: 6px;
+    font-size: 10px; color: #8a919e; font-variant-numeric: tabular-nums;
+  }
+  .hour:first-child span { top: 2px; }
+
+  .col {
+    position: relative; height: var(--body); border-right: 1px solid #e1e3e7;
+    background-image: repeating-linear-gradient(
+      to bottom, #eef0f3 0, #eef0f3 1px, transparent 1px, transparent var(--hour)
+    );
+  }
+  .block {
+    position: absolute; overflow: hidden; border-radius: 4px;
+    padding: 3px 5px; display: flex; flex-direction: column; gap: 1px;
+  }
+  .btitle { font-size: 11px; font-weight: 600; line-height: 1.25; }
+  .btime, .where {
+    font-size: 10px; line-height: 1.25; opacity: 0.85;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .empty { color: #8a919e; font-size: 13px; }
+  .notes { margin-top: 32px; padding-top: 20px; border-top: 1px solid #e1e3e7; }
+  .notes h2 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
   .notes ul { margin: 0; padding-left: 18px; }
   .notes li { margin-bottom: 6px; white-space: pre-wrap; }
+
   @media print {
     body { padding: 0; }
-    .day { break-inside: avoid; }
+    .sheet, .notes { break-inside: avoid; }
   }
 </style>
 </head>
@@ -194,11 +340,10 @@ ${notes.map((note) => `          <li>${esc(note)}</li>`).join("\n")}
   <main>
     <h1>${esc(title)}</h1>
     <p class="exported">${esc(labels.exportedAt)} ${esc(exported)}</p>
-${sections || `    <p class="empty">${esc(labels.empty)}</p>`}
+${sheet}
 ${noteBlock}
   </main>
 </body>
 </html>
 `;
 }
-

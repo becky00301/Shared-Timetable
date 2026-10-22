@@ -5,6 +5,7 @@ import { Code2, FileDown, ImageDown, Sheet, Upload, type LucideIcon } from "luci
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { exportFilename } from "@/lib/export/filename";
 import { exportTimetablePdf, exportTimetablePng } from "@/lib/export/timetable-export";
 import { useLocale } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -26,7 +27,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
       icon: ImageDown,
       run: () => {
         const target = getTarget();
-        if (target) void exportTimetablePng(target, `${project.slug}.png`);
+        if (target) void exportTimetablePng(target, exportFilename(project.title, "png"));
       }
     },
     {
@@ -34,7 +35,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
       icon: FileDown,
       run: () => {
         const target = getTarget();
-        if (target) void exportTimetablePdf(target, `${project.slug}.pdf`);
+        if (target) void exportTimetablePdf(target, exportFilename(project.title, "pdf"));
       }
     },
     {
