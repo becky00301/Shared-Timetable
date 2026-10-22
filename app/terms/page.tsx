@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LocaleToggle } from "@/components/layout/LocaleToggle";
+import { LegalPageHeader } from "@/components/layout/LegalPageHeader";
 import { useLocale } from "@/lib/i18n/locale";
 
 type Section = { title: string; body: string[] };
@@ -259,14 +259,9 @@ export default function TermsPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-3xl px-5 py-12">
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="text-sm text-muted transition hover:text-foreground">
-            {copy.back}
-          </Link>
-          <LocaleToggle />
-        </div>
-        <h1 className="mt-6 text-3xl font-semibold">{copy.title}</h1>
+      <LegalPageHeader backLabel={copy.back} />
+      <div className="mx-auto max-w-3xl px-5 py-8 sm:py-12">
+        <h1 className="text-3xl font-semibold">{copy.title}</h1>
         <p className="mt-3 text-sm leading-7 text-muted">{copy.intro}</p>
 
         <dl className="mt-6 grid gap-4 border-y border-border py-4 text-sm sm:grid-cols-2">
