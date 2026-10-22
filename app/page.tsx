@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LandingContent } from "@/components/layout/LandingContent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getUserWithin } from "@/lib/supabase/session";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME } from "@/lib/seo";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME_KO, WEBSITE_STRUCTURED_DATA } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/",
-    siteName: SITE_NAME,
+    siteName: SITE_NAME_KO,
     locale: "ko_KR",
     alternateLocale: ["en_US"],
     title: HOME_TITLE,
@@ -32,5 +32,15 @@ export default async function HomePage() {
   // "get started", which is not worth making the page wait on auth.
   const user = supabase ? await getUserWithin(supabase) : null;
 
-  return <LandingContent loggedIn={Boolean(user)} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(WEBSITE_STRUCTURED_DATA).replace(/</g, "\\u003c")
+        }}
+      />
+      <LandingContent loggedIn={Boolean(user)} />
+    </>
+  );
 }

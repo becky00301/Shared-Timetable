@@ -6,18 +6,21 @@ import { Toaster } from "sonner";
 import { AccentEffect } from "@/components/layout/AccentEffect";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { LocaleProvider } from "@/lib/i18n/locale";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_DISPLAY_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: HOME_TITLE,
-    template: `%s | ${SITE_NAME}`
+    template: `%s | ${SITE_DISPLAY_NAME}`
   },
   description: HOME_DESCRIPTION,
-  applicationName: SITE_NAME,
+  applicationName: SITE_DISPLAY_NAME,
   keywords: [
+    "플래너 투게더",
+    "플래너투게더",
+    "Planner Together",
     "공유 시간표",
     "일정 공유",
     "온라인 시간표",
