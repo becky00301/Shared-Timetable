@@ -58,17 +58,19 @@ export function accentIconSvg(hex: string) {
 const FAVICON_MARK = "data-accent-favicon";
 
 /**
- * Leaves exactly one icon link in the head, drawn in the accent.
+ * Repaints icon links in the head without removing nodes owned by React.
  *
  * Next re-inserts its own link for app/icon.svg during hydration, and a
- * browser given two will generally take the last — so the static file would
- * win and the icon would never change. Any link that is not ours is removed.
+ * browser given two will generally take the last. Repaint Next's links too:
+ * removing them makes React crash when it removes old metadata on navigation.
  */
 export function applyAccentFavicon(hex: string) {
   const href = `data:image/svg+xml,${encodeURIComponent(accentIconSvg(hex))}`;
   document
     .querySelectorAll<HTMLLinkElement>(`link[rel~="icon"]:not([${FAVICON_MARK}])`)
-    .forEach((link) => link.remove());
+    .forEach((link) => {
+      if (link.href !== href) link.href = href;
+    });
 
   let link = document.querySelector<HTMLLinkElement>(`link[${FAVICON_MARK}]`);
   if (!link) {

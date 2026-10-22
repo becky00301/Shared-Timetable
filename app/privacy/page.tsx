@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useLocale } from "@/lib/i18n/locale";
+import { useLocale, useT } from "@/lib/i18n/locale";
 
 type Section = { title: string; body: string[] };
 
@@ -302,6 +302,7 @@ const COPY = {
 
 export default function PrivacyPage() {
   const { locale } = useLocale();
+  const t = useT();
   const copy = COPY[locale];
 
   return (
@@ -338,6 +339,9 @@ export default function PrivacyPage() {
         </div>
 
         <p className="mt-12 border-t border-border pt-6 text-xs leading-6 text-muted">{copy.footer}</p>
+        <Link href="/terms" className="mt-4 inline-block text-sm text-muted underline underline-offset-2 hover:text-foreground">
+          {t("common.terms")}
+        </Link>
       </div>
     </main>
   );

@@ -549,7 +549,10 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">
           <span>© Planner Together</span>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+            <Link href="/terms" className="transition hover:text-foreground">
+              {t("common.terms")}
+            </Link>
             <Link href="/privacy" className="transition hover:text-foreground">
               {t("common.privacy")}
             </Link>

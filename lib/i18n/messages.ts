@@ -20,6 +20,7 @@ export const messages = {
   "common.loading": { ko: "불러오는 중...", en: "Loading…" },
   "common.optional": { ko: "선택 입력", en: "Optional" },
   "common.privacy": { ko: "개인정보처리방침", en: "Privacy Policy" },
+  "common.terms": { ko: "서비스 이용약관", en: "Terms of Service" },
   "common.openApp": { ko: "앱 열기", en: "Open app" },
   "common.days": { ko: "{count}일", en: "{count} days" },
   "common.peopleCount": { ko: "{count}명", en: "{count}" },
@@ -217,6 +218,15 @@ export const messages = {
     en: "I agree to the collection and use of my personal data."
   },
   "auth.consent.required": { ko: "(필수)", en: "(required)" },
+  "auth.terms.label": {
+    ko: "서비스 이용약관에 동의합니다.",
+    en: "I agree to the Terms of Service."
+  },
+  "auth.error.terms": { ko: "서비스 이용약관에 동의해주세요.", en: "Please agree to the Terms of Service." },
+  "auth.google.termsNotice": {
+    ko: "Google 로그인에도 서비스 이용약관이 적용됩니다.",
+    en: "The Terms of Service also apply to Google sign-in."
+  },
   "auth.consent.body": {
     ko: "이메일과 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.",
     en: "Your email and timetables are stored, and processing is handled by Supabase and Vercel on our behalf."

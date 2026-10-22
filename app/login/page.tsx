@@ -48,6 +48,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
   // /auth/callback sends failures back here rather than leaving someone on a
   // blank screen wondering whether it worked.
@@ -57,6 +58,14 @@ function LoginForm() {
   }, [authError, t]);
 
   async function signInWithGoogle() {
+    if (mode === "signup" && !termsAgreed) {
+      toast.error(t("auth.error.terms"));
+      return;
+    }
+    if (mode === "signup" && !agreed) {
+      toast.error(t("auth.error.consent"));
+      return;
+    }
     if (!supabase) {
       toast.info(t("auth.error.notConfigured"));
       return;
@@ -90,6 +99,10 @@ function LoginForm() {
     if (!email || !password) return;
     if (password.length < 6) {
       toast.error(t("auth.error.shortPassword"));
+      return;
+    }
+    if (mode === "signup" && !termsAgreed) {
+      toast.error(t("auth.error.terms"));
       return;
     }
     if (mode === "signup" && !agreed) {
@@ -169,6 +182,7 @@ function LoginForm() {
               <GoogleMark />
               {googleLoading ? t("auth.submitting") : t("auth.google")}
             </Button>
+            <p className="mt-2 text-xs leading-5 text-muted">{t("auth.google.termsNotice")}</p>
 
             <div className="my-5 flex items-center gap-3 text-xs text-muted">
               <span className="h-px flex-1 bg-border" />
@@ -200,6 +214,23 @@ function LoginForm() {
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
             />
           </label>
+
+          {mode === "signup" ? (
+            <label className="flex items-start gap-2 rounded-lg border border-border bg-black/[0.02] p-3 text-sm leading-6 text-muted">
+              <input
+                type="checkbox"
+                checked={termsAgreed}
+                onChange={(event) => setTermsAgreed(event.target.checked)}
+                className="mt-1 size-4 shrink-0 accent-[color:var(--primary)]"
+              />
+              <span>
+                <Link href="/terms" target="_blank" className="font-medium text-primary underline underline-offset-2">
+                  {t("auth.terms.label")}
+                </Link>{" "}
+                {t("auth.consent.required")}
+              </span>
+            </label>
+          ) : null}
 
           {mode === "signup" ? (
             <label className="flex items-start gap-2 rounded-lg border border-border bg-black/[0.02] p-3 text-sm leading-6 text-muted">
@@ -252,6 +283,15 @@ function LoginForm() {
             {mode === "signin" ? t("auth.signup.title") : t("auth.signin.title")}
           </button>
         </p>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted">
+          <Link href="/terms" target="_blank" className="underline underline-offset-2 hover:text-foreground">
+            {t("common.terms")}
+          </Link>
+          <Link href="/privacy" target="_blank" className="underline underline-offset-2 hover:text-foreground">
+            {t("common.privacy")}
+          </Link>
+        </div>
 
     </AuthShell>
   );
