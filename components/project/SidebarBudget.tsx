@@ -326,11 +326,18 @@ function ExpenseForm({
   }
 
   return (
-    <form className="flex flex-col gap-2" onSubmit={submit}>
-      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-2">
+    // Same shape as the note composer. The two fields and the button are one
+    // object, so it reads as "fill this in, then press that" — as a quiet
+    // outline sitting underneath, the button was taken for a label and people
+    // typed into the fields and stopped.
+    <form
+      className="rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+      onSubmit={submit}
+    >
+      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Input
           value={label}
-          className="h-9 text-sm"
+          className="h-9 rounded-none border-0 bg-transparent text-sm focus:border-transparent focus:ring-0"
           placeholder={t("budget.expenseLabelPlaceholder")}
           onChange={(event) => setLabel(event.target.value)}
         />
@@ -339,16 +346,18 @@ function ExpenseForm({
           inputMode="decimal"
           min={0}
           step={currencyFractionDigits(currency) === 0 ? 1 : 0.01}
-          className="h-9 text-sm tabular-nums"
+          className="h-9 rounded-none border-0 border-l border-border bg-transparent text-sm tabular-nums focus:border-transparent focus:ring-0"
           value={amount}
           placeholder={t("budget.expenseAmountPlaceholder")}
           onChange={(event) => setAmount(event.target.value)}
         />
       </div>
-      <Button type="submit" size="sm" variant="outline" disabled={!ready || saving}>
-        <Plus size={15} />
-        {saving ? t("budget.adding") : t("budget.addExpense")}
-      </Button>
+      <div className="flex justify-end px-2 pb-2">
+        <Button type="submit" size="sm" disabled={!ready || saving}>
+          <Plus size={15} />
+          {saving ? t("budget.adding") : t("budget.addExpense")}
+        </Button>
+      </div>
     </form>
   );
 }
