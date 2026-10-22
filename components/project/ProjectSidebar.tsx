@@ -100,8 +100,11 @@ export function ProjectSidebar({
     });
   }
 
+  // Tight horizontal padding: the cards carry their own, and stacking the
+  // column's 20px on top of theirs pushed content 33px off the edge in a
+  // 320px column.
   return (
-    <aside className="hidden w-80 shrink-0 flex-col overflow-y-auto border-r border-border bg-surface p-5 lg:flex">
+    <aside className="hidden w-80 shrink-0 flex-col overflow-y-auto border-r border-border bg-surface px-3 py-4 lg:flex">
       {/* Guests have no dashboard to go back to — this is their only page. */}
       {isGuest ? null : (
         <Link
