@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LandingContent } from "@/components/layout/LandingContent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getUserWithin } from "@/lib/supabase/session";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME_KO, WEBSITE_STRUCTURED_DATA } from "@/lib/seo";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME_KO, SITE_SHARE_IMAGE, WEBSITE_STRUCTURED_DATA } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +17,14 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     alternateLocale: ["en_US"],
     title: HOME_TITLE,
-    description: HOME_DESCRIPTION
+    description: HOME_DESCRIPTION,
+    images: [SITE_SHARE_IMAGE]
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: HOME_TITLE,
-    description: HOME_DESCRIPTION
+    description: HOME_DESCRIPTION,
+    images: [SITE_SHARE_IMAGE.url]
   }
 };
 

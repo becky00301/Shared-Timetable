@@ -8,6 +8,14 @@ export const HOME_TITLE = `${SITE_DISPLAY_NAME} | 함께 만드는 공유 시간
 export const HOME_DESCRIPTION =
   "플래너 투게더(Planner Together)는 여행, MT, 스터디, 프로젝트 일정을 함께 만드는 무료 공유 시간표입니다. 원하는 날짜를 고르고 일정을 드래그해 만든 뒤 링크 하나로 간편하게 공유하세요.";
 
+export const SITE_SHARE_IMAGE = {
+  url: `${SITE_URL}/og/planner-together-v1.png`,
+  width: 1200,
+  height: 630,
+  type: "image/png",
+  alt: "플래너 투게더 · 함께 만드는 공유 시간표. 드래그로 만들고, 링크 하나로 공유하세요."
+};
+
 export const WEBSITE_STRUCTURED_DATA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
