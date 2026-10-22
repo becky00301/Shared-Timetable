@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,9 +14,56 @@ import { SidebarBudget } from "@/components/project/SidebarBudget";
 import { SidebarNotes } from "@/components/project/SidebarNotes";
 import { SidebarScheduleMemos } from "@/components/project/SidebarScheduleMemos";
 import { useT } from "@/lib/i18n/locale";
+import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { Project, ProjectDay, ProjectMember, ProjectRole } from "@/types/project";
+
+/**
+ * One block of the sidebar: a titled card with its own header row.
+ *
+ * These sections used to be headings separated only by margin, which left the
+ * column reading as one long scroll with no edges. Giving each a card and a
+ * header — title left, count or control right — makes the boundaries visible
+ * without changing any colour.
+ */
+function Panel({
+  title,
+  aside,
+  children,
+  bodyClassName,
+  headless = false
+}: {
+  title?: string;
+  aside?: ReactNode;
+  children: ReactNode;
+  bodyClassName?: string;
+  /** For a child that already draws its own header row — the card would
+      otherwise label it twice. */
+  headless?: boolean;
+}) {
+  if (headless) {
+    return <section className="rounded-xl border border-border bg-background">{children}</section>;
+  }
+  return (
+    <section className="rounded-xl border border-border bg-background">
+      <div className="flex items-center justify-between gap-2 border-b border-border-muted px-3 py-2.5">
+        <h2 className="text-xs font-semibold text-muted">{title}</h2>
+        {aside}
+      </div>
+      <div className={cn("p-3", bodyClassName)}>{children}</div>
+    </section>
+  );
+}
+
+/** The small count chip the panel headers carry, as in a nav badge. */
+function CountChip({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-xs tabular-nums text-muted">
+      {children}
+    </span>
+  );
+}
 
 export function ProjectSidebar({
   project,
@@ -116,42 +163,32 @@ export function ProjectSidebar({
         <ExportToolbar project={project} targetId="timetable-export" />
       </div>
 
-      {/* Section labels sit a level below the project title and the content
-          they head: before, every heading in this column carried the same
-          weight, so the eye had nothing to climb. */}
-      <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-xs font-semibold text-muted">{t("sidebar.participants")}</h2>
-        <span className="text-xs tabular-nums text-muted">
-          {t("common.peopleCount", { count: members.length })}
-        </span>
-      </div>
-      <div className="mt-2 -mx-2">
-        <ParticipantList members={members} canManage={currentRole === "owner"} />
-      </div>
+      {/* Even gaps now that each block has an edge of its own; the old mt-8
+          was doing the separating. */}
+      <div className="mt-6 flex flex-col gap-3 pb-2">
+        <Panel
+          title={t("sidebar.participants")}
+          aside={<CountChip>{members.length}</CountChip>}
+          bodyClassName="p-1.5"
+        >
+          <ParticipantList members={members} canManage={currentRole === "owner"} />
+        </Panel>
 
-      <div className="mt-8">
-        <SelectedDatesCalendar days={days} projectId={project.id} canEdit={canEdit} />
-      </div>
+        <Panel headless>
+          <SelectedDatesCalendar days={days} projectId={project.id} canEdit={canEdit} />
+        </Panel>
 
-      <div className="mt-8">
-        <h2 className="text-xs font-semibold text-muted">{t("budget.title")}</h2>
-      </div>
-      <div className="mt-2">
-        <SidebarBudget project={project} canEdit={canEdit} />
-      </div>
+        <Panel title={t("budget.title")}>
+          <SidebarBudget project={project} canEdit={canEdit} />
+        </Panel>
 
-      <div className="mt-8">
-        <h2 className="text-xs font-semibold text-muted">{t("sidebar.notes")}</h2>
-      </div>
-      <div className="mt-2">
-        <SidebarNotes projectId={project.id} canEdit={canEdit} />
-      </div>
+        <Panel title={t("sidebar.notes")}>
+          <SidebarNotes projectId={project.id} canEdit={canEdit} />
+        </Panel>
 
-      <div className="mt-8">
-        <h2 className="text-xs font-semibold text-muted">{t("sidebar.scheduleMemos")}</h2>
-      </div>
-      <div className="mt-2 pb-2">
-        <SidebarScheduleMemos projectId={project.id} days={days} />
+        <Panel title={t("sidebar.scheduleMemos")}>
+          <SidebarScheduleMemos projectId={project.id} days={days} />
+        </Panel>
       </div>
     </aside>
   );

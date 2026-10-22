@@ -93,7 +93,8 @@ export function SelectedDatesCalendar({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2">
+      {/* Doubles as the surrounding card's header row. */}
+      <div className="flex items-center justify-between gap-2 border-b border-border-muted px-3 py-2">
         <h2 className="text-xs font-semibold text-muted">{t("sidebar.selectedDates")}</h2>
         {canEdit && projectId ? (
           <button
@@ -107,7 +108,7 @@ export function SelectedDatesCalendar({
         ) : null}
       </div>
 
-      <div className="mt-3 rounded-xl border border-border bg-black/[0.02] p-3">
+      <div className="p-3">
         <div className="flex items-center justify-between">
           <button
             type="button"
