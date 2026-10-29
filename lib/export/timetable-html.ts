@@ -240,12 +240,14 @@ ${notes.map((note) => `        <li>${esc(note)}</li>`).join("\n")}
     : "";
 
   const sheet = sortedDays.length
-    ? `    <div class="sheet" style="--days:${sortedDays.length};--hour:${HOUR_PX}px;--body:${bodyHeight}px">
+    ? `    <div class="scroll">
+      <div class="sheet" style="--days:${sortedDays.length};--hour:${HOUR_PX}px;--body:${bodyHeight}px">
       <div class="corner"></div>
       ${headCells}
       ${hasAllDay ? `<div class="alldaylabel">${esc(labels.allDay)}</div>${allDayCells}` : ""}
       <div class="gutter">${gutter}</div>
       ${bodyCells}
+      </div>
     </div>`
     : `    <p class="empty">${esc(labels.empty)}</p>`;
 
@@ -271,11 +273,22 @@ ${notes.map((note) => `        <li>${esc(note)}</li>`).join("\n")}
   h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.02em; }
   .exported { margin: 0 0 24px; color: #69707f; font-size: 13px; }
 
+  /* A week of columns will not fit a phone, and the rounded corners used to
+     be clipping the overflow away with no way to reach it. The grid keeps a
+     readable minimum per day and this scrolls to the rest. */
+  .scroll {
+    overflow-x: auto;
+    border: 1px solid #e1e3e7; border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
   .sheet {
     display: grid;
     grid-template-columns: 52px repeat(var(--days), minmax(104px, 1fr));
-    border: 1px solid #e1e3e7; border-radius: 12px; overflow: hidden;
+    min-width: calc(52px + var(--days) * 104px);
   }
+  /* The hours stay put while the days scroll past them. */
+  .corner, .alldaylabel, .gutter { position: sticky; left: 0; z-index: 2; }
+  .gutter { background: #fff; }
   .corner, .alldaylabel { background: #f7f8f9; border-right: 1px solid #e1e3e7; }
   .corner { border-bottom: 1px solid #e1e3e7; }
   .dayhead {
@@ -300,7 +313,7 @@ ${notes.map((note) => `        <li>${esc(note)}</li>`).join("\n")}
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
-  .gutter { border-right: 1px solid #e1e3e7; height: var(--body); }
+  .gutter { border-right: 1px solid #e1e3e7; height: var(--body); background: #fff; }
   .hour { height: var(--hour); position: relative; }
   .hour span {
     position: absolute; top: -6px; right: 6px;
@@ -332,7 +345,9 @@ ${notes.map((note) => `        <li>${esc(note)}</li>`).join("\n")}
 
   @media print {
     body { padding: 0; }
-    .sheet, .notes { break-inside: avoid; }
+    .scroll { overflow: visible; }
+    .sheet { min-width: 0; }
+    .scroll, .notes { break-inside: avoid; }
   }
 </style>
 </head>
