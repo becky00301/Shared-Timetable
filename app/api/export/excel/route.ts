@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import writeXlsxFile, { getSheetData, type CellObject, type Column, type SheetData } from "write-excel-file/node";
 import { exportFilename } from "@/lib/export/filename";
+import { BUDGET_LABELS, buildBudgetSheets, moneyColumn } from "@/lib/export/budget-excel";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +33,8 @@ const LABELS = {
     errNoProjectId: "projectId가 필요해요.",
     errNoServerConfig: "서버 설정이 필요해요.",
     errNeedLogin: "로그인이 필요해요.",
-    errNotFound: "시간표를 찾을 수 없어요."
+    errNotFound: "시간표를 찾을 수 없어요.",
+    errExportFailed: "엑셀 데이터를 불러오지 못했어요. 다시 시도해 주세요."
   },
   en: {
     weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -56,7 +59,8 @@ const LABELS = {
     errNoProjectId: "projectId is required.",
     errNoServerConfig: "Server configuration is missing.",
     errNeedLogin: "You need to be logged in.",
-    errNotFound: "Timetable not found."
+    errNotFound: "Timetable not found.",
+    errExportFailed: "Couldn't load the Excel export data. Please try again."
   }
 } as const;
 
@@ -75,6 +79,8 @@ type Row = {
   title: string;
   location: string;
   memo: string;
+  amount: number | null;
+  currency: string;
 };
 
 type NoteRow = { body: string; createdAt: string };
@@ -110,7 +116,7 @@ function textColumn<T>(header: string, width: number, pick: (row: T) => string):
   };
 }
 
-function scheduleColumnsFor(labels: Labels): Column<Row>[] {
+function scheduleColumnsFor(labels: Labels, locale: Locale, currency: string): Column<Row>[] {
   return [
     textColumn(labels.colDate, 14, (row) => row.date),
     textColumn(labels.colWeekday, 6, (row) => row.weekday),
@@ -119,7 +125,12 @@ function scheduleColumnsFor(labels: Labels): Column<Row>[] {
     textColumn(labels.colEnd, 8, (row) => row.end),
     textColumn(labels.colTitle, 28, (row) => row.title),
     textColumn(labels.colLocation, 22, (row) => row.location),
-    textColumn(labels.colMemo, 40, (row) => row.memo)
+    textColumn(labels.colMemo, 40, (row) => row.memo),
+    moneyColumn(BUDGET_LABELS[locale].amount, currency, (row: Row) => row.amount),
+    {
+      ...textColumn(BUDGET_LABELS[locale].currency, 10, (row: Row) => row.currency),
+      cell: (row) => ({ value: row.currency, type: String, align: "center", alignVertical: "center" })
+    }
   ];
 }
 
@@ -399,25 +410,43 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.json({ error: labels.errNeedLogin }, { status: 401 });
 
   // RLS makes sure the caller is a member of this project.
-  const { data: project } = await supabase
+  const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id, title")
+    .select("id, title, budget_total, budget_currency")
     .eq("id", projectId)
     .maybeSingle();
+  if (projectError) return NextResponse.json({ error: labels.errExportFailed }, { status: 500 });
   if (!project) return NextResponse.json({ error: labels.errNotFound }, { status: 404 });
 
-  const [{ data: days }, { data: items }, { data: notes }] = await Promise.all([
+  const [daysResult, itemsResult, notesResult, expensesResult] = await Promise.all([
     supabase.from("project_days").select("id, date, sort_order").eq("project_id", projectId),
     supabase
       .from("schedule_items")
-      .select("day_id, end_day_id, title, description, location, start_time, end_time, all_day, color")
-      .eq("project_id", projectId),
+      .select("day_id, end_day_id, title, description, location, start_time, end_time, all_day, color, amount")
+      .eq("project_id", projectId)
+      .order("start_time", { ascending: true }),
     supabase
       .from("project_notes")
       .select("body, created_at")
       .eq("project_id", projectId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true }),
+    supabase.from("project_expenses").select("label, amount, spent_on").eq("project_id", projectId)
       .order("created_at", { ascending: true })
   ]);
+
+  // A failed query must not turn into an incomplete workbook with zero spending.
+  const queryError = [daysResult, itemsResult, notesResult, expensesResult].find((result) => result.error)?.error;
+  if (queryError) {
+    console.error("Excel export query failed", queryError);
+    return NextResponse.json({ error: labels.errExportFailed }, { status: 500 });
+  }
+  const days = daysResult.data ?? [];
+  const items = itemsResult.data ?? [];
+  const notes = notesResult.data ?? [];
+  const expenses = expensesResult.data ?? [];
+  const currency = project.budget_currency || DEFAULT_CURRENCY;
 
   const dayById = new Map((days ?? []).map((day) => [day.id, day]));
   const visualSheet = buildTimetableSheet(
@@ -451,7 +480,9 @@ export async function GET(request: Request) {
         end: item.all_day ? "" : item.end_time.slice(0, 5),
         title: item.title,
         location: item.location ?? "",
-        memo: item.description ?? ""
+        memo: item.description ?? "",
+        amount: toAmount(item.amount),
+        currency
       };
     });
 
@@ -460,7 +491,7 @@ export async function GET(request: Request) {
     createdAt: note.created_at.slice(0, 10)
   }));
 
-  const scheduleColumns = scheduleColumnsFor(labels);
+  const scheduleColumns = scheduleColumnsFor(labels, locale, currency);
   const noteColumns = noteColumnsFor(labels);
   const file = await writeXlsxFile([
     {
@@ -482,7 +513,8 @@ export async function GET(request: Request) {
       sheet: labels.sheetNotes,
       data: getSheetData(noteRows, noteColumns),
       columns: noteColumns.map((column) => ({ width: column.width }))
-    }
+    },
+    ...buildBudgetSheets(project, days, items, expenses, locale)
   ]);
   const buffer = await file.toBuffer();
 
