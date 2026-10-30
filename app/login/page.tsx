@@ -48,6 +48,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<"google" | "custom:naver" | null>(null);
   const busy = loading || socialLoading !== null;
+  const [agreed, setAgreed] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
   // /auth/callback sends failures back here rather than leaving someone on a
   // blank screen wondering whether it worked.
@@ -94,6 +96,15 @@ function LoginForm() {
     if (!email || !password) return;
     if (password.length < 6) {
       toast.error(t("auth.error.shortPassword"));
+      return;
+    }
+    // Consent applies to email sign-up only. Social sign-in has its own flow.
+    if (mode === "signup" && !termsAgreed) {
+      toast.error(t("auth.error.terms"));
+      return;
+    }
+    if (mode === "signup" && !agreed) {
+      toast.error(t("auth.error.consent"));
       return;
     }
     setLoading(true);
@@ -211,7 +222,46 @@ function LoginForm() {
             />
           </label>
 
-          <Button type="submit" disabled={busy}>
+          {mode === "signup" ? (
+            <>
+              <label className="flex items-start gap-2 rounded-lg border border-border bg-black/[0.02] p-3 text-sm leading-6 text-muted">
+                <input
+                  type="checkbox"
+                  required
+                  checked={termsAgreed}
+                  onChange={(event) => setTermsAgreed(event.target.checked)}
+                  disabled={busy}
+                  className="mt-1 size-4 shrink-0 accent-[color:var(--primary)]"
+                />
+                <span>
+                  <Link href="/terms" target="_blank" className="font-medium text-primary underline underline-offset-2">
+                    {t("auth.terms.label")}
+                  </Link>{" "}
+                  {t("auth.consent.required")}
+                </span>
+              </label>
+              <label className="flex items-start gap-2 rounded-lg border border-border bg-black/[0.02] p-3 text-sm leading-6 text-muted">
+                <input
+                  type="checkbox"
+                  required
+                  checked={agreed}
+                  onChange={(event) => setAgreed(event.target.checked)}
+                  disabled={busy}
+                  className="mt-1 size-4 shrink-0 accent-[color:var(--primary)]"
+                />
+                <span>
+                  <span className="text-foreground">{t("auth.consent.label")}</span> {t("auth.consent.required")}
+                  <br />
+                  {t("auth.consent.body")}{" "}
+                  <Link href="/privacy" target="_blank" className="font-medium text-primary underline underline-offset-2">
+                    {t("common.privacy")}
+                  </Link>
+                </span>
+              </label>
+            </>
+          ) : null}
+
+          <Button type="submit" disabled={busy || (mode === "signup" && (!termsAgreed || !agreed))}>
             {loading ? t("auth.submitting") : mode === "signin" ? t("auth.signin.title") : t("auth.signup.submit")}
           </Button>
         </form>
