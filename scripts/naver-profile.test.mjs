@@ -63,3 +63,18 @@ test("never sends other providers' tokens to NAVER and does not update guests or
     { ...user, identities: [{ provider: "email" }] }
   ]) await syncNaverDisplayName(supabase, other, "test-token", unexpected);
 });
+
+test("reports safe failure codes so absent consent, mismatched identity and persistence failures are distinguishable", async () => {
+  const supabase = { auth: { updateUser: async () => ({ error: null }) } };
+  const fetcher = async () => Response.json(profile({ nickname: "별명" }));
+  assert.equal(await syncNaverDisplayName(supabase, user, "test-token", fetcher), "synced");
+  assert.equal(await syncNaverDisplayName(supabase, user, null, fetcher), "missing-token");
+  assert.equal(await syncNaverDisplayName(supabase, {
+    ...user, identities: [{ provider: "custom:naver", identity_data: {} }]
+  }, "test-token", fetcher), "missing-subject");
+  assert.equal(await syncNaverDisplayName(supabase, user, "test-token", async () => Response.json(profile())), "name-not-provided");
+  assert.equal(await syncNaverDisplayName(supabase, user, "test-token", async () => Response.json(profile({ id: "other-subject", nickname: "별명" }))), "subject-mismatch");
+  assert.equal(await syncNaverDisplayName(supabase, user, "test-token", async () => new Response(null, { status: 403 })), "request-failed");
+  assert.equal(await syncNaverDisplayName(supabase, user, "test-token", async () => Response.json({ resultcode: "024" })), "invalid-response");
+  assert.equal(await syncNaverDisplayName({ auth: { updateUser: async () => ({ error: { message: "private diagnostic details" } }) } }, user, "test-token", fetcher), "save-failed");
+});

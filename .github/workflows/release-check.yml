@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Check NAVER authentication boundary
-        run: node --experimental-strip-types --test scripts/naver-auth.test.mjs
+        run: node --experimental-strip-types --test scripts/naver-auth.test.mjs scripts/naver-profile.test.mjs
 
       - name: Check Excel budget export
         run: node --experimental-strip-types --test scripts/excel-budget-export.test.mjs

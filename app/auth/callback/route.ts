@@ -30,7 +30,10 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       if (data.user) {
-        await syncNaverDisplayName(supabase, data.user, data.session?.provider_token).catch(() => {});
+        const status = await syncNaverDisplayName(supabase, data.user, data.session?.provider_token)
+          .catch(() => "unexpected-error");
+        // Fixed status codes only: never log names, subjects or OAuth tokens.
+        if (status !== "skipped") console.info("[naver-profile]", status);
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
