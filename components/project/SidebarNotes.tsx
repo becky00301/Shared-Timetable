@@ -3,16 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import {
   closestCenter,
+  defaultDropAnimationSideEffects,
   DndContext,
   DragOverlay,
+  KeyboardSensor,
   MouseSensor,
   TouchSensor,
-  useDraggable,
-  useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent
 } from "@dnd-kit/core";
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,7 +41,8 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
   const activeNote = notes.find((note) => note.id === activeId);
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   async function submit(event: React.FormEvent) {
@@ -114,43 +117,50 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
           onDragCancel={() => setActiveId(null)}
           onDragEnd={finishDrag}
         >
-          <div className="flex flex-col gap-2" aria-busy={reordering}>
-            {notes.map((note, index) => (
-              <SidebarNoteRow
-                key={note.id}
-                id={note.id}
-                body={note.body}
-                canEdit={canEdit}
-                busy={reordering}
-                onMove={(direction) => {
-                  const target = notes[index + direction];
-                  if (target) void moveNote(note.id, target.id);
-                }}
-                onSave={async (body) => {
-                  try {
-                    await updateNote(note.id, body);
-                  } catch (error) {
-                    console.error(error);
-                    toast.error(t("notes.saveFailed"));
-                    throw error;
-                  }
-                }}
-                onDelete={() =>
-                  deleteNote(note.id)
-                    .then(() => toast.success(t("notes.deleted")))
-                    .catch((error) => {
+          <SortableContext items={notes.map((note) => note.id)} strategy={verticalListSortingStrategy}>
+            <div className="flex flex-col gap-2" aria-busy={reordering}>
+              {notes.map((note, index) => (
+                <SidebarNoteRow
+                  key={note.id}
+                  id={note.id}
+                  body={note.body}
+                  canEdit={canEdit}
+                  busy={reordering}
+                  onMove={(direction) => {
+                    const target = notes[index + direction];
+                    if (target) void moveNote(note.id, target.id);
+                  }}
+                  onSave={async (body) => {
+                    try {
+                      await updateNote(note.id, body);
+                    } catch (error) {
                       console.error(error);
-                      toast.error(t("notes.deleteFailed"));
-                    })
-                }
-              />
-            ))}
-          </div>
-          <DragOverlay dropAnimation={null}>
+                      toast.error(t("notes.saveFailed"));
+                      throw error;
+                    }
+                  }}
+                  onDelete={() =>
+                    deleteNote(note.id)
+                      .then(() => toast.success(t("notes.deleted")))
+                      .catch((error) => {
+                        console.error(error);
+                        toast.error(t("notes.deleteFailed"));
+                      })
+                  }
+                />
+              ))}
+            </div>
+          </SortableContext>
+          <DragOverlay dropAnimation={{
+            duration: 180,
+            easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+            sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: "0" } } })
+          }}>
             {activeNote ? (
-              <div className="flex gap-1 rounded-lg border border-primary bg-background px-2.5 py-2 shadow-lg">
-                <GripVertical size={14} className="mt-1 shrink-0 text-muted" />
-                <p className="min-w-0 whitespace-pre-wrap break-words text-xs leading-5 text-foreground">{activeNote.body}</p>
+              <div className="flex items-start gap-1 rounded-lg border border-border bg-background px-2.5 py-2 shadow-lg cursor-grabbing">
+                <span className="mt-0.5 shrink-0 py-0.5 text-muted"><GripVertical size={14} /></span>
+                <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-xs leading-5 text-foreground">{activeNote.body}</p>
+                <span className="shrink-0 p-1 invisible" aria-hidden="true"><Trash2 size={13} /></span>
               </div>
             ) : null}
           </DragOverlay>
@@ -189,8 +199,11 @@ function SidebarNoteRow({
   const cancelled = useRef(false);
   const t = useT();
   const disabled = !canEdit || busy || editing;
-  const { attributes, listeners, setNodeRef: setDragRef, setActivatorNodeRef, isDragging } = useDraggable({ id, disabled });
-  const { setNodeRef: setDropRef, isOver, active } = useDroppable({ id, disabled });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging, transform, transition } = useSortable({
+    id,
+    disabled,
+    transition: { duration: 180, easing: "cubic-bezier(0.25, 1, 0.5, 1)" }
+  });
 
   function cancelLongPress() {
     if (longPress.current !== null) clearTimeout(longPress.current);
@@ -233,7 +246,8 @@ function SidebarNoteRow({
 
   return (
     <div
-      ref={(node) => { setDragRef(node); setDropRef(node); }}
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
       onContextMenu={(event) => {
         if (!canEdit || editing || busy) return;
         event.preventDefault();
@@ -242,8 +256,7 @@ function SidebarNoteRow({
       }}
       className={cn(
         "group flex items-start gap-1 rounded-lg border border-border bg-black/[0.02] px-2.5 py-2",
-        isDragging && "opacity-30",
-        isOver && active?.id !== id && "border-primary ring-2 ring-primary/20"
+        isDragging && "opacity-0"
       )}
     >
       {editing && canEdit ? (
@@ -280,9 +293,11 @@ function SidebarNoteRow({
               aria-label={t("notes.reorderHint")}
               title={t("notes.reorderHint")}
               onKeyDown={(event) => {
-                if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                if (!isDragging && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
                   event.preventDefault();
                   onMove(event.key === "ArrowUp" ? -1 : 1);
+                } else {
+                  listeners?.onKeyDown?.(event);
                 }
               }}
               className="mt-0.5 shrink-0 touch-none rounded-sm py-0.5 text-muted cursor-grab active:cursor-grabbing disabled:cursor-default hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
