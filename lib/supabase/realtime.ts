@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const TABLES = ["schedule_items", "project_days", "availability", "project_members"] as const;
+const TABLES = ["schedule_items", "project_days", "availability", "project_members", "project_notes"] as const;
 
 // Kept on its own channel: a database that has not yet run migration 015 has no
 // project_expenses table, and a failed binding takes down every table sharing

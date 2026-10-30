@@ -77,6 +77,7 @@ type ProjectStore = {
   addNote: (projectId: string, body: string) => Promise<void>;
   updateNote: (noteId: string, body: string) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
+  reorderNotes: (projectId: string, noteIds: string[]) => Promise<void>;
   removeDay: (dayId: string) => Promise<void>;
   /** Moves a timetable onto a new set of dates. Dates that survive the change
       keep their id, so their schedules and notes are untouched. */
@@ -330,6 +331,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
             .from("project_notes")
             .select("*")
             .eq("project_id", project.id)
+            .order("sort_order", { ascending: true })
             .order("created_at", { ascending: true }),
           supabase
             .from("project_expenses")
@@ -558,17 +560,17 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (patch.budget_currency !== undefined) payload.budget_currency = patch.budget_currency;
     if (!Object.keys(payload).length) return;
 
+    // Project metadata is owner-only. This RPC lets editors change only the
+    // budget, without giving them permission to change ownership or sharing.
     const { data, error } = await supabase
-      .from("projects")
-      .update(payload)
-      .eq("id", projectId)
-      .select("*")
+      .rpc("update_project_budget", { project_uuid: projectId, budget_patch: payload })
       .single();
     if (error) {
       if (isMissingColumn(error, "budget_")) {
         set({ budgetSchemaMissing: true });
         throw new Error(translate("budget.notMigrated"));
       }
+      if (error.code === "42501") throw new Error(translate("budget.editDenied"));
       throw error;
     }
     const updated = normalizeProject(data as Project);
@@ -667,6 +669,39 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (error) throw error;
     if (!data?.length) throw new Error(translate("error.deleteDenied"));
     set((state) => ({ notes: state.notes.filter((note) => note.id !== noteId) }));
+  },
+
+  reorderNotes: async (projectId, noteIds) => {
+    const supabase = requireClient();
+    const previous = new Map(
+      get().notes.filter((note) => note.project_id === projectId).map((note) => [note.id, note.sort_order])
+    );
+    const positions = new Map(noteIds.map((id, index) => [id, index]));
+    set((state) => ({
+      notes: state.notes.map((note) =>
+        note.project_id === projectId && positions.has(note.id)
+          ? { ...note, sort_order: positions.get(note.id)! }
+          : note
+      )
+    }));
+    const { data, error } = await supabase.rpc("reorder_project_notes", {
+      project_uuid: projectId,
+      note_ids: noteIds
+    });
+    if (error) {
+      // A collaborator may have added/deleted a note while it was being moved.
+      const { data: fresh } = await supabase.from("project_notes").select("*").eq("project_id", projectId);
+      set((state) => ({
+        notes: fresh
+          ? [...state.notes.filter((note) => note.project_id !== projectId), ...(fresh as ProjectNote[])]
+          : state.notes.map((note) => previous.has(note.id) ? { ...note, sort_order: previous.get(note.id)! } : note)
+      }));
+      throw error;
+    }
+    const saved = new Map((data ?? []).map((note) => [note.id, note.sort_order]));
+    set((state) => ({
+      notes: state.notes.map((note) => saved.has(note.id) ? { ...note, sort_order: saved.get(note.id)! } : note)
+    }));
   },
 
   removeDay: async (dayId) => {

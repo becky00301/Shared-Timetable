@@ -618,7 +618,9 @@ export const messages = {
   "notes.adding": { ko: "추가 중...", en: "Adding…" },
   "notes.add": { ko: "메모 추가", en: "Add note" },
   "notes.empty": { ko: "아직 메모가 없어요.", en: "No notes yet." },
-  "notes.editHint": { ko: "클릭해서 수정", en: "Click to edit" },
+  "notes.editHint": { ko: "우클릭 또는 길게 눌러 수정", en: "Right-click or long-press to edit" },
+  "notes.reorderHint": { ko: "드래그해서 순서 변경 · 방향키로 이동", en: "Drag to reorder · Use arrow keys to move" },
+  "notes.reorderFailed": { ko: "메모 순서를 저장하지 못했어요. 다시 시도해 주세요.", en: "Couldn't save the note order. Please try again." },
   "notes.deleteLabel": { ko: "메모 삭제", en: "Delete note" },
   "notes.addFailed": { ko: "메모를 추가하지 못했어요.", en: "Couldn't add the note." },
   "notes.saveFailed": { ko: "메모를 저장하지 못했어요.", en: "Couldn't save the note." },
@@ -654,6 +656,7 @@ export const messages = {
   "budget.expenseDeleted": { ko: "지출을 삭제했어요.", en: "Spending deleted." },
   "budget.addFailed": { ko: "지출을 추가하지 못했어요.", en: "Couldn't add the spending." },
   "budget.saveFailed": { ko: "예산을 저장하지 못했어요.", en: "Couldn't save the budget." },
+  "budget.editDenied": { ko: "예산을 수정할 권한이 없어요. 프로젝트 권한을 확인해 주세요.", en: "You don't have permission to edit this budget. Check your project role." },
   "budget.deleteFailed": { ko: "지출을 삭제하지 못했어요.", en: "Couldn't delete the spending." },
   "budget.invalidAmount": { ko: "금액을 다시 확인해 주세요.", en: "Check the amount." },
   "budget.amountNotSaved": {

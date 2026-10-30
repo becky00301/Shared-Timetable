@@ -105,6 +105,19 @@ create table if not exists public.project_notes (
 
 create index if not exists project_notes_project_idx on public.project_notes(project_id, created_at);
 
+-- Preserve the existing creation order when adding persistent note positions.
+alter table public.project_notes add column if not exists sort_order integer;
+with positions as (
+  select id, (row_number() over (partition by project_id order by created_at, id) - 1)::integer as position
+  from public.project_notes
+)
+update public.project_notes n set sort_order = positions.position
+from positions where positions.id = n.id and n.sort_order is null;
+alter table public.project_notes alter column sort_order set default 0;
+alter table public.project_notes alter column sort_order set not null;
+create index if not exists project_notes_order_idx on public.project_notes(project_id, sort_order, created_at, id);
+
+
 -- Spending that never had a schedule of its own: a taxi fare, a shared
 -- deposit, the drinks nobody put on the timetable.
 create table if not exists public.project_expenses (
@@ -275,6 +288,12 @@ begin
   end if;
   if not exists (
     select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_notes'
+  ) then
+    alter publication supabase_realtime add table public.project_notes;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_expenses'
   ) then
     alter publication supabase_realtime add table public.project_expenses;
@@ -359,6 +378,7 @@ revoke execute on function public.prepare_account_deletion(uuid)
 from public, anon, authenticated;
 
 grant execute on function public.prepare_account_deletion(uuid) to service_role;
+
 alter table public.users enable row level security;
 alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
@@ -584,6 +604,67 @@ to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
 
+-- Serialize appends and reorders within a project so new notes stay at the end.
+create or replace function public.append_project_note_order()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  perform pg_advisory_xact_lock(hashtextextended(new.project_id::text, 0));
+  select coalesce(max(sort_order), -1) + 1 into new.sort_order
+  from public.project_notes where project_id = new.project_id;
+  return new;
+end;
+$$;
+
+revoke execute on function public.append_project_note_order() from public, anon, authenticated;
+
+drop trigger if exists project_notes_append_order on public.project_notes;
+create trigger project_notes_append_order
+before insert on public.project_notes
+for each row execute function public.append_project_note_order();
+
+create or replace function public.reorder_project_notes(project_uuid uuid, note_ids uuid[])
+returns setof public.project_notes
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or not public.can_edit_project(project_uuid) then
+    raise exception 'Editing permission required' using errcode = '42501';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(project_uuid::text, 0));
+
+  -- Reject stale, duplicate and cross-project lists before updating any row.
+  if note_ids is null
+    or cardinality(note_ids) <> (select count(*) from public.project_notes where project_id = project_uuid)
+    or cardinality(note_ids) <> (select count(distinct id) from unnest(note_ids) as ids(id))
+    or exists (
+      select 1 from unnest(note_ids) as ids(id)
+      where not exists (
+        select 1 from public.project_notes n where n.id = ids.id and n.project_id = project_uuid
+      )
+    ) then
+    raise exception 'Note list changed; reload before reordering' using errcode = '22023';
+  end if;
+
+  update public.project_notes n
+  set sort_order = (ordered.position - 1)::integer
+  from unnest(note_ids) with ordinality as ordered(id, position)
+  where n.id = ordered.id and n.project_id = project_uuid;
+
+  return query select * from public.project_notes
+  where project_id = project_uuid order by sort_order, created_at, id;
+end;
+$$;
+
+revoke execute on function public.reorder_project_notes(uuid, uuid[]) from public, anon;
+grant execute on function public.reorder_project_notes(uuid, uuid[]) to authenticated;
+
 create or replace function public.join_project_by_invite(token text)
 returns uuid
 language plpgsql
@@ -791,3 +872,65 @@ $$;
 
 revoke execute on function public.claim_guest_project(text) from public, anon;
 grant execute on function public.claim_guest_project(text) to authenticated;
+
+-- The project row itself stays owner-only. Editors get a narrowly scoped
+-- budget operation; its privileged implementation is outside exposed schemas.
+create schema if not exists budget_private;
+revoke all on schema budget_private from public, anon, authenticated;
+grant usage on schema budget_private to authenticated;
+
+create or replace function budget_private.update_project_budget(project_uuid uuid, budget_patch jsonb)
+returns setof public.projects
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not coalesce(public.can_edit_project(project_uuid), false) then
+    raise exception 'Editing permission required' using errcode = '42501';
+  end if;
+
+  if budget_patch is null or jsonb_typeof(budget_patch) <> 'object' then
+    raise exception 'Budget patch must be an object' using errcode = '22023';
+  end if;
+  if exists (
+    select 1 from jsonb_object_keys(budget_patch) as fields(name)
+    where name not in ('budget_total', 'budget_currency')
+  ) then
+    raise exception 'Only budget fields may be changed' using errcode = '22023';
+  end if;
+  if budget_patch ? 'budget_total'
+    and jsonb_typeof(budget_patch->'budget_total') not in ('number', 'null') then
+    raise exception 'Budget total must be a number or null' using errcode = '22023';
+  end if;
+  if budget_patch ? 'budget_currency'
+    and jsonb_typeof(budget_patch->'budget_currency') <> 'string' then
+    raise exception 'Budget currency must be a string' using errcode = '22023';
+  end if;
+
+  return query
+  update public.projects p
+  set budget_total = case when budget_patch ? 'budget_total'
+        then (budget_patch->>'budget_total')::numeric else p.budget_total end,
+      budget_currency = case when budget_patch ? 'budget_currency'
+        then budget_patch->>'budget_currency' else p.budget_currency end
+  where p.id = project_uuid
+  returning p.*;
+end;
+$$;
+
+revoke all on function budget_private.update_project_budget(uuid, jsonb) from public, anon, authenticated;
+grant execute on function budget_private.update_project_budget(uuid, jsonb) to authenticated;
+
+-- PostgREST exposes this invoker wrapper, not the privileged implementation.
+create or replace function public.update_project_budget(project_uuid uuid, budget_patch jsonb)
+returns setof public.projects
+language sql
+security invoker
+set search_path = ''
+as $$
+  select * from budget_private.update_project_budget(project_uuid, budget_patch);
+$$;
+
+revoke all on function public.update_project_budget(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.update_project_budget(uuid, jsonb) to authenticated;

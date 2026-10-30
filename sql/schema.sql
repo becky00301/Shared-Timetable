@@ -105,6 +105,19 @@ create table if not exists public.project_notes (
 
 create index if not exists project_notes_project_idx on public.project_notes(project_id, created_at);
 
+-- Preserve the existing creation order when adding persistent note positions.
+alter table public.project_notes add column if not exists sort_order integer;
+with positions as (
+  select id, (row_number() over (partition by project_id order by created_at, id) - 1)::integer as position
+  from public.project_notes
+)
+update public.project_notes n set sort_order = positions.position
+from positions where positions.id = n.id and n.sort_order is null;
+alter table public.project_notes alter column sort_order set default 0;
+alter table public.project_notes alter column sort_order set not null;
+create index if not exists project_notes_order_idx on public.project_notes(project_id, sort_order, created_at, id);
+
+
 -- Spending that never had a schedule of its own: a taxi fare, a shared
 -- deposit, the drinks nobody put on the timetable.
 create table if not exists public.project_expenses (
@@ -272,6 +285,12 @@ begin
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_members'
   ) then
     alter publication supabase_realtime add table public.project_members;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_notes'
+  ) then
+    alter publication supabase_realtime add table public.project_notes;
   end if;
   if not exists (
     select 1 from pg_publication_tables

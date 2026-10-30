@@ -105,19 +105,23 @@ Guest mode is a trial, not a full account: signing in immediately creates **one*
 
 A guest gets a real `auth.users` row with `is_anonymous: true` and the `authenticated` role, so every existing RLS policy applies to them unchanged. The session lives only in that browser's storage — there is no email to recover it with, so the timetable warns guests to save its link.
 
-Incremental migrations live in `sql/migrations/` and are already folded into `sql/schema.sql`; run them on an existing database:
+Incremental migrations live in `sql/migrations/` and are already folded into `sql/schema.sql` and `sql/policies.sql`; run them on an existing database:
 
 - `001_project_kind.sql` — weekly vs date-range timetables
 - `009_anonymous_guest_name.sql` — display name for guests (they have no email)
 - `011_remove_google_and_legacy.sql` — remove retired Google sync data and legacy anonymous timetable storage
 - `012_read_only_embeds.sql` — add separate read-only embed tokens
 - `015_budget.sql` — per-schedule amounts, a project budget, and free-standing expenses
+- `20261030034929_note_order.sql` — persistent note ordering and live note updates
+- `20261030075714_editor_budget.sql` — allow owners and editors to save budget fields without granting project management access
 
 For an existing database that previously enabled Google Calendar sync or the legacy standalone timetable, run `sql/migrations/011_remove_google_and_legacy.sql`. This permanently deletes the retired integration tokens and legacy timetable data.
 
 ## Deployment
 
 The app is ready for a standard Vercel Next.js deployment.
+
+Production is the Vercel project **`shared-timetable`**, serving `https://www.planner-together.com` and `https://planner-together.com`. Check this project name in `.vercel/project.json` before deploying; the separate `planner-together` Vercel project does not serve these domains. Verify the deployed JavaScript and `/api/health` on the custom domain after deployment.
 
 1. Set the project root to this directory.
 2. Use the default install/build settings:

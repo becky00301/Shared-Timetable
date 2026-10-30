@@ -109,6 +109,7 @@ export type Database = {
           project_id: string;
           creator_id: string | null;
           body: string;
+          sort_order: number;
           created_at: string;
           updated_at: string;
         };
@@ -117,6 +118,7 @@ export type Database = {
           project_id: string;
           creator_id?: string | null;
           body: string;
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -232,6 +234,14 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      update_project_budget: {
+        Args: { project_uuid: string; budget_patch: Json };
+        Returns: Database["public"]["Tables"]["projects"]["Row"][];
+      };
+      reorder_project_notes: {
+        Args: { project_uuid: string; note_ids: string[] };
+        Returns: Database["public"]["Tables"]["project_notes"]["Row"][];
+      };
       join_project_by_invite: {
         Args: { token: string };
         Returns: string;

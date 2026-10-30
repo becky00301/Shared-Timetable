@@ -51,6 +51,7 @@ export type ProjectNote = {
   project_id: string;
   creator_id: string | null;
   body: string;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 };
