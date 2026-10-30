@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fetchNaverDisplayName, naverProfileDisplayName, syncNaverDisplayName } from "../lib/auth/naver-profile.ts";
+import { fetchNaverDisplayName, naverProfileDisplayName, naverProfilePermissions, syncNaverDisplayName } from "../lib/auth/naver-profile.ts";
 
 const subject = "naver-verified-subject";
 const profile = (fields = {}) => ({ resultcode: "00", response: { id: subject, ...fields } });
@@ -10,6 +10,26 @@ const user = {
   identities: [{ provider: "custom:naver", identity_data: { sub: subject } }],
   user_metadata: { name: "NAVER abcdef" }
 };
+
+test("permission diagnostics keep only name/nickname flags and discard the echoed token", async () => {
+  const result = await naverProfilePermissions("private-test-token", async (url, options) => {
+    assert.equal(url, "https://openapi.naver.com/v1/nid/verify?info=true");
+    assert.equal(options.headers.Authorization, "Bearer private-test-token");
+    assert.equal(options.redirect, "error");
+    return Response.json({ resultcode: "00", response: {
+      token: "private-test-token", allowed_profile: "id, name, nickname, email", expire_date: "private"
+    } });
+  });
+  assert.deepEqual(result, { status: "checked", name: true, nickname: true });
+  assert.equal(JSON.stringify(result).includes("private"), false);
+  assert.deepEqual(await naverProfilePermissions("test", async () => Response.json({
+    resultcode: "00", response: { allowed_profile: "id" }
+  })), { status: "checked", name: false, nickname: false });
+  for (const value of [null, {}, { resultcode: "00", response: { allowed_profile: [] } }]) {
+    assert.deepEqual(await naverProfilePermissions("test", async () => Response.json(value)), { status: "unavailable" });
+  }
+  assert.deepEqual(await naverProfilePermissions("test", async () => { throw new Error("private"); }), { status: "request-failed" });
+});
 
 test("prefers nickname, falls back to name, and requires a matching verified subject", () => {
   assert.equal(naverProfileDisplayName(profile({ nickname: " 별명 ", name: "이름" }), subject), "별명");

@@ -10,6 +10,28 @@ function displayName(value: unknown): string | null {
   return name && name.length <= 100 && !/\p{Cc}/u.test(name) ? name : null;
 }
 
+/** Return permission flags only. NAVER's verification response can echo the
+ * access token, so its raw response must never be returned or logged. */
+export async function naverProfilePermissions(token: string, fetchProfile: typeof fetch = fetch) {
+  try {
+    const response = await fetchProfile("https://openapi.naver.com/v1/nid/verify?info=true", {
+      headers: { Authorization: `Bearer ${token}` }, cache: "no-store", redirect: "error",
+      signal: AbortSignal.timeout(3000)
+    });
+    if (!response.ok) return { status: "request-failed" } as const;
+    const payload: unknown = await response.json();
+    if (!payload || typeof payload !== "object" || !("resultcode" in payload) || payload.resultcode !== "00" ||
+        !("response" in payload) || !payload.response || typeof payload.response !== "object" ||
+        !("allowed_profile" in payload.response) || typeof payload.response.allowed_profile !== "string") {
+      return { status: "unavailable" } as const;
+    }
+    const permissions = payload.response.allowed_profile.split(",").map((item) => item.trim());
+    return { status: "checked", name: permissions.includes("name"), nickname: permissions.includes("nickname") } as const;
+  } catch {
+    return { status: "request-failed" } as const;
+  }
+}
+
 /** Profile data is used for display only; identity and access use the verified
  * OIDC subject. Never accept a profile belonging to a different subject. */
 export function naverProfileDisplayName(payload: unknown, subject: string): string | null {
