@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Button } from "@/components/ui/button";
 import { GoogleMark } from "@/components/ui/google-mark";
+import { NaverMark } from "@/components/ui/naver-mark";
 import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -20,6 +21,8 @@ import { useProjectStore } from "@/stores/project-store";
 // enabled in Supabase. Until both are done the button would fail on click, so
 // it only appears once the deployment says the provider is live.
 const GOOGLE_AUTH_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_AUTH === "1";
+const NAVER_AUTH_ENABLED = process.env.NEXT_PUBLIC_NAVER_AUTH === "1";
+const SOCIAL_AUTH_ENABLED = GOOGLE_AUTH_ENABLED || NAVER_AUTH_ENABLED;
 
 export default function LoginPage() {
   return (
@@ -46,7 +49,8 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<"google" | "custom:naver" | null>(null);
+  const busy = loading || socialLoading !== null;
   const [agreed, setAgreed] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
 
@@ -54,10 +58,13 @@ function LoginForm() {
   // blank screen wondering whether it worked.
   const authError = searchParams.get("error");
   useEffect(() => {
-    if (authError) toast.error(t("auth.error.generic"));
+    if (authError) {
+      toast.error(t(authError === "provider_email_needs_verification" ? "auth.error.verifyProviderEmail" : "auth.error.generic"));
+    }
   }, [authError, t]);
 
-  async function signInWithGoogle() {
+  async function signInWithSocial(provider: "google" | "custom:naver") {
+    if (busy) return;
     if (mode === "signup" && !termsAgreed) {
       toast.error(t("auth.error.terms"));
       return;
@@ -70,14 +77,14 @@ function LoginForm() {
       toast.info(t("auth.error.notConfigured"));
       return;
     }
-    setGoogleLoading(true);
+    setSocialLoading(provider);
     try {
-      // The browser leaves the app for Google, so where to land afterwards has
-      // to travel with the request. A pending claim rides along as a query on
+      // The browser leaves the app, so the destination travels with the
+      // request. A pending claim rides along as a query on
       // the destination, which the dashboard picks up.
       const destination = claimSlug ? `/dashboard?claim=${encodeURIComponent(claimSlug)}` : next;
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+        provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`
         }
@@ -86,12 +93,13 @@ function LoginForm() {
     } catch (error) {
       console.error(error);
       toast.error(t("auth.error.generic"));
-      setGoogleLoading(false);
+      setSocialLoading(null);
     }
   }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (busy) return;
     if (!supabase) {
       toast.info(t("auth.error.notConfigured"));
       return;
@@ -170,19 +178,34 @@ function LoginForm() {
           {mode === "signin" ? t("auth.signin.subtitle") : t("auth.signup.subtitle")}
         </p>
 
-        {GOOGLE_AUTH_ENABLED ? (
+        {SOCIAL_AUTH_ENABLED ? (
           <>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-6 w-full"
-              disabled={googleLoading}
-              onClick={signInWithGoogle}
-            >
-              <GoogleMark />
-              {googleLoading ? t("auth.submitting") : t("auth.google")}
-            </Button>
-            <p className="mt-2 text-xs leading-5 text-muted">{t("auth.google.termsNotice")}</p>
+            <div className="mt-6 flex flex-col gap-3">
+              {GOOGLE_AUTH_ENABLED ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={busy}
+                  onClick={() => signInWithSocial("google")}
+                >
+                  <GoogleMark />
+                  {socialLoading === "google" ? t("auth.submitting") : t("auth.google")}
+                </Button>
+              ) : null}
+              {NAVER_AUTH_ENABLED ? (
+                <button
+                  type="button"
+                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-[#03A94D] px-5 text-sm font-medium text-white transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#03A94D] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={busy}
+                  onClick={() => signInWithSocial("custom:naver")}
+                >
+                  <NaverMark />
+                  {socialLoading === "custom:naver" ? t("auth.submitting") : t("auth.naver")}
+                </button>
+              ) : null}
+            </div>
+            <p className="mt-2 text-xs leading-5 text-muted">{t("auth.social.termsNotice")}</p>
 
             <div className="my-5 flex items-center gap-3 text-xs text-muted">
               <span className="h-px flex-1 bg-border" />
@@ -192,7 +215,7 @@ function LoginForm() {
           </>
         ) : null}
 
-        <form className={cn("flex flex-col gap-4", GOOGLE_AUTH_ENABLED || "mt-6")} onSubmit={submit}>
+        <form className={cn("flex flex-col gap-4", SOCIAL_AUTH_ENABLED || "mt-6")} onSubmit={submit}>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
             {t("auth.email")}
             <Input
@@ -255,7 +278,7 @@ function LoginForm() {
             </label>
           ) : null}
 
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={busy}>
             {loading ? t("auth.submitting") : mode === "signin" ? t("auth.signin.title") : t("auth.signup.submit")}
           </Button>
         </form>

@@ -226,9 +226,13 @@ export const messages = {
     en: "I agree to the Terms of Service."
   },
   "auth.error.terms": { ko: "서비스 이용약관에 동의해주세요.", en: "Please agree to the Terms of Service." },
-  "auth.google.termsNotice": {
-    ko: "Google 로그인에도 서비스 이용약관이 적용됩니다.",
-    en: "The Terms of Service also apply to Google sign-in."
+  "auth.social.termsNotice": {
+    ko: "간편 로그인에도 서비스 이용약관이 적용됩니다.",
+    en: "The Terms of Service also apply to social sign-in."
+  },
+  "auth.error.verifyProviderEmail": {
+    ko: "이메일 확인이 필요해요. 받은 편지함의 인증 메일을 확인한 뒤 다시 로그인해 주세요.",
+    en: "Please open the verification email in your inbox, then sign in again."
   },
   "auth.consent.body": {
     ko: "이메일과 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.",
@@ -402,6 +406,7 @@ export const messages = {
   },
 
   "auth.google": { ko: "Google로 계속하기", en: "Continue with Google" },
+  "auth.naver": { ko: "네이버로 로그인", en: "Log in with NAVER" },
   "auth.or": { ko: "또는", en: "or" },
 
   "auth.signupComplete": {

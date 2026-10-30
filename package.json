@@ -17,8 +17,8 @@
   },
   "overrides": {
     "postcss": "^8.5.23",
-    "sharp": "^0.35.3",
-    "dompurify": "^3.4.12"
+    "sharp": "^0.35.5",
+    "dompurify": "^3.4.17"
   },
   "dependencies": {
     "@appica/ui-react": "^1.0.0",
@@ -42,7 +42,7 @@
     "lucide-react": "^0.468.0",
     "motion": "^14.4.0",
     "nanoid": "^5.1.5",
-    "next": "^15.5.22",
+    "next": "^15.5.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",

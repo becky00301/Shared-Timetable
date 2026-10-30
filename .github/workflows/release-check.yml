@@ -24,6 +24,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Check NAVER authentication boundary
+        run: node --experimental-strip-types --test scripts/naver-auth.test.mjs
+
       - name: Typecheck, lint, and build
         run: npm run check
 

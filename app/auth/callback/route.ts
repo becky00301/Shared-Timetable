@@ -16,6 +16,14 @@ export async function GET(request: Request) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return fail("supabase-unconfigured");
 
+  // OAuth providers can require an additional email confirmation. Preserve
+  // that stable error code so the login screen can explain the next step.
+  if (searchParams.get("error")) {
+    return fail(searchParams.get("error_code") === "provider_email_needs_verification"
+      ? "provider_email_needs_verification"
+      : "oauth-failed");
+  }
+
   // PKCE code flow (default for @supabase/ssr)
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
