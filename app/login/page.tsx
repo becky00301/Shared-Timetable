@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
-import { cn } from "@/lib/utils/cn";
 import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { getSafeNextPath } from "@/lib/utils/navigation";
 import { useProjectStore } from "@/stores/project-store";
@@ -21,8 +20,6 @@ import { useProjectStore } from "@/stores/project-store";
 // enabled in Supabase. Until both are done the button would fail on click, so
 // it only appears once the deployment says the provider is live.
 const GOOGLE_AUTH_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_AUTH === "1";
-const NAVER_AUTH_ENABLED = process.env.NEXT_PUBLIC_NAVER_AUTH === "1";
-const SOCIAL_AUTH_ENABLED = GOOGLE_AUTH_ENABLED || NAVER_AUTH_ENABLED;
 
 export default function LoginPage() {
   return (
@@ -178,44 +175,38 @@ function LoginForm() {
           {mode === "signin" ? t("auth.signin.subtitle") : t("auth.signup.subtitle")}
         </p>
 
-        {SOCIAL_AUTH_ENABLED ? (
-          <>
-            <div className="mt-6 flex flex-col gap-3">
-              {GOOGLE_AUTH_ENABLED ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  disabled={busy}
-                  onClick={() => signInWithSocial("google")}
-                >
-                  <GoogleMark />
-                  {socialLoading === "google" ? t("auth.submitting") : t("auth.google")}
-                </Button>
-              ) : null}
-              {NAVER_AUTH_ENABLED ? (
-                <button
-                  type="button"
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-[#03A94D] px-5 text-sm font-medium text-white transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#03A94D] disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={busy}
-                  onClick={() => signInWithSocial("custom:naver")}
-                >
-                  <NaverMark />
-                  {socialLoading === "custom:naver" ? t("auth.submitting") : t("auth.naver")}
-                </button>
-              ) : null}
-            </div>
-            <p className="mt-2 text-xs leading-5 text-muted">{t("auth.social.termsNotice")}</p>
+        <div className="mt-6 flex flex-col gap-3">
+          {GOOGLE_AUTH_ENABLED ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={busy}
+              onClick={() => signInWithSocial("google")}
+            >
+              <GoogleMark />
+              {socialLoading === "google" ? t("auth.submitting") : t("auth.google")}
+            </Button>
+          ) : null}
+          <button
+            type="button"
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-[#03A94D] px-5 text-sm font-medium text-white transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#03A94D] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={busy}
+            onClick={() => signInWithSocial("custom:naver")}
+          >
+            <NaverMark />
+            {socialLoading === "custom:naver" ? t("auth.submitting") : t("auth.naver")}
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-muted">{t("auth.social.termsNotice")}</p>
 
-            <div className="my-5 flex items-center gap-3 text-xs text-muted">
-              <span className="h-px flex-1 bg-border" />
-              {t("auth.or")}
-              <span className="h-px flex-1 bg-border" />
-            </div>
-          </>
-        ) : null}
+        <div className="my-5 flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-border" />
+          {t("auth.or")}
+          <span className="h-px flex-1 bg-border" />
+        </div>
 
-        <form className={cn("flex flex-col gap-4", SOCIAL_AUTH_ENABLED || "mt-6")} onSubmit={submit}>
+        <form className="flex flex-col gap-4" onSubmit={submit}>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
             {t("auth.email")}
             <Input

@@ -50,14 +50,11 @@ Supabase에서 **Create and enable provider**로 저장합니다.
 Supabase **URL Configuration → Redirect URLs**에는 앱 복귀 주소인
 `https://www.planner-together.com/auth/callback`을 허용합니다. 기존 Google 설정은 유지합니다.
 
-## 3. 버튼 활성화와 테스트
+## 3. 배포와 테스트
 
-Vercel의 실제 도메인을 서비스하는 프로젝트 → **Environment Variables**:
-
-- Key: `NEXT_PUBLIC_NAVER_AUTH`
-- Value: `1`
-- Type: `Config`
-- 테스트에는 Preview, 운영 공개에는 Production을 선택한 뒤 재배포합니다.
+네이버 로그인 버튼은 기본으로 표시됩니다. 별도 Vercel 환경변수로 켤 필요가 없습니다.
+이전 안내의 `NEXT_PUBLIC_NAVER_AUTH`는 더 이상 사용하지 않으며, 기존 값은 버튼 표시에 영향을 주지 않습니다.
+Supabase의 `custom:naver` 제공자가 활성화되어 있고 **Allow users without email**이 켜져 있어야 합니다.
 
 확인 항목:
 
