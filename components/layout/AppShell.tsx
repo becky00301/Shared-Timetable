@@ -14,16 +14,18 @@ import type { User } from "@supabase/supabase-js";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const t = useT();
-  const [user, setUser] = useState<{ email: string | null; isGuest: boolean; isNaver: boolean; id: string } | null>(null);
+  const [user, setUser] = useState<{ email: string | null; name: string | null; isGuest: boolean; isNaver: boolean; id: string } | null>(null);
   const supabase = createSupabaseBrowserClient();
   const signedIn = Boolean(user);
   const label = user?.isGuest ? t("guest.badge") : user?.email ||
-    (user?.isNaver ? naverAccountLabel(user.id) : t("account.page.title"));
+    (user?.isNaver ? user.name || naverAccountLabel(user.id) : t("account.page.title"));
 
   useEffect(() => {
     if (!supabase) return;
     const read = (u: User | null) => u ? {
-      email: u.email ?? null, isGuest: Boolean(u.is_anonymous),
+      email: u.email ?? null,
+      name: typeof u.user_metadata.name === "string" ? u.user_metadata.name.trim() : null,
+      isGuest: Boolean(u.is_anonymous),
       isNaver: isEmailLessNaverAccount(u), id: u.id
     } : null;
     supabase.auth.getUser().then(({ data }) => setUser(read(data.user)));

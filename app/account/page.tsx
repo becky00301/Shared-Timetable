@@ -63,7 +63,7 @@ export default function AccountPage() {
             </p>
           ) : null}
           {isNaver && user ? (
-            <p className="mt-5 text-sm text-muted">{naverAccountLabel(user.id)}</p>
+            <p className="mt-5 text-sm text-muted">{typeof user.user_metadata.name === "string" && user.user_metadata.name.trim() || naverAccountLabel(user.id)}</p>
           ) : null}
         </header>
 
