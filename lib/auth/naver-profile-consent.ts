@@ -7,7 +7,7 @@ export function naverProfileConsentRequest(origin: string) {
     provider: "custom:naver" as const,
     options: {
       redirectTo: callback.href,
-      queryParams: { auth_type: "reprompt" }
+      queryParams: { prompt: "consent" }
     }
   };
 }

@@ -17,7 +17,8 @@ test("profile import explicitly requests NAVER re-consent and returns to the acc
   assert.equal(error, null);
   const authorize = new URL(data.url);
   assert.equal(authorize.searchParams.get("provider"), "custom:naver");
-  assert.equal(authorize.searchParams.get("auth_type"), "reprompt");
+  assert.equal(authorize.searchParams.get("prompt"), "consent");
+  assert.equal(authorize.searchParams.has("auth_type"), false);
   assert.equal(authorize.searchParams.get("code_challenge_method"), "s256");
   const callback = new URL(authorize.searchParams.get("redirect_to"));
   assert.equal(callback.origin, "https://www.planner-together.com");
