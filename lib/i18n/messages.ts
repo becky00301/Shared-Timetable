@@ -277,10 +277,14 @@ export const messages = {
     ko: "네이버 로그인 계정입니다. 비밀번호와 로그인 보안은 네이버 계정에서 관리할 수 있어요. 이메일 등록 없이 시간표를 사용할 수 있습니다.",
     en: "You sign in with NAVER. Manage your password and sign-in security in your NAVER account. You can use timetables without registering an email address."
   },
-  "account.naver.reauthenticate": { ko: "네이버로 다시 인증", en: "Verify with NAVER again" },
-  "account.naver.reauthenticateBody": {
-    ko: "안전한 회원 탈퇴를 위해 네이버로 다시 인증한 후 진행해 주세요.",
-    en: "Verify with NAVER again before closing your account."
+  "account.google.security": {
+    ko: "Google 로그인 계정입니다. 비밀번호와 로그인 보안은 Google 계정에서 관리할 수 있어요.",
+    en: "You sign in with Google. Manage your password and sign-in security in your Google account."
+  },
+  "account.social.reauthenticate": { ko: "{provider}로 다시 인증", en: "Verify with {provider} again" },
+  "account.social.reauthenticateBody": {
+    ko: "안전한 회원 탈퇴를 위해 {provider}로 다시 인증한 후 진행해 주세요.",
+    en: "Verify with {provider} again before closing your account."
   },
   "account.menu.password": { ko: "비밀번호 변경", en: "Change password" },
   "account.menu.security": { ko: "로그인 정보", en: "Sign-in information" },

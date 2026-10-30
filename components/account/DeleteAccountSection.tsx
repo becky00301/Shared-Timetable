@@ -7,13 +7,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { SocialProvider } from "@/lib/auth/social-account";
 
 type DeletionSummary = {
   willDelete: number;
   willTransfer: number;
 };
 
-export function DeleteAccountSection({ naverAccount = false }: { naverAccount?: boolean }) {
+export function DeleteAccountSection({ socialProvider = null }: { socialProvider?: SocialProvider | null }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
@@ -26,18 +27,19 @@ export function DeleteAccountSection({ naverAccount = false }: { naverAccount?: 
   const [reauthenticationRequired, setReauthenticationRequired] = useState(false);
 
   const confirmWord = t("account.confirm.word");
-  const canDelete = typed.trim() === confirmWord && (naverAccount || password.length > 0) && !working && !reauthenticationRequired;
+  const canDelete = typed.trim() === confirmWord && (socialProvider || password.length > 0) && !working && !reauthenticationRequired;
+  const providerName = socialProvider === "google" ? "Google" : "NAVER";
 
   async function reauthenticate() {
     const supabase = createSupabaseBrowserClient();
-    if (!supabase) return;
+    if (!supabase || !socialProvider) return;
     setWorking(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "custom:naver",
+        provider: socialProvider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/account?section=delete")}`,
-          queryParams: { auth_type: "reauthenticate" }
+          queryParams: socialProvider === "google" ? { prompt: "select_account" } : { auth_type: "reauthenticate" }
         }
       });
       if (error) throw error;
@@ -154,7 +156,7 @@ export function DeleteAccountSection({ naverAccount = false }: { naverAccount?: 
             ) : null}
           </div>
 
-          {!naverAccount ? <label className="mt-4 flex flex-col gap-1.5 text-sm text-muted">
+          {!socialProvider ? <label className="mt-4 flex flex-col gap-1.5 text-sm text-muted">
             {t("account.password.label")}
             <Input
               type="password"
@@ -178,9 +180,9 @@ export function DeleteAccountSection({ naverAccount = false }: { naverAccount?: 
 
           {reauthenticationRequired ? (
             <div className="mt-4 space-y-3">
-              <p className="text-sm leading-6 text-muted">{t("account.naver.reauthenticateBody")}</p>
+              <p className="text-sm leading-6 text-muted">{t("account.social.reauthenticateBody", { provider: providerName })}</p>
               <Button type="button" variant="outline" disabled={working} onClick={reauthenticate}>
-                {t("account.naver.reauthenticate")}
+                {t("account.social.reauthenticate", { provider: providerName })}
               </Button>
             </div>
           ) : null}

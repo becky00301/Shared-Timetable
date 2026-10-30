@@ -5,6 +5,18 @@ type AccountIdentity = {
   identities?: { provider: string }[];
 };
 
+export type SocialProvider = "google" | "custom:naver";
+
+/** Classify the verified identities, never the email domain or editable user
+ * metadata. Linked email accounts keep their password-management controls. */
+export function getSocialOnlyProvider(user: AccountIdentity | null | undefined): SocialProvider | null {
+  if (!user || user.is_anonymous || !user.identities?.length) return null;
+  if (user.identities.some((identity) => identity.provider === "email")) return null;
+  if (user.identities.some((identity) => identity.provider === "google")) return "google";
+  if (user.identities.some((identity) => identity.provider === "custom:naver")) return "custom:naver";
+  return null;
+}
+
 export function isEmailLessNaverAccount(user: AccountIdentity | null | undefined) {
   return Boolean(user && !user.is_anonymous && !user.email &&
     user.identities?.some((identity) => identity.provider === "custom:naver"));

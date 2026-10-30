@@ -1,9 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createServerClient } from "@supabase/ssr";
-import { hasRecentOAuthLogin, isEmailLessNaverAccount, naverAccountLabel } from "../lib/auth/social-account.ts";
+import { getSocialOnlyProvider, hasRecentOAuthLogin, isEmailLessNaverAccount, naverAccountLabel } from "../lib/auth/social-account.ts";
 
 const naver = { id: "abcdef12-1234", email: "", identities: [{ provider: "custom:naver" }], is_anonymous: false };
+
+test("only OAuth identities suppress password management; Gmail email signups and linked email identities retain it", () => {
+  const google = { ...naver, email: "member@gmail.com", identities: [{ provider: "google" }] };
+  assert.equal(getSocialOnlyProvider(google), "google");
+  assert.equal(getSocialOnlyProvider({ ...google, email: "member@company.example" }), "google");
+  assert.equal(getSocialOnlyProvider({ ...google, identities: [{ provider: "email" }] }), null);
+  assert.equal(getSocialOnlyProvider({ ...google, identities: [{ provider: "email" }, { provider: "google" }] }), null);
+  assert.equal(getSocialOnlyProvider({ ...google, identities: [], user_metadata: { provider: "google" } }), null);
+  assert.equal(getSocialOnlyProvider({ ...google, identities: undefined }), null);
+  assert.equal(getSocialOnlyProvider({ ...google, is_anonymous: true }), null);
+  assert.equal(getSocialOnlyProvider(naver), "custom:naver");
+  assert.equal(getSocialOnlyProvider({ ...naver, identities: [{ provider: "custom:naver" }, { provider: "email" }] }), null);
+});
 
 test("email-less NAVER accounts are members; guests and unrelated accounts are not eligible", () => {
   assert.equal(isEmailLessNaverAccount(naver), true);

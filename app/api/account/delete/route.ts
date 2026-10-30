@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { hasRecentOAuthLogin, isEmailLessNaverAccount } from "@/lib/auth/social-account";
+import { getSocialOnlyProvider, hasRecentOAuthLogin } from "@/lib/auth/social-account";
 
 const DELETE_CONFIRMATION = "DELETE";
 
@@ -71,8 +71,8 @@ export async function POST(request: Request) {
   if (!user || user.is_anonymous) {
     return NextResponse.json({ error: "not-signed-in" }, { status: 401 });
   }
-  const naverAccount = isEmailLessNaverAccount(user);
-  if (!naverAccount && !user.email) {
+  const socialProvider = getSocialOnlyProvider(user);
+  if (!socialProvider && !user.email) {
     return NextResponse.json({ error: "not-signed-in" }, { status: 401 });
   }
 
@@ -84,11 +84,11 @@ export async function POST(request: Request) {
   }
 
   const password = typeof body.password === "string" ? body.password : "";
-  if ((!naverAccount && !password) || body.confirmation !== DELETE_CONFIRMATION) {
+  if ((!socialProvider && !password) || body.confirmation !== DELETE_CONFIRMATION) {
     return NextResponse.json({ error: "confirmation-required" }, { status: 400 });
   }
 
-  if (naverAccount) {
+  if (socialProvider) {
     // Verify signed claims and the actual OAuth login time, not token issue or
     // refresh time. An old authenticated session alone cannot delete a user.
     const { data, error } = await supabase.auth.getClaims();

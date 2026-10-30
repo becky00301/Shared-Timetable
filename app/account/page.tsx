@@ -10,7 +10,7 @@ import { useT } from "@/lib/i18n/locale";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
-import { isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
+import { getSocialOnlyProvider, isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
 import type { User } from "@supabase/supabase-js";
 
 type AccountMenu = "password" | "delete";
@@ -21,6 +21,7 @@ export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
   const email = user?.email;
   const isNaver = isEmailLessNaverAccount(user);
+  const socialProvider = getSocialOnlyProvider(user);
   const [activeMenu, setActiveMenu] = useState<AccountMenu>("password");
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function AccountPage() {
               onClick={() => setActiveMenu("password")}
             >
               <KeyRound size={16} />
-              {isNaver ? t("account.menu.security") : t("account.menu.password")}
+              {socialProvider ? t("account.menu.security") : t("account.menu.password")}
             </button>
             <button
               type="button"
@@ -107,11 +108,11 @@ export default function AccountPage() {
           {!user ? (
             <p className="text-sm text-muted">{t("common.loading")}</p>
           ) : activeMenu === "password" ? (
-            isNaver ? <p className="text-sm leading-6 text-muted">{t("account.naver.security")}</p>
+            socialProvider ? <p className="text-sm leading-6 text-muted">{t(socialProvider === "google" ? "account.google.security" : "account.naver.security")}</p>
               : email ? <ChangePasswordSection email={email} />
                 : <p className="text-sm text-muted">{t("auth.error.generic")}</p>
           ) : (
-            <DeleteAccountSection naverAccount={isNaver} />
+            <DeleteAccountSection socialProvider={socialProvider} />
           )}
         </div>
       </main>
