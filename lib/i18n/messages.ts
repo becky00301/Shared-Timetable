@@ -273,6 +273,11 @@ export const messages = {
     en: "Manage your account information and security settings."
   },
   "account.page.email": { ko: "로그인 이메일", en: "Login email" },
+  "account.naver.profileMissing": {
+    ko: "네이버에서 이름과 별명을 받지 못했어요. 표시 이름을 불러오려면 네이버 동의 화면에서 이름 또는 별명 제공을 허용해 주세요. 동의한 별명을 우선 사용하고, 별명이 없으면 이름을 사용해요.",
+    en: "NAVER hasn't shared your name or nickname. To import a display name, allow your name or nickname on NAVER's consent screen. We use your nickname first, then your name."
+  },
+  "account.naver.importName": { ko: "네이버 이름 불러오기", en: "Import name from NAVER" },
   "account.naver.security": {
     ko: "네이버 로그인 계정입니다. 비밀번호와 로그인 보안은 네이버 계정에서 관리할 수 있어요. 이메일 등록 없이 시간표를 사용할 수 있습니다.",
     en: "You sign in with NAVER. Manage your password and sign-in security in your NAVER account. You can use timetables without registering an email address."

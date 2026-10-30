@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { KeyRound, Trash2 } from "lucide-react";
 import { ChangePasswordSection } from "@/components/account/ChangePasswordSection";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
+import { NaverProfileNotice } from "@/components/account/NaverProfileNotice";
 import { AppShell } from "@/components/layout/AppShell";
 import { useT } from "@/lib/i18n/locale";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -20,6 +21,7 @@ export default function AccountPage() {
   const t = useT();
   const [user, setUser] = useState<User | null>(null);
   const email = user?.email;
+  const naverName = typeof user?.user_metadata.name === "string" ? user.user_metadata.name.trim() : "";
   const isNaver = isEmailLessNaverAccount(user);
   const socialProvider = getSocialOnlyProvider(user);
   const [activeMenu, setActiveMenu] = useState<AccountMenu>("password");
@@ -63,8 +65,10 @@ export default function AccountPage() {
             </p>
           ) : null}
           {isNaver && user ? (
-            <p className="mt-5 text-sm text-muted">{typeof user.user_metadata.name === "string" && user.user_metadata.name.trim() || naverAccountLabel(user.id)}</p>
+            <p className="mt-5 text-sm text-muted">{naverName || naverAccountLabel(user.id)}</p>
           ) : null}
+          {isNaver && user && (!naverName || naverName === naverAccountLabel(user.id))
+            ? <NaverProfileNotice /> : null}
         </header>
 
         <div className="mt-7 border-b border-border">

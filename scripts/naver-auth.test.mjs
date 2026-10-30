@@ -2,8 +2,28 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createServerClient } from "@supabase/ssr";
 import { getSocialOnlyProvider, hasRecentOAuthLogin, isEmailLessNaverAccount, naverAccountLabel } from "../lib/auth/social-account.ts";
+import { naverProfileConsentRequest } from "../lib/auth/naver-profile-consent.ts";
 
 const naver = { id: "abcdef12-1234", email: "", identities: [{ provider: "custom:naver" }], is_anonymous: false };
+
+test("profile import explicitly requests NAVER re-consent and returns to the account with PKCE", async () => {
+  const supabase = createServerClient("https://example.supabase.co", "test-publishable-key", {
+    cookies: { getAll: () => [], setAll: () => {} }
+  });
+  const request = naverProfileConsentRequest("https://www.planner-together.com");
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    ...request, options: { ...request.options, skipBrowserRedirect: true }
+  });
+  assert.equal(error, null);
+  const authorize = new URL(data.url);
+  assert.equal(authorize.searchParams.get("provider"), "custom:naver");
+  assert.equal(authorize.searchParams.get("auth_type"), "reprompt");
+  assert.equal(authorize.searchParams.get("code_challenge_method"), "s256");
+  const callback = new URL(authorize.searchParams.get("redirect_to"));
+  assert.equal(callback.origin, "https://www.planner-together.com");
+  assert.equal(callback.pathname, "/auth/callback");
+  assert.equal(callback.searchParams.get("next"), "/account");
+});
 
 test("only OAuth identities suppress password management; Gmail email signups and linked email identities retain it", () => {
   const google = { ...naver, email: "member@gmail.com", identities: [{ provider: "google" }] };
