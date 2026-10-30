@@ -86,7 +86,8 @@ The endpoint returns `status: "ok"` only when the app is running and the require
 ### Social sign-in
 
 Google sign-in is shown when `NEXT_PUBLIC_GOOGLE_AUTH=1` and its Supabase provider is configured.
-NAVER sign-in uses `custom:naver` and is shown when `NEXT_PUBLIC_NAVER_AUTH=1`.
+NAVER sign-in uses the Auto-discovery OIDC provider `custom:naver`, works without an email address,
+and is shown when `NEXT_PUBLIC_NAVER_AUTH=1`.
 Follow the [NAVER setup guide](docs/naver-login.md) before enabling the button.
 
 Run the SQL files in order:

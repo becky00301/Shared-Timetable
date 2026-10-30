@@ -19,8 +19,8 @@ const SECTIONS_KO: Section[] = [
   {
     title: "제2조 처리하는 개인정보의 항목 및 수집 방법",
     body: [
-      "회원가입 시 필수 항목: 이메일 주소, 인증용 사용자 식별값. 비밀번호는 Supabase Auth가 인증 목적으로 처리하며, 운영자는 비밀번호 원문을 조회하거나 별도로 저장하지 않습니다.",
-      "Google 또는 네이버 간편 로그인 이용 시: 이용자가 동의한 이메일 주소와 로그인 제공자의 사용자 식별값을 해당 제공자로부터 전달받아 회원 인증에 사용합니다. 네이버의 이름·전화번호·생일·성별·프로필 사진은 수집하지 않습니다.",
+      "이메일 회원가입 시 필수 항목: 이메일 주소, 인증용 사용자 식별값. 비밀번호는 Supabase Auth가 인증 목적으로 처리하며, 운영자는 비밀번호 원문을 조회하거나 별도로 저장하지 않습니다.",
+      "Google 간편 로그인 이용 시: 이용자가 동의한 이메일 주소와 로그인 제공자의 사용자 식별값을 해당 제공자로부터 전달받아 회원 인증에 사용합니다. 네이버 로그인은 이메일 없이 네이버 사용자 식별값으로 인증하며, 네이버의 이메일·이름·전화번호·생일·성별·프로필 사진은 수집하지 않습니다. 참여자 구분을 위한 서비스 내 표시 이름을 생성합니다.",
       "비회원 체험은 종료되어 더 이상 익명 사용자 식별값을 새로 수집하지 않습니다. 체험 종료 전에 생성된 익명 사용자 식별값과 게스트 표시 이름은 제3조의 보유 기간에 따라 처리합니다.",
       "서비스 이용 시: 시간표 이름·설명·종류·선택 날짜, 일정 제목·날짜·시간·장소·메모·색상, 자유 메모, 첨부 링크, 참여자 이메일·역할, 초대 및 공유를 위한 식별값",
       "피드백 제출 시: 이용자가 Google Forms에 직접 입력한 피드백 내용과 선택적으로 입력한 연락 정보",
@@ -153,8 +153,8 @@ const SECTIONS_EN: Section[] = [
   {
     title: "2. Data processed and how it is collected",
     body: [
-      "Required at registration: email address and authentication user ID. Supabase Auth processes the password for authentication; the operator cannot read or separately store the plain-text password.",
-      "For Google or NAVER sign-in: we receive the email address and provider user ID the user agrees to share for account authentication. We do not collect names, phone numbers, birthdays, gender, or profile photos from NAVER.",
+      "Required for email registration: email address and authentication user ID. Supabase Auth processes the password for authentication; the operator cannot read or separately store the plain-text password.",
+      "For Google sign-in: we receive the email address and provider user ID the user agrees to share for authentication. NAVER sign-in uses a NAVER user ID without requiring an email address. We do not collect email addresses, names, phone numbers, birthdays, gender, or profile photos from NAVER. We generate an in-service display name to distinguish participants.",
       "Guest trials have ended, so no new anonymous user IDs are collected. Anonymous user IDs and guest display names created before they ended are handled under the retention periods in Section 3.",
       "While using the Service: timetable name, description, type and dates; schedule title, date, time, location, notes and color; free-form notes, attachment links, participant emails and roles, and invitation and sharing identifiers",
       "When feedback is submitted: the response and any contact details the user voluntarily enters in Google Forms",

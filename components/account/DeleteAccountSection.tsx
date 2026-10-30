@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type DeletionSummary = {
   willDelete: number;
   willTransfer: number;
 };
 
-export function DeleteAccountSection() {
+export function DeleteAccountSection({ naverAccount = false }: { naverAccount?: boolean }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
@@ -22,14 +23,35 @@ export function DeleteAccountSection() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryFailed, setSummaryFailed] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [reauthenticationRequired, setReauthenticationRequired] = useState(false);
 
   const confirmWord = t("account.confirm.word");
-  const canDelete = typed.trim() === confirmWord && password.length > 0 && !working;
+  const canDelete = typed.trim() === confirmWord && (naverAccount || password.length > 0) && !working && !reauthenticationRequired;
+
+  async function reauthenticate() {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    setWorking(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "custom:naver",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/account?section=delete")}`,
+          queryParams: { auth_type: "reauthenticate" }
+        }
+      });
+      if (error) throw error;
+    } catch {
+      toast.error(t("auth.error.generic"));
+      setWorking(false);
+    }
+  }
 
   async function showConfirmation() {
     setTyped("");
     setPassword("");
     setPasswordError(false);
+    setReauthenticationRequired(false);
     setSummary(null);
     setSummaryFailed(false);
     setSummaryLoading(true);
@@ -58,6 +80,11 @@ export function DeleteAccountSection() {
         body: JSON.stringify({ password, confirmation: "DELETE" })
       });
       const result = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (response.status === 403 && result?.error === "reauthentication-required") {
+        setReauthenticationRequired(true);
+        setWorking(false);
+        return;
+      }
       if (response.status === 403 && result?.error === "invalid-password") {
         setPasswordError(true);
         setWorking(false);
@@ -127,7 +154,7 @@ export function DeleteAccountSection() {
             ) : null}
           </div>
 
-          <label className="mt-4 flex flex-col gap-1.5 text-sm text-muted">
+          {!naverAccount ? <label className="mt-4 flex flex-col gap-1.5 text-sm text-muted">
             {t("account.password.label")}
             <Input
               type="password"
@@ -147,7 +174,16 @@ export function DeleteAccountSection() {
                 {t("account.password.incorrect")}
               </span>
             ) : null}
-          </label>
+          </label> : null}
+
+          {reauthenticationRequired ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm leading-6 text-muted">{t("account.naver.reauthenticateBody")}</p>
+              <Button type="button" variant="outline" disabled={working} onClick={reauthenticate}>
+                {t("account.naver.reauthenticate")}
+              </Button>
+            </div>
+          ) : null}
 
           <label className="mt-2 flex flex-col gap-1.5 text-sm text-muted">
             {t("account.confirm.body", { word: confirmWord })}

@@ -8,20 +8,24 @@ import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
+import { isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
+import type { User } from "@supabase/supabase-js";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const t = useT();
-  const [user, setUser] = useState<{ email: string | null; isGuest: boolean } | null>(null);
+  const [user, setUser] = useState<{ email: string | null; isGuest: boolean; isNaver: boolean; id: string } | null>(null);
   const supabase = createSupabaseBrowserClient();
   const signedIn = Boolean(user);
-  // Guests have no email, so the chip shows a "게스트" label instead.
-  const label = user?.isGuest ? t("guest.badge") : user?.email;
+  const label = user?.isGuest ? t("guest.badge") : user?.email ||
+    (user?.isNaver ? naverAccountLabel(user.id) : t("account.page.title"));
 
   useEffect(() => {
     if (!supabase) return;
-    const read = (u: { email?: string; is_anonymous?: boolean } | null) =>
-      u ? { email: u.email ?? null, isGuest: Boolean(u.is_anonymous) } : null;
+    const read = (u: User | null) => u ? {
+      email: u.email ?? null, isGuest: Boolean(u.is_anonymous),
+      isNaver: isEmailLessNaverAccount(u), id: u.id
+    } : null;
     supabase.auth.getUser().then(({ data }) => setUser(read(data.user)));
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(read(session?.user ?? null));

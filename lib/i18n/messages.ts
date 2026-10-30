@@ -235,8 +235,8 @@ export const messages = {
     en: "Please open the verification email in your inbox, then sign in again."
   },
   "auth.consent.body": {
-    ko: "이메일과 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.",
-    en: "Your email and timetables are stored, and processing is handled by Supabase and Vercel on our behalf."
+    ko: "로그인 식별정보와 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.",
+    en: "Your sign-in identifiers and timetables are stored, and processing is handled by Supabase and Vercel on our behalf."
   },
   "auth.submitting": { ko: "처리 중...", en: "Working…" },
   "auth.signup.submit": { ko: "가입하기", en: "Create account" },
@@ -273,7 +273,17 @@ export const messages = {
     en: "Manage your account information and security settings."
   },
   "account.page.email": { ko: "로그인 이메일", en: "Login email" },
+  "account.naver.security": {
+    ko: "네이버 로그인 계정입니다. 비밀번호와 로그인 보안은 네이버 계정에서 관리할 수 있어요. 이메일 등록 없이 시간표를 사용할 수 있습니다.",
+    en: "You sign in with NAVER. Manage your password and sign-in security in your NAVER account. You can use timetables without registering an email address."
+  },
+  "account.naver.reauthenticate": { ko: "네이버로 다시 인증", en: "Verify with NAVER again" },
+  "account.naver.reauthenticateBody": {
+    ko: "안전한 회원 탈퇴를 위해 네이버로 다시 인증한 후 진행해 주세요.",
+    en: "Verify with NAVER again before closing your account."
+  },
   "account.menu.password": { ko: "비밀번호 변경", en: "Change password" },
+  "account.menu.security": { ko: "로그인 정보", en: "Sign-in information" },
   "account.menu.delete": { ko: "회원 탈퇴", en: "Close account" },
   "account.change.title": { ko: "비밀번호 변경", en: "Change password" },
   "account.change.body": {

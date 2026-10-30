@@ -10,13 +10,17 @@ import { useT } from "@/lib/i18n/locale";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
+import { isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
+import type { User } from "@supabase/supabase-js";
 
 type AccountMenu = "password" | "delete";
 
 export default function AccountPage() {
   const router = useRouter();
   const t = useT();
-  const [email, setEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const email = user?.email;
+  const isNaver = isEmailLessNaverAccount(user);
   const [activeMenu, setActiveMenu] = useState<AccountMenu>("password");
 
   useEffect(() => {
@@ -36,7 +40,8 @@ export default function AccountPage() {
         router.replace(slug ? `/plans/${slug}` : "/login");
         return;
       }
-      if (data.user.email) setEmail(data.user.email);
+      setUser(data.user);
+      if (new URLSearchParams(window.location.search).get("section") === "delete") setActiveMenu("delete");
     });
 
     return () => {
@@ -56,6 +61,9 @@ export default function AccountPage() {
               <span className="ml-3 font-medium text-foreground">{email}</span>
             </p>
           ) : null}
+          {isNaver && user ? (
+            <p className="mt-5 text-sm text-muted">{naverAccountLabel(user.id)}</p>
+          ) : null}
         </header>
 
         <div className="mt-7 border-b border-border">
@@ -74,7 +82,7 @@ export default function AccountPage() {
               onClick={() => setActiveMenu("password")}
             >
               <KeyRound size={16} />
-              {t("account.menu.password")}
+              {isNaver ? t("account.menu.security") : t("account.menu.password")}
             </button>
             <button
               type="button"
@@ -96,12 +104,14 @@ export default function AccountPage() {
         </div>
 
         <div id="account-panel" role="tabpanel" className="py-8">
-          {!email ? (
+          {!user ? (
             <p className="text-sm text-muted">{t("common.loading")}</p>
           ) : activeMenu === "password" ? (
-            <ChangePasswordSection email={email} />
+            isNaver ? <p className="text-sm leading-6 text-muted">{t("account.naver.security")}</p>
+              : email ? <ChangePasswordSection email={email} />
+                : <p className="text-sm text-muted">{t("auth.error.generic")}</p>
           ) : (
-            <DeleteAccountSection />
+            <DeleteAccountSection naverAccount={isNaver} />
           )}
         </div>
       </main>

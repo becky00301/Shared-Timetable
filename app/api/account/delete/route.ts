@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hasRecentOAuthLogin, isEmailLessNaverAccount } from "@/lib/auth/social-account";
 
 const DELETE_CONFIRMATION = "DELETE";
 
@@ -56,6 +57,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) {
+    return NextResponse.json({ error: "invalid-origin" }, { status: 403 });
+  }
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "supabase-unconfigured" }, { status: 500 });
@@ -64,7 +68,11 @@ export async function POST(request: Request) {
   const {
     data: { user }
   } = await supabase.auth.getUser();
-  if (!user || user.is_anonymous || !user.email) {
+  if (!user || user.is_anonymous) {
+    return NextResponse.json({ error: "not-signed-in" }, { status: 401 });
+  }
+  const naverAccount = isEmailLessNaverAccount(user);
+  if (!naverAccount && !user.email) {
     return NextResponse.json({ error: "not-signed-in" }, { status: 401 });
   }
 
@@ -76,28 +84,33 @@ export async function POST(request: Request) {
   }
 
   const password = typeof body.password === "string" ? body.password : "";
-  if (!password || body.confirmation !== DELETE_CONFIRMATION) {
+  if ((!naverAccount && !password) || body.confirmation !== DELETE_CONFIRMATION) {
     return NextResponse.json({ error: "confirmation-required" }, { status: 400 });
   }
 
-  const admin = createSupabaseAdminClient();
-  if (!admin) {
-    return NextResponse.json({ error: "service-role-missing" }, { status: 500 });
+  if (naverAccount) {
+    // Verify signed claims and the actual OAuth login time, not token issue or
+    // refresh time. An old authenticated session alone cannot delete a user.
+    const { data, error } = await supabase.auth.getClaims();
+    if (error || !hasRecentOAuthLogin(data?.claims, user.id)) {
+      return NextResponse.json({ error: "reauthentication-required" }, { status: 403 });
+    }
+  } else {
+    // Password users retain the existing password confirmation requirement.
+    const { url, key } = getSupabasePublicConfig();
+    const verifier = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data, error } = await verifier.auth.signInWithPassword({
+      email: user.email!, password
+    });
+    if (error || data.user?.id !== user.id) {
+      return NextResponse.json({ error: "invalid-password" }, { status: 403 });
+    }
   }
 
-  // Verify the current password without replacing the browser's existing
-  // session. The verifier never persists the short-lived session it receives.
-  const { url, key } = getSupabasePublicConfig();
-  const verifier = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-  const { error: passwordError } = await verifier.auth.signInWithPassword({
-    email: user.email,
-    password
-  });
-  if (passwordError) {
-    return NextResponse.json({ error: "invalid-password" }, { status: 403 });
-  }
+  const admin = createSupabaseAdminClient();
+  if (!admin) return NextResponse.json({ error: "service-role-missing" }, { status: 500 });
 
   // The RPC locks every owned project and completes all public-data changes in
   // one transaction. It is idempotent, so a failed Auth deletion can be retried.

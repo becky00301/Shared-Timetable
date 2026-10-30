@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSafeNextPath } from "@/lib/utils/navigation";
+import { isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -26,8 +27,14 @@ export async function GET(request: Request) {
 
   // PKCE code flow (default for @supabase/ssr)
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      // This is only a display name. Access rights continue to use auth.uid().
+      if (data.user && isEmailLessNaverAccount(data.user) && !data.user.user_metadata.name) {
+        await supabase.auth.updateUser({ data: { name: naverAccountLabel(data.user.id) } }).catch(() => {});
+      }
+      return NextResponse.redirect(`${origin}${next}`);
+    }
     return fail(error.message);
   }
 
