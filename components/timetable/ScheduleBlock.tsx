@@ -209,7 +209,7 @@ export function ScheduleBlock({
         data-resize-handle
         className="absolute inset-x-0 top-0 flex h-2 touch-none select-none items-center justify-center text-current opacity-70 [-webkit-touch-callout:none]"
         onPointerDown={(event) => startResize("top", event)}
-        aria-label="Resize schedule start"
+        aria-label="Resize event start"
       >
         <GripHorizontal size={12} />
         <HandleReach edge="top" />
@@ -260,7 +260,7 @@ export function ScheduleBlock({
         data-resize-handle
         className="absolute inset-x-0 bottom-0 flex h-2 touch-none select-none items-center justify-center text-current opacity-70 [-webkit-touch-callout:none]"
         onPointerDown={(event) => startResize("bottom", event)}
-        aria-label="Resize schedule end"
+        aria-label="Resize event end"
       >
         <GripHorizontal size={12} />
         <HandleReach edge="bottom" />

@@ -30,10 +30,10 @@ export const messages = {
   "role.viewer": { ko: "뷰어", en: "Viewer" },
 
   // ---------------------------------------------------------------- landing
-  "landing.feature.drag.title": { ko: "드래그로 일정 추가", en: "Drag to add" },
+  "landing.feature.drag.title": { ko: "드래그로 일정 추가", en: "Drag to add an event" },
   "landing.feature.drag.body": {
     ko: "시간표를 드래그하면 바로 일정이 생겨요. 복잡한 입력 없이 즉시 시작.",
-    en: "Drag across the grid and a schedule appears. No forms, no setup."
+    en: "Drag across the grid and an event appears. No forms, no setup."
   },
   "landing.feature.dates.title": { ko: "필요한 날짜만", en: "Only the dates you need" },
   "landing.feature.dates.body": {
@@ -47,24 +47,24 @@ export const messages = {
   },
   "landing.feature.share.title": { ko: "링크로 공유", en: "Share anywhere" },
   "landing.feature.share.body": {
-    ko: "PNG·PDF·엑셀·HTML로 내보내거나 링크만 보내 누구에게나 보여줄 수 있어요.",
-    en: "Export to PNG, PDF, Excel or HTML, or just send a link anyone can open."
+    ko: "PNG·PDF·엑셀·HTML로 내보내거나, 링크 하나로 함께할 사람을 초대할 수 있어요.",
+    en: "Export to PNG, PDF, Excel or HTML, or invite people with one link."
   },
   "landing.hero.brand": {
     ko: "플래너 투게더 · Planner Together",
     en: "Planner Together · 플래너 투게더"
   },
-  "landing.hero.line1": { ko: "함께 만드는", en: "Timetables you" },
-  "landing.hero.line2": { ko: "공유 시간표", en: "build together" },
+  "landing.hero.line1": { ko: "함께 만드는", en: "Shared timetables," },
+  "landing.hero.line2": { ko: "공유 시간표", en: "built together" },
   // Two sentences, two lines. Kept as separate strings rather than one with a
   // <br>, so each language breaks where its own sentence ends.
   "landing.hero.body1": {
     ko: "드래그로 만들고 링크 하나로 공유하세요.",
-    en: "Drag to build, share with one link."
+    en: "Drag to build it. Share it with one link."
   },
   "landing.hero.body2": {
     ko: "여행 계획표부터 MT·스터디까지, 엑셀 양식 없이 필요한 날짜만 골라 함께 채우는 시간표",
-    en: "Trips, study groups, projects — pick the dates that matter and fill them in together."
+    en: "From trip itineraries to retreats and study groups — pick only the dates you need and fill them in together, no spreadsheet required."
   },
   // ------------------------------------------------------------- use cases
   // Grouped by the two timetable kinds, because that is the first thing the
@@ -73,41 +73,41 @@ export const messages = {
   "landing.cases.eyebrow": { ko: "이럴 때 써요", en: "What people use it for" },
   "landing.cases.title": {
     ko: "날짜가 정해진 일이든, 매주 반복되는 일이든",
-    en: "For the trip next month and the week that repeats"
+    en: "For plans on set dates, or the same week every week"
   },
-  "landing.cases.rangeLabel": { ko: "날짜를 골라서", en: "Pick the dates" },
-  "landing.cases.weeklyLabel": { ko: "매주 반복으로", en: "Repeat every week" },
+  "landing.cases.rangeLabel": { ko: "날짜를 골라서", en: "On set dates" },
+  "landing.cases.weeklyLabel": { ko: "매주 반복으로", en: "Every week" },
 
   "landing.cases.trip.title": { ko: "여행", en: "Trips" },
   "landing.cases.trip.body": {
     ko: "엑셀 여행 계획표 대신, 2박 3일 동선을 시간대별로. 비행기·숙소·맛집에 지출까지 한 화면에서 정리돼요.",
-    en: "Lay out each day by the hour — flights, hotels, places to eat, and what it all costs, on one screen."
+    en: "Skip the Excel itinerary and lay out each day of the trip by the hour — flights, hotels, places to eat and what it all costs, on one screen."
   },
   "landing.cases.mt.title": { ko: "MT·워크숍", en: "Retreats and offsites" },
   "landing.cases.mt.body": {
     ko: "단체 일정을 다 같이 채우고, 링크 하나로 공유하세요. 누가 뭘 맡았는지 바로 보여요.",
-    en: "Fill the group's schedule together and share it with one link. Everyone sees who has what."
+    en: "Fill in the group's schedule together and share it with one link. Everyone can see who's doing what."
   },
   "landing.cases.event.title": { ko: "행사·축제", en: "Events and festivals" },
   "landing.cases.event.body": {
     ko: "부스 운영과 스태프 교대를 한눈에. 바뀐 일정은 모두에게 바로 반영돼요.",
-    en: "Booth hours and staff shifts at a glance, with every change landing for everyone at once."
+    en: "Booth hours and staff shifts at a glance. Any change shows up for everyone instantly."
   },
 
   "landing.cases.school.title": { ko: "학교 시간표", en: "Class schedules" },
   "landing.cases.school.body": {
     ko: "요일별 수업을 드래그로 채우고 친구와 공유하세요. 공강도 바로 눈에 들어와요.",
-    en: "Drag your classes onto the week and share it with friends — the gaps show themselves."
+    en: "Drag your classes into the week and share it with friends. Free periods jump right out."
   },
-  "landing.cases.vacation.title": { ko: "방학 계획", en: "Holiday plans" },
+  "landing.cases.vacation.title": { ko: "방학 계획", en: "Vacation plans" },
   "landing.cases.vacation.body": {
     ko: "기상 시간부터 하루 루틴까지. 계획이 쌓이는 게 눈에 보여요.",
-    en: "From what time you get up to how the day runs, laid out where you can see it hold."
+    en: "From wake-up time to your daily routine — watch your plan take shape."
   },
-  "landing.cases.routine.title": { ko: "스터디·운동", en: "Study and training" },
+  "landing.cases.routine.title": { ko: "스터디·운동", en: "Study groups and workouts" },
   "landing.cases.routine.body": {
     ko: "매주 같은 시간에 모이는 일정을 한 번만 만들어두면 끝이에요.",
-    en: "Set the weekly slot once and it is there every week."
+    en: "Set up a weekly meetup once and you're done."
   },
 
   "landing.cta.start": { ko: "무료로 시작하기", en: "Start for free" },
@@ -128,7 +128,7 @@ export const messages = {
   "landing.feature.chat.title": { ko: "말하려고 멈추지 않아도 돼요", en: "Say it without leaving the grid" },
   "landing.feature.chat.body": {
     ko: "시간표를 보다가 / 를 누르면 마우스 커서에 채팅 줄이 열립니다. 치는 글자가 그대로 상대 화면에 나타나서 보내기 버튼이 없어요. 입력창을 찾아 시선을 옮길 필요 없이, 지금 보고 있는 그 칸 옆에서 이야기하면 됩니다.",
-    en: "Press / while you are looking at the timetable and a chat line opens at your cursor. The letters land on everyone else's screen as you type them, so there is nothing to send. You talk beside the slot you are both looking at, without going to find a box."
+    en: "Press / while you're on the timetable and a chat line opens right at your cursor. Everyone sees your words as you type, so there's no send button. Talk right next to the slot you're both looking at — no hunting for a chat box."
   },
 
   "landing.nav.features": { ko: "기능", en: "Features" },
@@ -138,51 +138,51 @@ export const messages = {
   // --------------------------------------------------- landing: the problem
   // Grey up to the turn, black after it — the sentence carries the section's
   // rhythm instead of a coloured panel doing it.
-  "landing.statement.eyebrow": { ko: "왜 필요한가요", en: "Why it exists" },
+  "landing.statement.eyebrow": { ko: "왜 필요한가요", en: "Why Planner Together" },
   "landing.statement.problem": {
     ko: "날짜를 정하는 건 단톡방에서, 일정은 메모장에, 예산은 또 다른 곳에 적어두죠.",
-    en: "The dates get decided in a group chat, the plan lives in someone's notes, and the budget sits somewhere else again."
+    en: "The dates get settled in the group chat, the plan lives in someone's notes app, and the budget is somewhere else entirely."
   },
   "landing.statement.answer": {
     ko: "플래너 투게더는 그 셋을 한 장에 모읍니다. 필요한 날짜만 골라 드래그로 채우고, 링크 하나로 함께 보는 시간표.",
-    en: "Planner Together puts all three on one page. Pick only the dates you need, drag to fill them in, and share one link."
+    en: "Planner Together brings all three onto one page. Pick only the dates you need, drag to fill them in, and look at it together from one link."
   },
 
   // --------------------------------------------------- landing: vs Excel
   // The spreadsheet column comes first in each row, since that is the
   // experience someone searching for an Excel itinerary arrives with.
-  "landing.excel.eyebrow": { ko: "엑셀 여행 계획표와 비교", en: "Compared with a spreadsheet" },
+  "landing.excel.eyebrow": { ko: "엑셀 여행 계획표와 비교", en: "Excel itinerary vs. Planner Together" },
   "landing.excel.title": {
     ko: "여행 계획표, 이제 엑셀 양식 없이",
     en: "Travel itineraries without the spreadsheet"
   },
   "landing.excel.colExcel": { ko: "엑셀 양식", en: "Excel template" },
   "landing.excel.colUs": { ko: "플래너 투게더", en: "Planner Together" },
-  "landing.excel.dates.row": { ko: "날짜 칸 만들기", en: "Setting up days" },
-  "landing.excel.dates.excel": { ko: "날짜·요일·시간 칸을 직접 그리고 병합", en: "Draw and merge date and hour cells" },
-  "landing.excel.dates.us": { ko: "여행 날짜만 고르면 시간표가 생겨요", en: "Pick your dates and the grid is there" },
+  "landing.excel.dates.row": { ko: "날짜 칸 만들기", en: "Setting up the dates" },
+  "landing.excel.dates.excel": { ko: "날짜·요일·시간 칸을 직접 그리고 병합", en: "Draw and merge cells for dates, days and times" },
+  "landing.excel.dates.us": { ko: "여행 날짜만 고르면 시간표가 생겨요", en: "Pick your travel dates and the timetable is ready" },
   "landing.excel.move.row": { ko: "일정 옮기기", en: "Moving plans" },
-  "landing.excel.move.excel": { ko: "셀을 잘라 붙이고 병합 다시 풀기", en: "Cut, paste, unmerge, re-merge" },
+  "landing.excel.move.excel": { ko: "셀을 잘라 붙이고 병합 다시 풀기", en: "Cut, paste, unmerge, merge again" },
   "landing.excel.move.us": { ko: "블록을 드래그해서 옮기고 늘이기", en: "Drag a block to move or stretch it" },
-  "landing.excel.share.row": { ko: "일행과 같이 쓰기", en: "Planning with others" },
-  "landing.excel.share.excel": { ko: "단톡방에 파일 올리고 최종본 찾기", en: "Pass files around, hunt for the latest" },
-  "landing.excel.share.us": { ko: "링크 하나로 동시에 편집", en: "Edit together from one link" },
-  "landing.excel.phone.row": { ko: "휴대폰에서 보기", en: "On a phone" },
-  "landing.excel.phone.excel": { ko: "확대하고 옆으로 밀면서 읽기", en: "Pinch and scroll sideways" },
-  "landing.excel.phone.us": { ko: "세로 타임라인으로 바뀌어요", en: "Turns into a vertical timeline" },
-  "landing.excel.file.row": { ko: "엑셀 파일이 필요할 때", en: "When you need the file" },
+  "landing.excel.share.row": { ko: "일행과 같이 쓰기", en: "Planning as a group" },
+  "landing.excel.share.excel": { ko: "단톡방에 파일 올리고 최종본 찾기", en: "Post the file in the group chat, then hunt for the final version" },
+  "landing.excel.share.us": { ko: "링크 하나로 동시에 편집", en: "Everyone edits at once from one link" },
+  "landing.excel.phone.row": { ko: "휴대폰에서 보기", en: "Viewing on a phone" },
+  "landing.excel.phone.excel": { ko: "확대하고 옆으로 밀면서 읽기", en: "Zoom in and scroll sideways" },
+  "landing.excel.phone.us": { ko: "세로 타임라인으로 바뀌어요", en: "Switches to a vertical timeline" },
+  "landing.excel.file.row": { ko: "엑셀 파일이 필요할 때", en: "When you need an Excel file" },
   "landing.excel.file.excel": { ko: "—", en: "—" },
   "landing.excel.file.us": { ko: "완성한 일정표를 엑셀로 내보내기", en: "Export the finished plan to Excel" },
   // ---------------------------------------------------------- landing: FAQ
   "landing.faq.eyebrow": { ko: "자주 묻는 질문", en: "FAQ" },
-  "landing.faq.title": { ko: "궁금할 만한 것들", en: "The usual questions" },
+  "landing.faq.title": { ko: "궁금할 만한 것들", en: "Questions you might have" },
   "landing.faq.q0": {
     ko: "엑셀 여행 계획표 양식 대신 쓸 수 있나요?",
     en: "Can it replace an Excel travel itinerary template?"
   },
   "landing.faq.a0": {
     ko: "네. 날짜·요일·시간 칸을 직접 그리고 병합할 필요 없이, 여행 날짜만 고르면 시간대별 여행 일정표가 바로 생겨요. 일정은 드래그로 넣고 옮기면 됩니다.",
-    en: "Yes. Instead of drawing and merging date, weekday and hour cells, pick your travel dates and an hour-by-hour itinerary is ready. Drag plans in and move them around."
+    en: "Yes. Instead of drawing and merging cells for dates, days and times, just pick your travel dates and an hour-by-hour itinerary is ready. Drag events in and move them around."
   },
   "landing.faq.q1": { ko: "무료인가요?", en: "Is it free?" },
   "landing.faq.a1": {
@@ -200,12 +200,12 @@ export const messages = {
   "landing.faq.q3": { ko: "날짜를 나중에 바꿔도 되나요?", en: "Can I change the dates later?" },
   "landing.faq.a3": {
     ko: "네. 날짜를 다시 고르면 그대로 남는 날의 일정과 메모는 건드리지 않고, 빠진 날만 정리됩니다.",
-    en: "Yes. Pick a different set of dates and the days that stay keep their schedules and notes — only the ones you dropped go."
+    en: "Yes. Pick the dates again and the events and notes on the days you keep stay as they are — only the dates you removed are cleared."
   },
   "landing.faq.q4": { ko: "휴대폰에서도 쓸 수 있나요?", en: "Does it work on a phone?" },
   "landing.faq.a4": {
     ko: "됩니다. 좁은 화면에서는 촘촘한 격자 대신 세로 타임라인으로 바뀌어서 읽기 편해요.",
-    en: "It does. On a narrow screen the dense grid becomes a vertical timeline that is easier to read."
+    en: "It does. On a narrow screen, the dense grid switches to a vertical timeline that's easier to read."
   },
   "landing.faq.q5": { ko: "엑셀 파일로 내보낼 수 있나요?", en: "Can I export it to Excel?" },
   "landing.faq.a5": {
@@ -216,15 +216,15 @@ export const messages = {
   "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
   "landing.how.title": {
     ko: "네 가지만 알면 끝이에요",
-    en: "Four things, that's it"
+    en: "Just four things to know"
   },
   "landing.detail.drag.body": {
     ko: "시간표 위에서 마우스를 끌면 그 자리에 바로 일정이 생겨요. 시작·종료 시간을 따로 입력할 필요 없이, 끌어서 놓기만 하면 됩니다.",
-    en: "Drag across the grid and a schedule appears right there. No typing start and end times — just drag and drop."
+    en: "Drag across the grid and an event appears right there. No typing start and end times — just drag and let go."
   },
   "landing.detail.dates.body": {
     ko: "일주일 기본 틀로 바로 시작하거나, 달력에서 여행·행사 기간을 골라 필요한 날짜만 담아요. 빈 날짜로 지저분해지지 않아요.",
-    en: "Start from a weekly template, or pick a trip's dates on the calendar — only the days you need, no empty clutter."
+    en: "Start from a standard week, or pick a trip's dates on the calendar — only the days you need, with no empty days cluttering it up."
   },
   "landing.detail.collab.body": {
     ko: "초대 링크 하나로 친구를 부르면 같은 시간표를 실시간으로 함께 채워요. 누가 무엇을 바꿔도 모두의 화면에 바로 반영됩니다.",
@@ -232,7 +232,7 @@ export const messages = {
   },
   "landing.detail.share.body": {
     ko: "완성한 시간표는 링크로 보내거나 PNG·PDF·엑셀·HTML로 내보낼 수 있어요. 계정이 없는 사람에게도 보여줄 수 있습니다.",
-    en: "Send the finished timetable as a link, or export it to PNG, PDF, Excel or HTML. Even people without an account can view it."
+    en: "Send the finished timetable as a link, or export it to PNG, PDF, Excel or HTML to show people who don't have an account."
   },
 
   // ---------------------------------------------------------------- auth
@@ -301,7 +301,7 @@ export const messages = {
     ko: "계정 정보와 보안 설정을 관리하세요.",
     en: "Manage your account information and security settings."
   },
-  "account.page.email": { ko: "로그인 이메일", en: "Login email" },
+  "account.page.email": { ko: "로그인 이메일", en: "Sign-in email" },
   "account.naver.profileMissing": {
     ko: "네이버에서 이름과 별명을 받지 못했어요. 표시 이름을 불러오려면 네이버 동의 화면에서 이름 또는 별명 제공을 허용해 주세요. 동의한 별명을 우선 사용하고, 별명이 없으면 이름을 사용해요.",
     en: "NAVER hasn't shared your name or nickname. To import a display name, allow your name or nickname on NAVER's consent screen. We use your nickname first, then your name."
@@ -331,7 +331,7 @@ export const messages = {
   "account.danger.title": { ko: "회원 탈퇴", en: "Close your account" },
   "account.danger.body": {
     ko: "계정과 개인정보를 삭제합니다. 혼자 쓰던 시간표는 함께 삭제되고, 다른 참여자가 있는 시간표는 남은 참여자에게 소유권이 넘어갑니다. 되돌릴 수 없습니다.",
-    en: "Deletes your account and personal data. Timetables you were using alone go with it; ones with other members are handed over to a remaining member. This can't be undone."
+    en: "Deletes your account and personal data. Timetables only you use are deleted with it; ones shared with others are handed over to another member. This can't be undone."
   },
   "account.danger.cta": { ko: "회원 탈퇴", en: "Close account" },
   "account.confirm.title": { ko: "정말 탈퇴하시겠어요?", en: "Close your account?" },
@@ -350,10 +350,10 @@ export const messages = {
     en: "That password is incorrect."
   },
   "account.summary.loading": { ko: "탈퇴 결과를 확인하고 있어요...", en: "Checking what will change..." },
-  "account.summary.delete": { ko: "함께 삭제되는 개인 시간표", en: "Personal timetables deleted" },
+  "account.summary.delete": { ko: "함께 삭제되는 개인 시간표", en: "Personal timetables that will be deleted" },
   "account.summary.transfer": {
     ko: "소유권이 이전되는 공동 시간표",
-    en: "Shared timetables transferred"
+    en: "Shared timetables that will be handed over"
   },
   "account.summary.failed": {
     ko: "시간표 현황을 불러오지 못했어요. 탈퇴를 진행하면 서버에서 다시 확인합니다.",
@@ -422,16 +422,16 @@ export const messages = {
   "grid.zoomReset": { ko: "기본 배율로", en: "Reset zoom" },
 
   // ------------------------------------------------------------------- claim
-  "claim.title": { ko: "체험으로 만든 시간표 가져오기", en: "Bring in a trial timetable" },
+  "claim.title": { ko: "체험으로 만든 시간표 가져오기", en: "Import a timetable from trial mode" },
   "claim.body": {
     ko: "로그인 없이 만들었던 시간표가 있다면, 저장해둔 링크를 붙여넣어 주세요. 이 계정으로 그대로 옮겨드려요.",
-    en: "Made a timetable before you had an account? Paste the link you saved and it moves into this account, as it is."
+    en: "Made a timetable without logging in? Paste the link you saved and we'll move it into this account, just as it is."
   },
   "claim.inputLabel": { ko: "시간표 링크", en: "Timetable link" },
   "claim.placeholder": { ko: "https://… /plans/…", en: "https://… /plans/…" },
-  "claim.submit": { ko: "가져오기", en: "Bring it in" },
-  "claim.submitting": { ko: "가져오는 중...", en: "Bringing it in…" },
-  "claim.success": { ko: "시간표를 가져왔어요.", en: "The timetable is yours now." },
+  "claim.submit": { ko: "가져오기", en: "Import" },
+  "claim.submitting": { ko: "가져오는 중...", en: "Importing…" },
+  "claim.success": { ko: "시간표를 가져왔어요.", en: "Timetable imported." },
   "claim.error.invalidLink": {
     ko: "시간표 링크가 아니에요. 주소에 /plans/ 가 들어간 링크를 붙여넣어 주세요.",
     en: "That isn't a timetable link. Paste one with /plans/ in the address."
@@ -450,7 +450,7 @@ export const messages = {
   },
   "claim.error.generic": {
     ko: "가져오지 못했어요. 잠시 후 다시 시도해주세요.",
-    en: "Couldn't bring it in. Please try again in a moment."
+    en: "Couldn't import it. Please try again in a moment."
   },
 
   "auth.google": { ko: "Google로 계속하기", en: "Continue with Google" },
@@ -477,12 +477,12 @@ export const messages = {
   },
   "dashboard.anon.body": {
     ko: "시간표를 만들려면 계정이 필요해요. 만든 시간표는 어느 기기에서든 열 수 있고, 링크 하나로 함께 채울 수 있어요.",
-    en: "Making one needs an account. After that it opens on any device, and one link is enough to fill it in together."
+    en: "You'll need an account to make a timetable. It opens on any device, and one link lets others fill it in with you."
   },
-  "dashboard.anon.cta": { ko: "가입하고 시간표 만들기", en: "Sign up and make one" },
+  "dashboard.anon.cta": { ko: "가입하고 시간표 만들기", en: "Sign up to create a timetable" },
   "dashboard.anon.hint": {
     ko: "이메일과 비밀번호만 있으면 됩니다.",
-    en: "An email and a password is all it takes."
+    en: "All you need is an email and a password."
   },
   "dashboard.new": { ko: "새 시간표", en: "New timetable" },
   "dashboard.projectsView": { ko: "시간표 목록", en: "Timetables" },
@@ -490,7 +490,7 @@ export const messages = {
   "dashboard.today": { ko: "오늘", en: "Today" },
   "dashboard.previousMonth": { ko: "이전 달", en: "Previous month" },
   "dashboard.nextMonth": { ko: "다음 달", en: "Next month" },
-  "dashboard.noSchedulesForDay": { ko: "이날은 일정이 없어요.", en: "No schedules for this day." },
+  "dashboard.noSchedulesForDay": { ko: "이날은 일정이 없어요.", en: "No events on this day." },
   "dashboard.ongoingProjects": { ko: "진행 중인 프로젝트", en: "Ongoing projects" },
   "dashboard.upcomingProjects": { ko: "다가올 프로젝트", en: "Upcoming projects" },
   "dashboard.pastProjects": { ko: "지난 프로젝트", en: "Past projects" },
@@ -532,7 +532,7 @@ export const messages = {
   "card.renameFailed": { ko: "이름을 변경하지 못했어요.", en: "Couldn't rename it." },
   "card.renameHint": { ko: "Enter로 저장 · Esc로 취소", en: "Enter to save · Esc to cancel" },
   "card.noDates": { ko: "아직 날짜가 없어요", en: "No dates yet" },
-  "card.scheduleCount": { ko: "일정 {count}개", en: "{count} schedules" },
+  "card.scheduleCount": { ko: "일정 {count}개", en: "{count} events" },
   "card.memberCount": { ko: "{count}명", en: "{count} people" },
   "card.contextHint": { ko: "우클릭 메뉴", en: "Right-click for menu" },
 
@@ -555,7 +555,7 @@ export const messages = {
   },
   "setup.startMonday": { ko: "월요일 시작", en: "Starts Monday" },
   "setup.startSunday": { ko: "일요일 시작", en: "Starts Sunday" },
-  "setup.startAsIs": { ko: "이대로 시작하기", en: "Start with this" },
+  "setup.startAsIs": { ko: "이대로 시작하기", en: "Start as is" },
   "setup.chooseRange": { ko: "기간을 선택하세요", en: "Choose a date range" },
   "setup.chooseRangeSub": {
     ko: "시작일과 종료일을 차례로 클릭하세요.",
@@ -628,7 +628,7 @@ export const messages = {
   "dates.editTitle": { ko: "날짜 수정", en: "Edit dates" },
   "dates.editSubtitle": {
     ko: "시작일과 종료일을 다시 골라주세요. 그대로 남는 날짜의 일정은 유지돼요.",
-    en: "Pick a new start and end date. Schedules on dates that stay are kept."
+    en: "Pick a new start and end date. Events on the dates you keep stay as they are."
   },
   "dates.save": { ko: "날짜 변경", en: "Update dates" },
   "dates.saving": { ko: "변경하는 중...", en: "Updating…" },
@@ -639,7 +639,7 @@ export const messages = {
   },
   "dates.dropWarning": {
     ko: "{days}일이 범위에서 빠지고, 거기 있던 일정 {items}개가 함께 삭제돼요.",
-    en: "{days} date(s) fall outside the new range; {items} schedule(s) on them will be deleted."
+    en: "{days} date(s) fall outside the new range, and the {items} event(s) on them will be deleted."
   },
   "dates.dropWarningEmpty": {
     ko: "{days}일이 범위에서 빠져요. 해당 날짜에는 일정이 없어요.",
@@ -649,11 +649,11 @@ export const messages = {
   "mobileBar.timetable": { ko: "시간표", en: "Timetable" },
   "mobileBar.refresh": { ko: "새로고침", en: "Refresh" },
   "mobileBar.refreshFailed": { ko: "시간표를 다시 불러오지 못했어요.", en: "Couldn't reload the timetable." },
-  "sidebar.scheduleMemos": { ko: "일정에 적은 메모", en: "Notes on schedules" },
+  "sidebar.scheduleMemos": { ko: "일정에 적은 메모", en: "Notes on events" },
   "sidebar.renameHint": { ko: "클릭해서 이름 수정", en: "Click to rename" },
   "sidebar.memoEmpty": {
     ko: "일정 상세에 메모를 적으면 여기에 모여요.",
-    en: "Notes you add to a schedule collect here."
+    en: "Notes you add to events show up here."
   },
   "notes.placeholder": { ko: "준비물, 예산, 링크 등", en: "Packing list, budget, links…" },
   "notes.adding": { ko: "추가 중...", en: "Adding…" },
@@ -671,7 +671,7 @@ export const messages = {
   // ---------------------------------------------------------------- budget
   "budget.title": { ko: "예산", en: "Budget" },
   "budget.total": { ko: "전체 예산", en: "Total budget" },
-  "budget.totalPlaceholder": { ko: "예산 입력", en: "Set an amount" },
+  "budget.totalPlaceholder": { ko: "예산 입력", en: "Enter a budget" },
   "budget.currency": { ko: "통화", en: "Currency" },
   "budget.spent": { ko: "사용", en: "Spent" },
   "budget.remaining": { ko: "남음", en: "Left" },
@@ -681,25 +681,25 @@ export const messages = {
     ko: "전체 예산을 정하면 얼마나 남았는지 보여드릴게요.",
     en: "Set a total budget to see what's left."
   },
-  "budget.fromSchedules": { ko: "일정에 적은 금액", en: "From schedules" },
+  "budget.fromSchedules": { ko: "일정에 적은 금액", en: "From events" },
   "budget.otherSpending": { ko: "그 밖의 지출", en: "Other spending" },
   "budget.itemCount": { ko: "{count}건", en: "{count}" },
-  "budget.expenseLabelPlaceholder": { ko: "택시비, 숙소 보증금 등", en: "Taxi, deposit, …" },
+  "budget.expenseLabelPlaceholder": { ko: "택시비, 숙소 보증금 등", en: "Taxi fare, hotel deposit…" },
   "budget.expenseAmountPlaceholder": { ko: "금액", en: "Amount" },
-  "budget.addExpense": { ko: "지출 추가", en: "Add spending" },
+  "budget.addExpense": { ko: "지출 추가", en: "Add expense" },
   "budget.adding": { ko: "추가 중...", en: "Adding…" },
   "budget.expenseEmpty": {
     ko: "일정 밖에서 쓴 돈을 여기에 더할 수 있어요.",
-    en: "Add money spent outside the timetable here."
+    en: "Add money spent outside your events here."
   },
   "budget.expenseEditHint": { ko: "클릭해서 수정", en: "Click to edit" },
-  "budget.expenseDeleteLabel": { ko: "지출 삭제", en: "Delete spending" },
-  "budget.expenseDeleted": { ko: "지출을 삭제했어요.", en: "Spending deleted." },
-  "budget.addFailed": { ko: "지출을 추가하지 못했어요.", en: "Couldn't add the spending." },
+  "budget.expenseDeleteLabel": { ko: "지출 삭제", en: "Delete expense" },
+  "budget.expenseDeleted": { ko: "지출을 삭제했어요.", en: "Expense deleted." },
+  "budget.addFailed": { ko: "지출을 추가하지 못했어요.", en: "Couldn't add the expense." },
   "budget.saveFailed": { ko: "예산을 저장하지 못했어요.", en: "Couldn't save the budget." },
   "budget.editDenied": { ko: "예산을 수정할 권한이 없어요. 프로젝트 권한을 확인해 주세요.", en: "You don't have permission to edit this budget. Check your project role." },
-  "budget.deleteFailed": { ko: "지출을 삭제하지 못했어요.", en: "Couldn't delete the spending." },
-  "budget.invalidAmount": { ko: "금액을 다시 확인해 주세요.", en: "Check the amount." },
+  "budget.deleteFailed": { ko: "지출을 삭제하지 못했어요.", en: "Couldn't delete the expense." },
+  "budget.invalidAmount": { ko: "금액을 다시 확인해 주세요.", en: "Please check the amount." },
   "budget.amountNotSaved": {
     ko: "금액은 아직 저장되지 않아요.",
     en: "Amounts aren't being saved yet."
@@ -718,7 +718,7 @@ export const messages = {
   "members.transfer.open": { ko: "소유자 위임하기", en: "Transfer ownership" },
   "members.transfer.title": {
     ko: "소유자를 누구에게 위임하시겠습니까?",
-    en: "Who should own this timetable?"
+    en: "Who should become the owner?"
   },
   "members.transfer.body": {
     ko: "위임하면 나는 편집자가 되고, 참여자 권한 변경과 시간표 삭제는 새 소유자만 할 수 있어요.",
@@ -728,7 +728,7 @@ export const messages = {
     ko: "아직 함께하는 사람이 없어요. 프로젝트 링크로 초대한 뒤 위임할 수 있어요.",
     en: "No one else is here yet. Invite someone with the project link first."
   },
-  "members.transfer.confirm": { ko: "임명하기", en: "Appoint" },
+  "members.transfer.confirm": { ko: "임명하기", en: "Make owner" },
   "members.transfer.done": { ko: "{name}님이 소유자가 됐어요.", en: "{name} now owns this timetable." },
   "members.transfer.failed": { ko: "소유자를 위임하지 못했어요.", en: "Couldn't transfer ownership." },
 
@@ -736,7 +736,7 @@ export const messages = {
   "share.title": { ko: "시간표 공유", en: "Share timetable" },
   "share.subtitle": {
     ko: "링크를 복사해서 함께할 사람에게 보내주세요.",
-    en: "Copy a link and send it to the people joining you."
+    en: "Copy the link and send it to the people you're planning with."
   },
   "share.linkLabel": { ko: "프로젝트 링크", en: "Project link" },
   "share.linkExplainer": {
@@ -774,13 +774,13 @@ export const messages = {
   "map.title": { ko: "이동 경로", en: "Route" },
   "map.subtitle": {
     ko: "위치를 입력한 일정을 시간 순서대로 지도에 이어서 보여줘요.",
-    en: "Schedules with a location, pinned and joined in time order."
+    en: "Events with a location, connected on the map in time order."
   },
   "map.previousDay": { ko: "이전 날짜", en: "Previous day" },
   "map.nextDay": { ko: "다음 날짜", en: "Next day" },
   "map.noLocations": {
     ko: "이 날짜에는 위치가 입력된 일정이 없어요. 일정의 위치 칸에 주소나 장소 이름을 넣어주세요.",
-    en: "No schedule on this day has a location yet. Add an address or place name to a schedule's location field."
+    en: "No events on this day have a location yet. Add an address or place name to an event's location field."
   },
   "map.noKey": {
     ko: "지도를 쓰려면 구글 지도 API 키가 필요해요. NEXT_PUBLIC_GOOGLE_MAPS_API_KEY 환경 변수를 설정해주세요.",
@@ -797,11 +797,11 @@ export const messages = {
   },
   "map.notFoundHint": {
     ko: "{count}개 일정의 위치를 지도에서 찾지 못했어요. 더 구체적인 주소로 바꾸면 표시됩니다.",
-    en: "Couldn't place {count} schedule(s) on the map. A more specific address will fix it."
+    en: "Couldn't place {count} event(s) on the map. A more specific address will fix it."
   },
 
   // ---------------------------------------------------------------- invite
-  "invite.eyebrow": { ko: "플래너 투게더 초대", en: "Planner Together invitation" },
+  "invite.eyebrow": { ko: "플래너 투게더 초대", en: "You're invited to Planner Together" },
   "invite.joining": { ko: "참여하는 중...", en: "Joining…" },
   "invite.joiningBody": {
     ko: "잠시만요, 시간표에 참여자로 등록하고 있어요.",
@@ -827,13 +827,13 @@ export const messages = {
   // Shown when the public link is opened as a page rather than inside an
   // iframe: the reader is a person, not a Notion block.
   "embed.makeOwn": { ko: "나도 만들기", en: "Make my own" },
-  "embed.memberLogin": { ko: "멤버 로그인", en: "Member log in" },
+  "embed.memberLogin": { ko: "멤버 로그인", en: "Members, log in" },
 
   // ---------------------------------------------------------------- project page
   "project.notFound": { ko: "시간표를 찾을 수 없어요", en: "Timetable not found" },
   "project.notFoundBody": {
-    ko: "이 시간표가 없거나 아직 참여자가 아니에요. 이 주소 대신 초대 링크(/invite/…)를 받아서 열어주세요.",
-    en: "It doesn't exist, or you haven't joined yet. Open an invite link (/invite/…) instead of this address."
+    ko: "이 시간표가 없거나 아직 참여자가 아니에요. 이 주소 대신 프로젝트 링크(/invite/…)를 받아서 열어주세요.",
+    en: "It doesn't exist, or you haven't joined yet. Ask for the project link (/invite/…) and open that instead."
   },
   "project.loadingBody": { ko: "시간표를 불러오고 있어요.", en: "Loading the timetable." },
   "project.loadFailed": {
@@ -854,22 +854,22 @@ export const messages = {
     ko: "원하는 날짜를 추가해서 시간표를 시작하세요.",
     en: "Add some dates to start building your timetable."
   },
-  "grid.newSchedule": { ko: "새 일정", en: "New schedule" },
+  "grid.newSchedule": { ko: "새 일정", en: "New event" },
   "grid.draftPlaceholder": {
     ko: "일정 이름 (비우면 취소)",
-    en: "Schedule name (leave empty to cancel)"
+    en: "Event name (leave empty to cancel)"
   },
   "grid.allDayPlaceholder": {
     ko: "종일 일정 (비우면 취소)",
-    en: "All-day schedule (leave empty to cancel)"
+    en: "All-day event (leave empty to cancel)"
   },
-  "grid.scheduleSaveFailed": { ko: "일정을 저장하지 못했어요.", en: "Couldn't save the schedule." },
+  "grid.scheduleSaveFailed": { ko: "일정을 저장하지 못했어요.", en: "Couldn't save the event." },
   "grid.allDaySaveFailed": {
     ko: "종일 일정을 저장하지 못했어요.",
-    en: "Couldn't save the all-day schedule."
+    en: "Couldn't save the all-day event."
   },
-  "grid.moveFailed": { ko: "일정을 옮기지 못했어요", en: "Couldn't move the schedule" },
-  "grid.resizeFailed": { ko: "길이를 바꾸지 못했어요", en: "Couldn't resize the schedule" },
+  "grid.moveFailed": { ko: "일정을 옮기지 못했어요", en: "Couldn't move the event" },
+  "grid.resizeFailed": { ko: "길이를 바꾸지 못했어요", en: "Couldn't resize the event" },
   "grid.undoSuccess": { ko: "직전 편집을 되돌렸어요.", en: "Undid the last change." },
   "grid.undoFailed": { ko: "직전 편집을 되돌리지 못했어요.", en: "Couldn't undo the last change." },
   "grid.wakeTime": { ko: "기상 시간", en: "Wake time" },
@@ -877,7 +877,7 @@ export const messages = {
   "grid.setWakeTime": { ko: "기상 시간 설정", en: "Set wake time" },
   "grid.openMap": { ko: "이동 경로 지도", en: "Route map" },
   "grid.saveWakeTime": { ko: "저장", en: "Save" },
-  "grid.savingWakeTime": { ko: "저장 중...", en: "Saving..." },
+  "grid.savingWakeTime": { ko: "저장 중...", en: "Saving…" },
   "grid.clearWakeTime": { ko: "기상 시간 해제", en: "Clear wake time" },
   "grid.sleepTime": { ko: "수면", en: "Sleep" },
   "grid.sleepDuration": { ko: "수면 시간", en: "Sleep duration" },
@@ -888,10 +888,10 @@ export const messages = {
   },
 
   // ---------------------------------------------------------------- detail panel
-  "detail.title": { ko: "일정 상세", en: "Schedule details" },
+  "detail.title": { ko: "일정 상세", en: "Event details" },
   "detail.empty": {
     ko: "일정을 클릭하면 여기에서 바로 수정할 수 있어요.",
-    en: "Click a schedule to edit it right here."
+    en: "Click an event to edit it right here."
   },
   "detail.date": { ko: "날짜", en: "Date" },
   "detail.startDate": { ko: "시작 날짜", en: "Start date" },
@@ -908,8 +908,8 @@ export const messages = {
     ko: "Delete 키로도 삭제할 수 있어요.",
     en: "You can also press Delete."
   },
-  "detail.deleted": { ko: "일정을 삭제했어요.", en: "Schedule deleted." },
-  "detail.deleteFailed": { ko: "일정을 삭제하지 못했어요.", en: "Couldn't delete the schedule." },
+  "detail.deleted": { ko: "일정을 삭제했어요.", en: "Event deleted." },
+  "detail.deleteFailed": { ko: "일정을 삭제하지 못했어요.", en: "Couldn't delete the event." },
   "detail.saveFailed": { ko: "변경사항을 저장하지 못했어요.", en: "Couldn't save your changes." },
   "detail.endBeforeStart": {
     ko: "종료 시간은 시작 시간보다 뒤여야 해요.",
@@ -924,7 +924,7 @@ export const messages = {
   "error.deleteDenied": { ko: "삭제 권한이 없어요.", en: "You don't have permission to delete this." },
   "error.scheduleDeleteDenied": {
     ko: "이 일정을 삭제할 권한이 없거나, 이미 삭제된 일정이에요.",
-    en: "You can't delete this schedule, or it's already been deleted."
+    en: "You can't delete this event, or it's already been deleted."
   },
 
   // ---------------------------------------------------------------- misc
