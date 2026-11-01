@@ -1,14 +1,9 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  EmbeddedTimetable,
-  type EmbeddedDay,
-  type EmbeddedSchedule
-} from "@/components/embed/EmbeddedTimetable";
+import { EmbeddedTimetable } from "@/components/embed/EmbeddedTimetable";
+import { EMBED_TOKEN_PATTERN, parseTimetable } from "@/lib/embed/timetable";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Json } from "@/types/database";
-import type { ProjectKind } from "@/types/project";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +12,7 @@ export const dynamic = "force-dynamic";
 // instead of throwing: the page turns that into a 404, while the metadata just
 // keeps the generic title.
 const loadTimetable = cache(async (token: string) => {
-  if (!/^[a-f0-9]{32}$/i.test(token)) return null;
+  if (!EMBED_TOKEN_PATTERN.test(token)) return null;
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -64,61 +59,5 @@ export default async function EmbedPage({
       schedules={timetable.schedules}
       standalone={view === "page"}
     />
-  );
-}
-
-function parseTimetable(value: Json | null): {
-  project: { title: string; slug: string; kind: ProjectKind };
-  days: EmbeddedDay[];
-  schedules: EmbeddedSchedule[];
-} | null {
-  if (!isRecord(value) || !isRecord(value.project)) return null;
-  const project = value.project;
-  if (
-    typeof project.title !== "string" ||
-    typeof project.slug !== "string" ||
-    (project.kind !== "weekly" && project.kind !== "daterange") ||
-    !Array.isArray(value.days) ||
-    !Array.isArray(value.schedules)
-  ) {
-    return null;
-  }
-
-  const days = value.days.filter(isEmbeddedDay);
-  const schedules = value.schedules.filter(isEmbeddedSchedule);
-  if (days.length !== value.days.length || schedules.length !== value.schedules.length) return null;
-
-  return {
-    project: { title: project.title, slug: project.slug, kind: project.kind },
-    days,
-    schedules
-  };
-}
-
-function isRecord(value: Json | null | undefined): value is { [key: string]: Json | undefined } {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isEmbeddedDay(value: Json): value is EmbeddedDay {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.date === "string" &&
-    typeof value.sort_order === "number"
-  );
-}
-
-function isEmbeddedSchedule(value: Json): value is EmbeddedSchedule {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.day_id === "string" &&
-    (value.end_day_id === null || typeof value.end_day_id === "string") &&
-    typeof value.title === "string" &&
-    (value.location === null || typeof value.location === "string") &&
-    typeof value.start_time === "string" &&
-    typeof value.end_time === "string" &&
-    (value.color === null || typeof value.color === "string") &&
-    typeof value.all_day === "boolean"
   );
 }

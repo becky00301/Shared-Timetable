@@ -3,24 +3,36 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { EmbeddedTimetable } from "@/components/embed/EmbeddedTimetable";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Button } from "@/components/ui/button";
+import { EMBED_TOKEN_PATTERN, parseTimetable, type EmbeddedTimetableData } from "@/lib/embed/timetable";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 
-type Status = "checking" | "needs-login" | "joining" | "error";
+type Status = "checking" | "preview" | "needs-login" | "joining" | "error";
 
 export default function InvitePage() {
   const params = useParams<{ token: string }>();
   const router = useRouter();
   const joinByInviteToken = useProjectStore((state) => state.joinByInviteToken);
   const [status, setStatus] = useState<Status>("checking");
+  const [preview, setPreview] = useState<EmbeddedTimetableData | null>(null);
   const t = useT();
 
   useEffect(() => {
     let cancelled = false;
     const supabase = createSupabaseBrowserClient();
+
+    async function loadPreview(viewKey: string) {
+      const { data, error } = await supabase!.rpc("get_embedded_timetable", { embed_token_value: viewKey });
+      if (error) {
+        console.error(error);
+        return null;
+      }
+      return parseTimetable(data);
+    }
 
     async function run() {
       if (!supabase) {
@@ -29,7 +41,14 @@ export default function InvitePage() {
       }
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        if (!cancelled) setStatus("needs-login");
+        // Signed out: show the timetable read-only first, when the link
+        // carries its view key. Logging in from there comes back here and
+        // joins as an editor.
+        const viewKey = new URLSearchParams(window.location.search).get("view");
+        const timetable = viewKey && EMBED_TOKEN_PATTERN.test(viewKey) ? await loadPreview(viewKey) : null;
+        if (cancelled) return;
+        setPreview(timetable);
+        setStatus(timetable ? "preview" : "needs-login");
         return;
       }
       if (!cancelled) setStatus("joining");
@@ -49,6 +68,20 @@ export default function InvitePage() {
   }, [params.token, joinByInviteToken, router]);
 
   const loginHref = `/login?next=${encodeURIComponent(`/invite/${params.token}`)}`;
+
+  if (status === "preview" && preview) {
+    return (
+      <EmbeddedTimetable
+        title={preview.project.title}
+        slug={preview.project.slug}
+        kind={preview.project.kind}
+        days={preview.days}
+        schedules={preview.schedules}
+        standalone
+        joinHref={loginHref}
+      />
+    );
+  }
 
   return (
     <AuthShell wide className="text-center">

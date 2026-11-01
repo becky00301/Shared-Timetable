@@ -807,6 +807,7 @@ export const messages = {
     ko: "잠시만요, 시간표에 참여자로 등록하고 있어요.",
     en: "One moment — adding you to the timetable."
   },
+  "invite.preview.join": { ko: "로그인하고 편집자로 참여하기", en: "Log in to edit together" },
   "invite.needLogin": { ko: "로그인하고 참여하기", en: "Log in to join" },
   "invite.needLoginBody": {
     ko: "참여하려면 계정이 필요해요. 로그인하거나 회원가입을 마치면 이 시간표에 자동으로 참여됩니다.",

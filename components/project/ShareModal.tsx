@@ -18,8 +18,11 @@ export function ShareModal({ project }: { project: Project }) {
   // One link for everyone. The invite route lets a newcomer join and sends
   // anyone already in the timetable straight to it, so it works as the
   // project's link too. The bare /plans/<slug> address can't stand in for
-  // it: slugs come from titles, so they are guessable.
-  const shareUrl = `${origin}/invite/${project.invite_token}`;
+  // it: slugs come from titles, so they are guessable. The read-only key
+  // rides along so someone not signed in sees the timetable before logging in.
+  const shareUrl = project.embed_token
+    ? `${origin}/invite/${project.invite_token}?view=${project.embed_token}`
+    : `${origin}/invite/${project.invite_token}`;
 
   async function copy(value: string) {
     await navigator.clipboard.writeText(value);

@@ -117,7 +117,8 @@ export function EmbeddedTimetable({
   kind,
   days,
   schedules,
-  standalone = false
+  standalone = false,
+  joinHref
 }: {
   title: string;
   slug: string;
@@ -129,6 +130,9 @@ export function EmbeddedTimetable({
       only throws a signed-out reader at the login screen, so the page gets a
       header they can act on instead. */
   standalone?: boolean;
+  /** Set when the reader came through a project link: they can join, so the
+      one action is to log in and edit, in place of the stranger's choices. */
+  joinHref?: string;
 }) {
   const router = useRouter();
   const fmt = useDateFormat();
@@ -173,14 +177,22 @@ export function EmbeddedTimetable({
         </span>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {/* Editing this timetable takes an invite from its owner, so the
-            prominent action is the one a stranger can actually take. */}
-        <Button asChild size="sm">
-          <Link href="/dashboard">{t("embed.makeOwn")}</Link>
-        </Button>
-        <Button asChild size="sm" variant="outline">
-          <Link href={`/login?next=${encodeURIComponent(projectHref)}`}>{t("embed.memberLogin")}</Link>
-        </Button>
+        {joinHref ? (
+          <Button asChild size="sm">
+            <Link href={joinHref}>{t("invite.preview.join")}</Link>
+          </Button>
+        ) : (
+          <>
+            {/* Editing this timetable takes an invite from its owner, so the
+                prominent action is the one a stranger can actually take. */}
+            <Button asChild size="sm">
+              <Link href="/dashboard">{t("embed.makeOwn")}</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/login?next=${encodeURIComponent(projectHref)}`}>{t("embed.memberLogin")}</Link>
+            </Button>
+          </>
+        )}
       </div>
     </header>
   ) : (
