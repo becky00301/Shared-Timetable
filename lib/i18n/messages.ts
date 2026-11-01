@@ -191,8 +191,8 @@ export const messages = {
   },
   "landing.faq.q2": { ko: "같이 쓰려면 상대도 가입해야 하나요?", en: "Does everyone need an account?" },
   "landing.faq.a2": {
-    ko: "함께 편집하려면 계정이 필요해요. 다만 읽기 전용 링크는 로그인 없이 볼 수 있어서, 보기만 할 사람은 그냥 링크만 열면 됩니다.",
-    en: "Editing together does. But a read-only link opens without logging in, so anyone who just needs to look can simply open it."
+    ko: "네, 계정이 필요해요. 프로젝트 링크를 받은 사람이 로그인(또는 회원가입)하면 바로 편집자로 참여해서 함께 고칠 수 있어요.",
+    en: "Yes, everyone needs an account. Whoever gets the project link joins as an editor once they log in or sign up, and can edit with you straight away."
   },
   // Embedding is deliberately not advertised here: the production database is
   // still missing migration 012, so embed links 404. Put it back once that
@@ -726,19 +726,10 @@ export const messages = {
     ko: "링크를 복사해서 함께할 사람에게 보내주세요.",
     en: "Copy a link and send it to the people joining you."
   },
-  "share.inviteLabel": { ko: "초대 링크", en: "Invite link" },
-  "share.inviteHint": {
-    ko: "함께할 사람에게 보낼 링크예요",
-    en: "the link to send to people joining you"
-  },
-  "share.inviteExplainer": {
-    ko: "초대 링크를 연 사람은 로그인(또는 회원가입) 후 보기 전용(뷰어)으로 참여해요. 편집을 맡기려면 참여한 뒤 소유자가 참여자 목록에서 권한을 바꿔주면 됩니다.",
-    en: "Anyone opening the invite link joins as a viewer after logging in or signing up. To let them edit, the owner changes their role in the member list once they've joined."
-  },
-  "share.projectLabel": { ko: "프로젝트 링크", en: "Project link" },
-  "share.projectHint": {
-    ko: "로그인 없이 읽고, 멤버는 로그인 후 편집할 수 있어요",
-    en: "opens read-only without a login; members can edit after signing in"
+  "share.linkLabel": { ko: "프로젝트 링크", en: "Project link" },
+  "share.linkExplainer": {
+    ko: "이 링크를 연 사람은 로그인(또는 회원가입) 후 편집자로 참여해 함께 시간표를 수정할 수 있어요. 이미 참여한 사람은 바로 시간표로 이동해요. 보기만 허용하려면 소유자가 참여자 목록에서 권한을 뷰어로 바꿀 수 있어요.",
+    en: "Anyone who opens this link joins as an editor after logging in or signing up, and can edit the timetable with you. People already in the timetable go straight to it. For view-only access, the owner can change someone's role to viewer in the member list."
   },
   "share.copied": { ko: "링크를 복사했어요.", en: "Link copied." },
   "share.button": { ko: "공유", en: "Share" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Link2 } from "lucide-react";
+import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,10 +15,11 @@ export function ShareModal({ project }: { project: Project }) {
   const setOpen = useUiStore((state) => state.setShareOpen);
   const t = useT();
   const origin = typeof window === "undefined" ? SITE_URL : window.location.origin;
-  const projectUrl = project.embed_token
-    ? `${origin}/plans/${project.slug}?embed=${project.embed_token}`
-    : `${origin}/plans/${project.slug}`;
-  const inviteUrl = `${origin}/invite/${project.invite_token}`;
+  // One link for everyone. The invite route lets a newcomer join and sends
+  // anyone already in the timetable straight to it, so it works as the
+  // project's link too. The bare /plans/<slug> address can't stand in for
+  // it: slugs come from titles, so they are guessable.
+  const shareUrl = `${origin}/invite/${project.invite_token}`;
 
   async function copy(value: string) {
     await navigator.clipboard.writeText(value);
@@ -35,36 +36,19 @@ export function ShareModal({ project }: { project: Project }) {
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          {/* Invite link first: sharing the project link with a non-member only
-              gets them an access-denied page. */}
           <label className="flex flex-col gap-2 rounded-lg border border-primary/40 bg-primary/[0.06] p-3 text-sm text-muted">
-            <span>
-              <span className="font-medium text-foreground">{t("share.inviteLabel")}</span> — {t("share.inviteHint")}
-            </span>
+            <span className="font-medium text-foreground">{t("share.linkLabel")}</span>
             <div className="flex gap-2">
-              <Input readOnly value={inviteUrl} />
-              <Button type="button" size="icon" onClick={() => copy(inviteUrl)}>
-                <Link2 size={17} />
-              </Button>
-            </div>
-          </label>
-
-          <div className="rounded-lg border border-border bg-black/[0.03] p-3 text-sm leading-6 text-muted">
-            {t("share.inviteExplainer")}
-          </div>
-
-          <label className="flex flex-col gap-2 text-sm text-muted">
-            <span>
-              {t("share.projectLabel")} — {t("share.projectHint")}
-            </span>
-            <div className="flex gap-2">
-              <Input readOnly value={projectUrl} />
-              <Button type="button" size="icon" variant="outline" onClick={() => copy(projectUrl)}>
+              <Input readOnly value={shareUrl} />
+              <Button type="button" size="icon" onClick={() => copy(shareUrl)}>
                 <Copy size={17} />
               </Button>
             </div>
           </label>
 
+          <div className="rounded-lg border border-border bg-black/[0.03] p-3 text-sm leading-6 text-muted">
+            {t("share.linkExplainer")}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -111,6 +111,7 @@ Incremental migrations live in `sql/migrations/` and are already folded into `sq
 - `011_remove_google_and_legacy.sql` — remove retired Google sync data and legacy anonymous timetable storage
 - `012_read_only_embeds.sql` — add separate read-only embed tokens
 - `015_budget.sql` — per-schedule amounts, a project budget, and free-standing expenses
+- `20261030034142_invite_default_editor.sql` — new invitees join as editors; existing member roles stay unchanged
 - `20261030034929_note_order.sql` — persistent note ordering and live note updates
 - `20261030075714_editor_budget.sql` — allow owners and editors to save budget fields without granting project management access
 

@@ -687,7 +687,7 @@ begin
   end if;
 
   insert into public.project_members (project_id, user_id, role)
-  values (target_project.id, auth.uid(), 'viewer')
+  values (target_project.id, auth.uid(), 'editor')
   on conflict (project_id, user_id) do nothing;
 
   return target_project.id;
