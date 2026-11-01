@@ -1,9 +1,10 @@
 "use client";
 
-import { createElement } from "react";
+import { createElement, useState } from "react";
 import { ChevronDown, Crown, Eye, Pencil, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { RoleBadge } from "@/components/project/RoleBadge";
+import { TransferOwnershipDialog } from "@/components/project/TransferOwnershipDialog";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import type { ProjectMember } from "@/types/project";
@@ -28,6 +29,7 @@ export function ParticipantList({
   canManage?: boolean;
 }) {
   const updateMemberRole = useProjectStore((state) => state.updateMemberRole);
+  const [transferOpen, setTransferOpen] = useState(false);
   const t = useT();
 
   function changeRole(member: ProjectMember, role: "editor" | "viewer") {
@@ -77,15 +79,36 @@ export function ParticipantList({
                 className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted"
               />
             </div>
+          ) : canManage ? (
+            // The owner's own badge opens the hand-over: it is the one row the
+            // owner can't change any other way.
+            <button
+              type="button"
+              onClick={() => setTransferOpen(true)}
+              aria-label={t("members.transfer.open")}
+              title={t("members.transfer.open")}
+              className="shrink-0 rounded-full transition hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              {roleBadge(member)}
+            </button>
           ) : (
-            <RoleBadge
-              role={member.role}
-              className={`${ROLE_BOX} shrink-0 justify-between pl-3 pr-2`}
-              icon={createElement(ROLE_ICONS[member.role], { size: 13, "aria-hidden": true, className: "shrink-0" })}
-            />
+            roleBadge(member)
           )}
         </div>
       ))}
+      {canManage ? (
+        <TransferOwnershipDialog open={transferOpen} onOpenChange={setTransferOpen} members={members} />
+      ) : null}
     </div>
+  );
+}
+
+function roleBadge(member: ProjectMember) {
+  return (
+    <RoleBadge
+      role={member.role}
+      className={`${ROLE_BOX} shrink-0 justify-between pl-3 pr-2`}
+      icon={createElement(ROLE_ICONS[member.role], { size: 13, "aria-hidden": true, className: "shrink-0" })}
+    />
   );
 }

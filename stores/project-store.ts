@@ -91,6 +91,7 @@ type ProjectStore = {
   reset: () => void;
   joinByInviteToken: (token: string) => Promise<string>;
   updateMemberRole: (memberId: string, role: "editor" | "viewer") => Promise<void>;
+  transferOwnership: (projectId: string, newOwnerId: string) => Promise<void>;
   getProjectBySlug: (slug: string) => Project | undefined;
 };
 
@@ -991,6 +992,29 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (error) throw error;
     set((state) => ({
       members: state.members.map((member) => (member.id === memberId ? (data as ProjectMember) : member))
+    }));
+  },
+
+  // One database call moves both the owner's membership and projects.owner_id;
+  // the local copy is then patched the same way rather than refetched.
+  transferOwnership: async (projectId, newOwnerId) => {
+    const supabase = requireClient();
+    const previousOwnerId = get().currentUserId;
+    const { error } = await supabase.rpc("transfer_project_ownership", {
+      project_uuid: projectId,
+      new_owner_id: newOwnerId
+    });
+    if (error) throw error;
+    set((state) => ({
+      projects: state.projects.map((project) =>
+        project.id === projectId ? { ...project, owner_id: newOwnerId } : project
+      ),
+      members: state.members.map((member) => {
+        if (member.project_id !== projectId) return member;
+        if (member.user_id === newOwnerId) return { ...member, role: "owner" };
+        if (member.user_id === previousOwnerId) return { ...member, role: "editor" };
+        return member;
+      })
     }));
   },
 

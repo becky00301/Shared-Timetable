@@ -246,6 +246,10 @@ export type Database = {
         Args: { token: string };
         Returns: string;
       };
+      transfer_project_ownership: {
+        Args: { project_uuid: string; new_owner_id: string };
+        Returns: undefined;
+      };
       claim_guest_project: {
         Args: { project_slug: string };
         Returns: string;

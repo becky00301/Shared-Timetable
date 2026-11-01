@@ -720,6 +720,56 @@ grant execute on function public.can_edit_project(uuid) to authenticated;
 grant execute on function public.can_manage_project(uuid) to authenticated;
 grant execute on function public.join_project_by_invite(text) to authenticated;
 
+-- Hands ownership to an existing member; the previous owner stays as an editor.
+create or replace function public.transfer_project_ownership(project_uuid uuid, new_owner_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller uuid := auth.uid();
+  target_project public.projects;
+begin
+  if caller is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+
+  select * into target_project
+  from public.projects
+  where id = project_uuid
+  for update;
+
+  if target_project.id is null or target_project.owner_id <> caller then
+    raise exception 'Only the owner can transfer ownership' using errcode = '42501';
+  end if;
+
+  if new_owner_id = caller then
+    raise exception 'Already the owner' using errcode = '22023';
+  end if;
+
+  update public.project_members
+  set role = 'owner'
+  where project_id = project_uuid
+    and user_id = new_owner_id;
+
+  if not found then
+    raise exception 'The new owner must already be in the project' using errcode = '22023';
+  end if;
+
+  insert into public.project_members (project_id, user_id, role)
+  values (project_uuid, caller, 'editor')
+  on conflict (project_id, user_id) do update set role = 'editor';
+
+  update public.projects
+  set owner_id = new_owner_id
+  where id = project_uuid;
+end;
+$$;
+
+revoke execute on function public.transfer_project_ownership(uuid, uuid) from public, anon;
+grant execute on function public.transfer_project_ownership(uuid, uuid) to authenticated;
+
 create or replace function public.get_embedded_timetable(embed_token_value text)
 returns jsonb
 language plpgsql

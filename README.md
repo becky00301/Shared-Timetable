@@ -114,6 +114,7 @@ Incremental migrations live in `sql/migrations/` and are already folded into `sq
 - `20261030034142_invite_default_editor.sql` — new invitees join as editors; existing member roles stay unchanged
 - `20261030034929_note_order.sql` — persistent note ordering and live note updates
 - `20261030075714_editor_budget.sql` — allow owners and editors to save budget fields without granting project management access
+- `20261101120000_transfer_ownership.sql` — let an owner hand ownership to an existing member, who becomes owner while the previous owner stays as an editor
 
 For an existing database that previously enabled Google Calendar sync or the legacy standalone timetable, run `sql/migrations/011_remove_google_and_legacy.sql`. This permanently deletes the retired integration tokens and legacy timetable data.
 

@@ -719,6 +719,22 @@ export const messages = {
   "members.roleChanged": { ko: "권한을 변경했어요.", en: "Role updated." },
   "members.roleChangeFailed": { ko: "권한을 변경하지 못했어요.", en: "Couldn't update the role." },
   "members.changeRoleLabel": { ko: "멤버 권한 변경", en: "Change member role" },
+  "members.transfer.open": { ko: "소유자 위임하기", en: "Transfer ownership" },
+  "members.transfer.title": {
+    ko: "소유자를 누구에게 위임하시겠습니까?",
+    en: "Who should own this timetable?"
+  },
+  "members.transfer.body": {
+    ko: "위임하면 나는 편집자가 되고, 참여자 권한 변경과 시간표 삭제는 새 소유자만 할 수 있어요.",
+    en: "You'll become an editor. Only the new owner will be able to change roles or delete the timetable."
+  },
+  "members.transfer.empty": {
+    ko: "아직 함께하는 사람이 없어요. 프로젝트 링크로 초대한 뒤 위임할 수 있어요.",
+    en: "No one else is here yet. Invite someone with the project link first."
+  },
+  "members.transfer.confirm": { ko: "임명하기", en: "Appoint" },
+  "members.transfer.done": { ko: "{name}님이 소유자가 됐어요.", en: "{name} now owns this timetable." },
+  "members.transfer.failed": { ko: "소유자를 위임하지 못했어요.", en: "Couldn't transfer ownership." },
 
   // ---------------------------------------------------------------- share
   "share.title": { ko: "시간표 공유", en: "Share timetable" },
