@@ -118,6 +118,9 @@ export function TimetableGrid({
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollReleaseRef = useRef<(() => void) | null>(null);
+  // The event a touch long-press picked up. It stays armed after the drop,
+  // showing its resize handles, until the reader touches anything else.
+  const [armedId, setArmedId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const timedRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -244,6 +247,7 @@ export function TimetableGrid({
   const hScroll = colWidth !== undefined;
 
   useEffect(() => {
+    setArmedId(null);
     if (activeMode === "wake") {
       setDraft(null);
       setSelectedSchedule(null);
@@ -448,6 +452,8 @@ export function TimetableGrid({
     const columnWidth = colWidth ?? measuredWidth;
     const columnShift = Math.round(event.delta.x / Math.max(1, columnWidth));
     const nextDay = days[Math.max(0, Math.min(days.length - 1, currentDayIndex + columnShift))] ?? days[currentDayIndex];
+    // A long-press that only armed the event lands where it started.
+    if (nextDay.id === item.day_id && start === timeToMinutes(item.start_time)) return;
     upsertSchedule({
       ...item,
       day_id: nextDay.id,
@@ -513,8 +519,11 @@ export function TimetableGrid({
       autoScroll={false}
       // The drop position comes from the pointer's delta, so the grid must not
       // scroll under a moving block.
-      onDragStart={() => {
+      onDragStart={(event) => {
         scrollReleaseRef.current = holdScroll();
+        if (typeof TouchEvent !== "undefined" && event.activatorEvent instanceof TouchEvent) {
+          setArmedId(String(event.active.id));
+        }
       }}
       onDragCancel={releaseScroll}
       onDragEnd={onDragEnd}
@@ -543,6 +552,11 @@ export function TimetableGrid({
       <div
         ref={scrollRef}
         id={TIMETABLE_SCROLLER_ID}
+        onPointerDownCapture={(event) => {
+          if (!armedId) return;
+          const target = event.target as Element;
+          if (!target.closest(`[data-schedule-id="${armedId}"]`)) setArmedId(null);
+        }}
         className={cn(
           "min-h-0 flex-1 overflow-auto overscroll-none bg-background",
           // Frames the grid while wake-time mode is on. An outline on an
@@ -628,6 +642,7 @@ export function TimetableGrid({
                   width={colWidth}
                   hourHeight={hourHeight}
                   selectedScheduleId={selectedScheduleId}
+                  armedScheduleId={armedId}
                   schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
                   availability={availability.filter((slot) => slot.day_id === day.id)}
                   draft={

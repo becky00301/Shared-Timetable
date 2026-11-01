@@ -72,6 +72,7 @@ export function DateColumn({
   memberCount,
   activeMode,
   selectedScheduleId,
+  armedScheduleId,
   canEdit,
   width,
   hourHeight,
@@ -91,6 +92,7 @@ export function DateColumn({
   memberCount: number;
   activeMode: "schedule" | "availability" | "wake";
   selectedScheduleId: string | null;
+  armedScheduleId: string | null;
   canEdit: boolean;
   width?: number;
   hourHeight: number;
@@ -193,6 +195,7 @@ export function DateColumn({
             canEdit={canEdit}
             isInteractive={activeMode !== "wake"}
             isSelected={selectedScheduleId === item.id}
+            resizeArmed={armedScheduleId === item.id}
             hourHeight={hourHeight}
             onSelect={() => onSelectSchedule(item.id)}
             onResize={(startTime, endTime) => onResize(item, startTime, endTime)}

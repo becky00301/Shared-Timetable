@@ -20,6 +20,11 @@ import {
 } from "@/lib/utils/time";
 import type { ScheduleItem } from "@/types/schedule";
 
+/** Space between a block and its column's sides, and between a block and the
+    hour lines it starts and ends on. */
+const EDGE_GAP = 2;
+const VERTICAL_INSET = 1;
+
 /** How close to the edge of the visible hours a resize starts scrolling (wide
     enough for a fingertip), and the fastest it goes per frame. */
 const AUTO_SCROLL_EDGE = 72;
@@ -32,6 +37,7 @@ export function ScheduleBlock({
   isSelected,
   canEdit,
   isInteractive = true,
+  resizeArmed = false,
   hourHeight,
   onSelect,
   onResize,
@@ -43,6 +49,9 @@ export function ScheduleBlock({
   isSelected: boolean;
   canEdit: boolean;
   isInteractive?: boolean;
+  /** On a touch screen, the event a long-press picked: only it shows resize
+      handles and takes a resize from its edges. A mouse can always resize. */
+  resizeArmed?: boolean;
   hourHeight: number;
   onSelect: () => void;
   /** Called once, on release — not on every pointer move. */
@@ -71,11 +80,14 @@ export function ScheduleBlock({
   const height = resize
     ? Math.max(34, minutesToTop(resize.endMinutes - resize.startMinutes, hourHeight))
     : baseHeight;
+  // Hairline gaps, as in a native calendar: the block fills its column but
+  // for EDGE_GAP at each side, and sits a pixel inside its hour lines so two
+  // back-to-back events show a seam instead of merging.
   const splitPosition =
     laneCount > 1
       ? {
-          left: `calc(${(lane / laneCount) * 100}% + ${lane === 0 ? 4 : 2}px)`,
-          right: `calc(${((laneCount - lane - 1) / laneCount) * 100}% + ${lane === laneCount - 1 ? 4 : 2}px)`
+          left: `calc(${(lane / laneCount) * 100}% + ${EDGE_GAP}px)`,
+          right: `calc(${((laneCount - lane - 1) / laneCount) * 100}% + ${EDGE_GAP}px)`
         }
       : undefined;
   const isSplit = laneCount > 1;
@@ -183,16 +195,17 @@ export function ScheduleBlock({
         // transition-colors only: animating transform makes the block lag the cursor.
         // Not overflow-hidden: the handles' touch areas reach past the block's
         // edges. The text clips itself instead.
-        "absolute left-1 right-1 z-10 flex touch-manipulation cursor-pointer flex-col rounded-[4px] border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:p-2",
+        "absolute left-0.5 right-0.5 z-10 flex touch-manipulation cursor-pointer flex-col rounded-[4px] border border-black/[0.06] px-1.5 py-2 text-left shadow-lg transition-colors sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
         // Faded while another mode (wake time) owns the grid's clicks.
         !isInteractive && "pointer-events-none opacity-40",
         isSelected && (textColor === "#111827" ? "ring-2 ring-black/40" : "ring-2 ring-white/70"),
+        resizeArmed && "z-20 shadow-xl",
         isDragging && "opacity-70"
       )}
       style={{
-        top,
-        height,
+        top: top + VERTICAL_INSET,
+        height: height - VERTICAL_INSET * 2,
         backgroundColor: item.color,
         color: textColor,
         transform: CSS.Translate.toString(transform),
@@ -207,11 +220,17 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 top-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]"
+        className={cn(
+          "absolute inset-x-0 top-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]",
+          // A finger only gets the edges of the armed event; elsewhere a
+          // touch on the edge is just a touch on the event.
+          !resizeArmed && "pointer-coarse:pointer-events-none"
+        )}
         onPointerDown={(event) => startResize("top", event)}
         aria-label="Resize event start"
       >
         <HandleReach edge="top" />
+        {resizeArmed ? <HandleDot edge="top" color={item.color} /> : null}
       </button>
       <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-hidden">
         <p
@@ -257,24 +276,48 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 bottom-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]"
+        className={cn(
+          "absolute inset-x-0 bottom-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]",
+          // A finger only gets the edges of the armed event; elsewhere a
+          // touch on the edge is just a touch on the event.
+          !resizeArmed && "pointer-coarse:pointer-events-none"
+        )}
         onPointerDown={(event) => startResize("bottom", event)}
         aria-label="Resize event end"
       >
         <HandleReach edge="bottom" />
+        {resizeArmed ? <HandleDot edge="bottom" color={item.color} /> : null}
       </button>
     </div>
   );
 }
 
-/** The handle's touch area on a finger-driven screen: 22px tall, mostly past
-    the block's edge so it doesn't eat into the part that moves the block. A
-    mouse keeps the 8px strip it can hit precisely. */
+/** The handle's touch area on a finger-driven screen, live only on the armed
+    event: 32px tall, 20px of it past the block's edge, and 12px past each
+    side so the corner dots are easy to catch. Mostly outside the block, so
+    the middle still moves it. A mouse keeps the 8px strip it can hit
+    precisely. */
 function HandleReach({ edge }: { edge: "top" | "bottom" }) {
   return (
     <span
       aria-hidden
-      className={cn("absolute inset-x-0 h-[22px] pointer-fine:hidden", edge === "top" ? "-top-3" : "-bottom-3")}
+      className={cn("absolute -inset-x-3 h-8 pointer-fine:hidden", edge === "top" ? "-top-5" : "-bottom-5")}
+    />
+  );
+}
+
+/** The visible handle on an armed event, as in iOS Calendar: a white dot
+    ringed in the event's colour, top right and bottom left. Touch only; a
+    mouse finds the edge by its cursor. */
+function HandleDot({ edge, color }: { edge: "top" | "bottom"; color: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "absolute size-3 rounded-full bg-white pointer-fine:hidden",
+        edge === "top" ? "-top-1.5 right-3" : "-bottom-1.5 left-3"
+      )}
+      style={{ boxShadow: `0 0 0 2px color-mix(in oklab, ${color} 65%, black)` }}
     />
   );
 }
