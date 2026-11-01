@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { ReactElement, ReactNode } from "react";
+import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ChevronDown, FileDown, ImageDown, MousePointer2, Sheet } from "lucide-react";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
@@ -277,12 +276,40 @@ const USE_CASE_GROUPS: { label: MessageKey; cases: UseCase[] }[] = [
 
 
 // Fixed positions so the starfield renders identically on server and client.
-export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
+/**
+ * Whether the visitor is signed in, read in the browser from the stored
+ * session, so the landing itself can be built once and served to everyone.
+ * null until the session has been read.
+ */
+function useSignedIn() {
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) {
+      setSignedIn(false);
+      return;
+    }
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setSignedIn(Boolean(data.session)))
+      .catch(() => setSignedIn(false));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  return signedIn;
+}
+
+export function LandingContent() {
   const t = useT();
   // Honoured by hand here rather than only in Reveal, because these cards
   // animate inline instead of being wrapped.
   const reduceMotion = useReducedMotion();
-  const router = useRouter();
+  const signedIn = useSignedIn();
+  const loggedIn = signedIn === true;
+  // The account-dependent buttons keep their place but stay hidden until the
+  // session has been read, so a signed-in reader never sees "get started"
+  // flash before it turns into "my timetables".
+  const authHidden = signedIn === null ? "invisible" : "";
   // Signed out visitors land in the dashboard too: it asks for an account
   // at the point they try to make something, not at the door.
   const appHref = "/dashboard";
@@ -294,8 +321,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
     // The store lives in memory across client-side navigations, so it has to be
     // cleared explicitly or the next page still renders the old account's data.
     useProjectStore.getState().reset();
-    router.push("/");
-    router.refresh();
+    // The buttons follow on their own: the auth listener above hears it.
   }
 
   return (
@@ -328,7 +354,10 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             ) : null}
             <Link
               href={appHref}
-              className="whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-4 py-2 text-xs font-semibold transition sm:text-sm"
+              className={cn(
+                "whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-4 py-2 text-xs font-semibold transition sm:text-sm",
+                authHidden
+              )}
             >
               {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
             </Link>
@@ -352,7 +381,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <span className="block">{t("landing.hero.body1")}</span>
             <span className="block">{t("landing.hero.body2")}</span>
           </p>
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className={cn("mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row", authHidden)}>
             <Link
               href={appHref}
               className="w-full whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-7 py-3.5 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 active:translate-y-0 sm:w-auto"
@@ -561,7 +590,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             {t("landing.final.title")}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/70">{t("landing.final.body")}</p>
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className={cn("mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row", authHidden)}>
             <Link
               href={appHref}
               className="w-full whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-7 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5 active:translate-y-0 sm:w-auto"
@@ -591,7 +620,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
             <Link href="/privacy" className="transition hover:text-foreground">
               {t("common.privacy")}
             </Link>
-            <Link href={appHref} className="transition hover:text-foreground">
+            <Link href={appHref} className={cn("transition hover:text-foreground", authHidden)}>
               {loggedIn ? t("common.dashboard") : t("common.login")}
             </Link>
           </div>

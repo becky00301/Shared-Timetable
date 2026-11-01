@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { LandingContent } from "@/components/layout/LandingContent";
 import { landingFaqStructuredData } from "@/lib/landing-faq";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getUserWithin } from "@/lib/supabase/session";
 import {
   HOME_DESCRIPTION,
   HOME_TITLE,
@@ -11,8 +9,6 @@ import {
   SITE_SHARE_IMAGE,
   WEBSITE_STRUCTURED_DATA
 } from "@/lib/seo";
-
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: HOME_TITLE },
@@ -38,12 +34,9 @@ export const metadata: Metadata = {
 
 const FAQ_STRUCTURED_DATA = landingFaqStructuredData("ko");
 
-export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
-  // Bounded: this only decides whether the nav says "my timetables" or
-  // "get started", which is not worth making the page wait on auth.
-  const user = supabase ? await getUserWithin(supabase) : null;
-
+// Built once and served to everyone: the only account-dependent part, the
+// nav and call-to-action buttons, reads the session in the browser.
+export default function HomePage() {
   return (
     <>
       <script
@@ -58,7 +51,7 @@ export default async function HomePage() {
           __html: JSON.stringify(FAQ_STRUCTURED_DATA).replace(/</g, "\\u003c")
         }}
       />
-      <LandingContent loggedIn={Boolean(user)} />
+      <LandingContent />
     </>
   );
 }

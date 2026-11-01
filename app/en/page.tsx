@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { LandingContent } from "@/components/layout/LandingContent";
 import { landingFaqStructuredData } from "@/lib/landing-faq";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getUserWithin } from "@/lib/supabase/session";
 import {
   HOME_DESCRIPTION_EN,
   HOME_TITLE_EN,
@@ -11,8 +9,6 @@ import {
   SITE_SHARE_IMAGE_EN,
   WEBSITE_STRUCTURED_DATA_EN
 } from "@/lib/seo";
-
-export const dynamic = "force-dynamic";
 
 // The English landing. Same page as /, but the locale provider pins English
 // for this address, so the server sends English markup for search engines to
@@ -53,11 +49,9 @@ export const metadata: Metadata = {
 
 const FAQ_STRUCTURED_DATA = landingFaqStructuredData("en");
 
-export default async function EnglishHomePage() {
-  const supabase = await createSupabaseServerClient();
-  // Bounded, as on the Korean landing: it only picks the nav's button label.
-  const user = supabase ? await getUserWithin(supabase) : null;
-
+// Built once and served to everyone: the only account-dependent part, the
+// nav and call-to-action buttons, reads the session in the browser.
+export default function EnglishHomePage() {
   return (
     <>
       <script
@@ -72,7 +66,7 @@ export default async function EnglishHomePage() {
           __html: JSON.stringify(FAQ_STRUCTURED_DATA).replace(/</g, "\\u003c")
         }}
       />
-      <LandingContent loggedIn={Boolean(user)} />
+      <LandingContent />
     </>
   );
 }
