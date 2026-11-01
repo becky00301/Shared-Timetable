@@ -24,7 +24,7 @@ const SECTIONS_KO: Section[] = [
       "비회원 체험은 종료되어 더 이상 익명 사용자 식별값을 새로 수집하지 않습니다. 체험 종료 전에 생성된 익명 사용자 식별값과 게스트 표시 이름은 제3조의 보유 기간에 따라 처리합니다.",
       "서비스 이용 시: 시간표 이름·설명·종류·선택 날짜, 일정 제목·날짜·시간·장소·메모·색상, 자유 메모, 첨부 링크, 참여자 이메일·역할, 초대 및 공유를 위한 식별값",
       "피드백 제출 시: 이용자가 Google Forms에 직접 입력한 피드백 내용과 선택적으로 입력한 연락 정보",
-      "자동 생성 정보: 접속 IP 주소, 접속 시각, 방문 URL과 동적 경로, 필터링된 쿼리 매개변수, 이전 페이지 주소, 대략적인 접속 지역, 운영체제·브라우저·기기 유형, 서비스 이용 기록, 인증 세션 쿠키",
+      "자동 생성 정보: 접속 IP 주소, 접속 시각, 방문 URL과 동적 경로, 필터링된 쿼리 매개변수, 이전 페이지 주소, 대략적인 접속 지역, 운영체제·브라우저·기기 유형, 서비스 이용 기록, 인증 세션 쿠키, Google 애널리틱스 쿠키(_ga)의 무작위 식별값",
       "수집 방법: 회원가입 및 서비스 입력 화면, 고객 문의·피드백, 서비스 이용 중 자동 생성되는 로그와 분석 이벤트",
       "서비스는 주민등록번호와 같은 고유식별정보나 건강·사상·정치성향과 같은 민감정보를 의도적으로 요구하지 않습니다. 일정 또는 메모에 불필요한 민감정보를 입력하지 마세요."
     ]
@@ -36,6 +36,7 @@ const SECTIONS_KO: Section[] = [
       "시간표·일정·메모·참여 정보: 이용자가 해당 시간표를 삭제할 때까지. 시간표 삭제 시 그 시간표에 속한 날짜, 일정, 메모 및 첨부 정보도 함께 삭제합니다.",
       "체험 종료 전에 생성된 비회원 정보: 이용자가 해당 시간표를 본인 계정으로 이전하거나 삭제할 때까지. 이전이 완료되면 남은 익명 계정 정보는 서비스 운영상 정리 시 삭제합니다.",
       "Vercel Web Analytics 방문자 식별용 해시: 24시간 후 자동 폐기. 개인을 식별하지 않는 집계 통계는 분석 기능에서 삭제하거나 해당 서비스 이용을 종료할 때까지",
+      "Google 애널리틱스 이벤트 데이터: 데이터 보관 설정에 따라 수집 후 2개월이 지나면 자동 삭제. 개인을 식별하지 않는 집계 보고서는 분석 기능에서 삭제하거나 해당 서비스 이용을 종료할 때까지",
       "접속 및 오류 로그: 보안·장애 대응에 필요한 기간 또는 호스팅 제공자의 계약 및 설정에 따른 보유기간까지",
       "관계 법령에서 별도 보관을 요구하는 정보가 발생한 경우에는 해당 법령에서 정한 기간 동안 분리 보관한 후 삭제합니다. 현재 서비스는 유료 결제를 제공하지 않아 결제·거래 기록을 수집하지 않습니다."
     ]
@@ -54,7 +55,7 @@ const SECTIONS_KO: Section[] = [
     body: [
       "Supabase, Inc.: 회원 인증, 데이터베이스, 실시간 협업 데이터 처리. 이메일(있는 경우), 표시 이름, 사용자 식별값, 인증 정보, 시간표·일정·메모·참여 정보를 처리합니다.",
       "Vercel Inc.: 웹 서비스 호스팅, 요청 처리, 배포 로그 및 Web Analytics 제공. 접속 정보, 서비스 요청 데이터와 익명 집계 분석 정보를 처리합니다.",
-      "Google LLC: Google Tag Manager가 설정된 경우 태그 실행과 Google Forms를 통한 피드백 접수에 필요한 정보를 처리합니다.",
+      "Google LLC: Google Tag Manager를 통한 태그 실행, Google 애널리틱스를 통한 방문·이용 통계 분석, Google Forms를 통한 피드백 접수에 필요한 정보를 처리합니다. Google 애널리틱스는 쿠키 식별값, 페이지 조회·이용 이벤트, 이전 페이지 주소, 대략적인 지역, 운영체제·브라우저·기기 유형을 처리합니다.",
       "위 업체는 미국에 본사를 두고 글로벌 인프라를 운영하므로, 정보가 암호화된 통신망을 통해 미국 또는 각 업체가 운영하는 서버 소재 국가에서 처리될 수 있습니다. 이전 시점은 회원가입, 서비스 접속 또는 피드백 제출 시이며, 보유기간은 제3조 및 각 업체와의 계약·개인정보처리방침에 따릅니다.",
       "선택적 분석 또는 피드백 처리를 원하지 않으면 해당 기능을 이용하지 않을 수 있습니다. 핵심 호스팅·인증 처리에 동의하지 않는 경우 서비스 이용이 제한될 수 있으며, 회원 탈퇴로 처리를 중단할 수 있습니다.",
       "서비스는 위탁계약과 제공업체 설정을 통해 목적 외 처리 제한, 접근 통제, 비밀 유지 및 안전한 처리 여부를 확인합니다."
@@ -83,7 +84,8 @@ const SECTIONS_KO: Section[] = [
     body: [
       "로그인 상태와 보안을 유지하기 위해 Supabase 인증 세션 쿠키를 사용합니다. 필수 쿠키를 차단하면 로그인과 협업 기능이 정상적으로 동작하지 않을 수 있습니다.",
       "Vercel Web Analytics는 제3자 쿠키 없이 페이지 조회와 이벤트 시각, URL, 동적 경로, 필터링된 쿼리 매개변수, 이전 페이지 주소, 대략적인 지역, 운영체제·브라우저·기기 유형을 익명 집계 방식으로 처리합니다. 방문자 해시는 24시간 후 폐기됩니다.",
-      "Google Tag Manager는 환경 설정이 활성화된 경우에만 로드되며, 실제 수집 범위는 연결된 태그 설정에 따라 달라집니다. 서비스는 이메일이나 일정 내용이 분석 이벤트에 포함되지 않도록 운영합니다.",
+      "서비스는 Google Tag Manager를 통해 Google 애널리틱스(GA4)를 사용합니다. GA4는 _ga 쿠키에 저장된 무작위 식별값으로 방문을 구분하고, 페이지 조회와 이용 이벤트, 이전 페이지 주소, 대략적인 지역, 운영체제·브라우저·기기 유형을 수집해 이용 현황을 분석하는 데 씁니다. 서비스는 이메일이나 일정 내용이 분석 이벤트에 포함되지 않도록 운영합니다.",
+      "Google 애널리틱스 수집을 원하지 않으면 브라우저에서 쿠키를 차단하거나, Google이 제공하는 애널리틱스 차단 브라우저 부가기능(https://tools.google.com/dlpage/gaoptout)을 설치할 수 있습니다. 거부해도 서비스 이용에는 영향이 없습니다.",
       "쿠키는 Chrome·Safari·Edge·Firefox의 개인정보 또는 사이트 데이터 설정에서 삭제하거나 차단할 수 있습니다. 모바일 브라우저에서도 해당 브라우저의 사이트 추적 및 쿠키 설정을 변경할 수 있습니다."
     ]
   },
@@ -135,7 +137,7 @@ const SECTIONS_KO: Section[] = [
     body: [
       "이 방침의 내용이 변경되는 경우 시행 7일 전부터 이 페이지를 통해 알립니다. 이용자 권리에 중대한 영향을 미치는 변경은 가능한 경우 시행 30일 전에 알립니다.",
       "시행일: 2026년 10월 13일",
-      "최종 개정일: 2026년 10월 30일"
+      "최종 개정일: 2026년 11월 1일"
     ]
   }
 ];
@@ -158,7 +160,7 @@ const SECTIONS_EN: Section[] = [
       "Guest trials have ended, so no new anonymous user IDs are collected. Anonymous user IDs and guest display names created before they ended are handled under the retention periods in Section 3.",
       "While using the Service: timetable name, description, type and dates; schedule title, date, time, location, notes and color; free-form notes, attachment links, participant display names, emails (when available) and roles, and invitation and sharing identifiers",
       "When feedback is submitted: the response and any contact details the user voluntarily enters in Google Forms",
-      "Generated automatically: IP address, access time, visited URL and dynamic route, filtered query parameters, referrer, approximate location, operating system, browser and device type, service activity, and authentication session cookies",
+      "Generated automatically: IP address, access time, visited URL and dynamic route, filtered query parameters, referrer, approximate location, operating system, browser and device type, service activity, authentication session cookies, and the random identifier in the Google Analytics cookie (_ga)",
       "Collection methods: registration and service forms, support and feedback, and logs and analytics events generated during use",
       "The Service does not intentionally request government-issued identifiers or sensitive data such as health, beliefs, or political opinions. Do not place unnecessary sensitive data in schedules or notes."
     ]
@@ -170,6 +172,7 @@ const SECTIONS_EN: Section[] = [
       "Timetables, schedules, notes and participation data: until the timetable is deleted. Its dates, schedules, notes and attachments are deleted with it.",
       "Guest data created before trials ended: until the user moves the timetable into their own account or deletes it. Once it has been moved, the leftover anonymous account data is deleted during operational cleanup.",
       "Vercel Web Analytics visitor hash: discarded automatically after 24 hours. Non-identifying aggregate statistics remain until deleted from analytics or the analytics service is discontinued.",
+      "Google Analytics event data: deleted automatically two months after collection under the data retention setting. Non-identifying aggregate reports remain until deleted from analytics or the analytics service is discontinued.",
       "Access and error logs: for the period needed for security and incident response, or for the retention period configured with the hosting provider",
       "If law requires a separate retention period, the applicable data is isolated and deleted when that period ends. The Service currently has no paid checkout and collects no payment or transaction records."
     ]
@@ -188,7 +191,7 @@ const SECTIONS_EN: Section[] = [
     body: [
       "Supabase, Inc.: authentication, database and real-time collaboration. It processes email (when available), display names, user IDs, authentication data, timetable content and participation data.",
       "Vercel Inc.: web hosting, request handling, deployment logs and Web Analytics. It processes connection information, service requests and anonymous aggregate analytics.",
-      "Google LLC: configured tags through Google Tag Manager and feedback collection through Google Forms.",
+      "Google LLC: tags run through Google Tag Manager, visit and usage statistics through Google Analytics, and feedback collection through Google Forms. Google Analytics processes a cookie identifier, page views and usage events, referrer, approximate location, operating system, browser and device type.",
       "These providers are headquartered in the United States and operate global infrastructure. Data may therefore be processed in the United States or another country in which a provider operates, over encrypted networks, when a user registers, accesses the Service, or submits feedback. Retention follows section 3 and each provider agreement and privacy policy.",
       "Users may avoid optional analytics or feedback processing by not using those features. Refusing essential hosting or authentication processing may prevent use of the Service; users may stop it by closing their account.",
       "We use provider contracts and settings to require purpose limitation, access controls, confidentiality and appropriate security."
@@ -217,7 +220,8 @@ const SECTIONS_EN: Section[] = [
     body: [
       "Supabase authentication session cookies keep users signed in and protect the account. Blocking essential cookies can prevent login and collaboration from working.",
       "Without third-party cookies, Vercel Web Analytics processes page-view and event time, URL, dynamic route, filtered query parameters, referrer, approximate location, operating system, browser and device type as anonymous aggregate data. Its visitor hash expires after 24 hours.",
-      "Google Tag Manager loads only when enabled in the environment. The precise scope then depends on the connected tags. We operate analytics so that emails and schedule contents are not included in analytics events.",
+      "The Service uses Google Analytics (GA4) through Google Tag Manager. GA4 tells visits apart with a random identifier stored in the _ga cookie and collects page views and usage events, referrer, approximate location, operating system, browser and device type to analyse how the Service is used. We operate analytics so that emails and schedule contents are not included in analytics events.",
+      "To opt out of Google Analytics, block cookies in your browser or install Google's Analytics opt-out browser add-on (https://tools.google.com/dlpage/gaoptout). Opting out does not affect your use of the Service.",
       "Cookies can be removed or blocked in the privacy or site-data settings of Chrome, Safari, Edge and Firefox, including their mobile versions."
     ]
   },
@@ -269,7 +273,7 @@ const SECTIONS_EN: Section[] = [
     body: [
       "Changes are announced on this page at least seven days before they take effect. Where a change materially affects user rights, we aim to provide 30 days' notice.",
       "Effective date: October 13, 2026",
-      "Last revised: October 30, 2026"
+      "Last revised: November 1, 2026"
     ]
   }
 ];
@@ -283,7 +287,7 @@ const COPY = {
     effectiveLabel: "시행일",
     effectiveDate: "2026년 10월 13일",
     revisedLabel: "최종 개정일",
-    revisedDate: "2026년 10월 30일",
+    revisedDate: "2026년 11월 1일",
     footer:
       "이 방침은 서비스의 실제 운영 방식과 적용 법령을 기준으로 작성한 안내입니다. 서비스 기능이나 외부 처리업체가 변경되면 이 페이지도 함께 갱신합니다.",
     sections: SECTIONS_KO
@@ -296,7 +300,7 @@ const COPY = {
     effectiveLabel: "Effective",
     effectiveDate: "October 13, 2026",
     revisedLabel: "Last revised",
-    revisedDate: "October 30, 2026",
+    revisedDate: "November 1, 2026",
     footer:
       "This notice reflects the Service's current operation and applicable law. It will be updated when service features or external processors change.",
     sections: SECTIONS_EN
