@@ -19,6 +19,19 @@ export function sortOrderFor(dates: string[]) {
   return new Map([...dates].sort().map((date, index) => [date, index]));
 }
 
+/** Whether a weekly timetable was made Sunday-first: creation lays its days
+    out from the chosen start, so the earliest of them is that weekday. null
+    until its days have loaded. */
+export function weeklyStartsOnSunday(days: ProjectDay[]): boolean | null {
+  if (!days.length) return null;
+  const first = days.reduce((earliest, day) =>
+    day.sort_order < earliest.sort_order || (day.sort_order === earliest.sort_order && day.date < earliest.date)
+      ? day
+      : earliest
+  );
+  return getDay(new Date(first.date)) === 0;
+}
+
 // Weekly timetables are reordered to start on the chosen weekday (월/일 toggle).
 // Date-range timetables always keep their chronological sort_order, where
 // weekday ordering would scramble a multi-week trip.

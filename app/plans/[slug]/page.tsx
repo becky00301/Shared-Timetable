@@ -20,7 +20,7 @@ import { useProjectRealtime } from "@/lib/supabase/realtime";
 import { useT } from "@/lib/i18n/locale";
 import { SITE_NAME } from "@/lib/seo";
 import { canEdit as roleCanEdit } from "@/lib/permissions/roles";
-import { orderDays } from "@/lib/utils/days";
+import { orderDays, weeklyStartsOnSunday } from "@/lib/utils/days";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -35,6 +35,7 @@ export default function ProjectPage() {
   const undoScheduleChange = useProjectStore((state) => state.undoScheduleChange);
   const viewMode = useUiStore((state) => state.viewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
+  const setWeekStartsOnSunday = useUiStore((state) => state.setWeekStartsOnSunday);
   const [notFound, setNotFound] = useState(false);
   // Who removed this reader from the timetable, once that happens; "" when
   // only the fallback below noticed and the name isn't known.
@@ -96,6 +97,18 @@ export default function ProjectPage() {
   ownerNameRef.current =
     allMembers.find((member) => member.project_id === project?.id && member.role === "owner")?.user?.name ??
     ownerNameRef.current;
+
+  // The 월/일 toggle is one setting for the whole app, so on opening a weekly
+  // timetable it is set to the start the timetable was made with. Once per
+  // timetable, so flipping the toggle afterwards sticks for this visit.
+  const weekStartSetFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!project || project.kind !== "weekly" || weekStartSetFor.current === project.id) return;
+    const sundayFirst = weeklyStartsOnSunday(allDays.filter((day) => day.project_id === project.id));
+    if (sundayFirst === null) return;
+    weekStartSetFor.current = project.id;
+    setWeekStartsOnSunday(sundayFirst);
+  }, [project, allDays, setWeekStartsOnSunday]);
 
   const onSync = useCallback(() => {
     loadProject(params.slug)
