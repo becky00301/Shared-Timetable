@@ -4,11 +4,11 @@
 // Every entry is checked against getScheduleTextColor so its label lands on the
 // right side of the contrast threshold.
 export const SCHEDULE_COLOR_GROUPS = [
-  // neutral   blue       teal       green      amber      rose
-  ["#ECEEF1", "#DCE7F8", "#D6EDEA", "#DEEBD8", "#F6E9CF", "#F7DFE0"],
-  ["#D8DCE2", "#B9CFF0", "#ADDCD6", "#C2DCB6", "#EDD3A1", "#EFC3C5"],
-  ["#A8B0BC", "#7FA6DE", "#6FBDB2", "#8FBF7E", "#DCB05E", "#DE9095"],
-  ["#545C68", "#3F5F94", "#2F6E68", "#4A7040", "#8A6224", "#8C4249"]
+  // neutral   violet     blue       teal       green      amber      rose
+  ["#ECEEF1", "#E6DFF5", "#DCE7F8", "#D6EDEA", "#DEEBD8", "#F6E9CF", "#F7DFE0"],
+  ["#D8DCE2", "#CFC3EC", "#B9CFF0", "#ADDCD6", "#C2DCB6", "#EDD3A1", "#EFC3C5"],
+  ["#A8B0BC", "#A391D9", "#7FA6DE", "#6FBDB2", "#8FBF7E", "#DCB05E", "#DE9095"],
+  ["#545C68", "#5B4892", "#3F5F94", "#2F6E68", "#4A7040", "#8A6224", "#8C4249"]
 ] as const;
 
 export const DEFAULT_SCHEDULE_COLOR = "#B9CFF0";
@@ -117,4 +117,37 @@ export function getScheduleInkColor(backgroundColor?: string | null) {
   }
   inkCache.set(normalized, ink);
   return ink;
+}
+
+/**
+ * The colour a new event starts with: the palette column whose hue is
+ * nearest the reader's accent, in the second row — the same light shade the
+ * fixed default used to be. A near-grey accent (ink) maps to the neutral
+ * column. Anything unreadable keeps the old default.
+ */
+export function scheduleColorForAccent(accent: string | null | undefined): string {
+  if (!accent || !/^#?[0-9a-f]{6}$/i.test(accent.trim())) return DEFAULT_SCHEDULE_COLOR;
+  const [hue, saturation] = toHsl(channels(accent));
+  const shade = SCHEDULE_COLOR_GROUPS[1];
+  if (saturation < 0.25) return shade[0];
+
+  let best = 1;
+  let bestDistance = Infinity;
+  // Columns 1… are the hues; each is judged by its strongest swatch.
+  for (let column = 1; column < shade.length; column += 1) {
+    const [columnHue] = toHsl(channels(SCHEDULE_COLOR_GROUPS[3][column]));
+    const gap = Math.abs(hue - columnHue);
+    const distance = Math.min(gap, 1 - gap);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = column;
+    }
+  }
+  return shade[best];
+}
+
+/** scheduleColorForAccent for the accent currently on the page. */
+export function defaultScheduleColor(): string {
+  if (typeof document === "undefined") return DEFAULT_SCHEDULE_COLOR;
+  return scheduleColorForAccent(getComputedStyle(document.documentElement).getPropertyValue("--accent"));
 }

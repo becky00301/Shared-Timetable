@@ -48,6 +48,8 @@ export function pointerYToTime(y: number, hourHeight: number = HOUR_HEIGHT) {
   return minutesToTime(snapMinutes((y / hourHeight) * 60));
 }
 
+/** HH:MM - HH:MM. The database stores times with seconds, which a reader
+    never needs to see. */
 export function formatTimeRange(start: string, end: string) {
-  return `${start} - ${end}`;
+  return `${start.slice(0, 5)} - ${end.slice(0, 5)}`;
 }

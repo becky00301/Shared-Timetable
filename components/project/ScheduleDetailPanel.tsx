@@ -376,7 +376,7 @@ export function ScheduleDetailPanel({
           {t("detail.color")}
           <div className="flex flex-col gap-2">
             {SCHEDULE_COLOR_GROUPS.map((colors) => (
-              <div key={colors[0]} className="grid grid-cols-6 gap-2">
+              <div key={colors[0]} className="grid grid-cols-7 gap-2">
                 {colors.map((color) => {
                   const selected = item.color?.toLowerCase() === color.toLowerCase();
                   return (

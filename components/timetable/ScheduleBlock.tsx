@@ -22,8 +22,8 @@ import type { ScheduleItem } from "@/types/schedule";
 
 /** Space between a block and its column's sides, and between a block and the
     hour lines it starts and ends on. */
-const EDGE_GAP = 2;
-const VERTICAL_INSET = 1;
+export const EDGE_GAP = 2;
+export const VERTICAL_INSET = 1;
 
 /** How close to the edge of the visible hours a resize starts scrolling (wide
     enough for a fingertip), and the fastest it goes per frame. */

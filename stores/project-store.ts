@@ -7,7 +7,7 @@ import { translate } from "@/lib/i18n/messages";
 import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
-import { DEFAULT_SCHEDULE_COLOR } from "@/lib/utils/schedule-colors";
+import { defaultScheduleColor } from "@/lib/utils/schedule-colors";
 import type {
   Project,
   ProjectDay,
@@ -778,7 +778,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       location: item.location || null,
       start_time: item.start_time,
       end_time: item.end_time,
-      color: item.color ?? DEFAULT_SCHEDULE_COLOR,
+      color: item.color ?? defaultScheduleColor(),
       all_day: item.all_day ?? false,
       end_day_id: item.end_day_id ?? null
     };
