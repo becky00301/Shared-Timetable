@@ -903,6 +903,12 @@ export const messages = {
   "grid.undoFailed": { ko: "직전 편집을 되돌리지 못했어요.", en: "Couldn't undo the last change." },
   "grid.wakeTime": { ko: "기상 시간", en: "Wake time" },
   "grid.wakeMode": { ko: "기상 설정", en: "Set wake time" },
+  "grid.wakeMode.on": { ko: "기상 설정 중", en: "Setting wake times" },
+  "grid.wakeMode.hint": {
+    ko: "날짜마다 일어날 시각을 눌러 정하세요.",
+    en: "Tap the time you get up on each day."
+  },
+  "grid.wakeMode.done": { ko: "완료", en: "Done" },
   "grid.setWakeTime": { ko: "기상 시간 설정", en: "Set wake time" },
   "grid.openMap": { ko: "이동 경로 지도", en: "Route map" },
   "grid.saveWakeTime": { ko: "저장", en: "Save" },

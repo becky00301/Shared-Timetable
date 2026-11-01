@@ -543,7 +543,13 @@ export function TimetableGrid({
       <div
         ref={scrollRef}
         id={TIMETABLE_SCROLLER_ID}
-        className="min-h-0 flex-1 overflow-auto overscroll-none bg-background"
+        className={cn(
+          "min-h-0 flex-1 overflow-auto overscroll-none bg-background",
+          // Frames the grid while wake-time mode is on. An outline on an
+          // isolated box paints above everything inside it, so the sticky
+          // date row can't cover the edge, and it stays put as it scrolls.
+          activeMode === "wake" && "isolate outline-2 -outline-offset-2 outline-[var(--accent)]"
+        )}
       >
         <div ref={contentRef} className={cn("relative", hScroll ? "w-max min-w-full" : "min-w-full")}>
           <LiveCursors cursors={cursors} />
@@ -686,8 +692,9 @@ function DayHeaderCell({
           <p className="text-sm font-semibold text-foreground">{weekday}</p>
         ) : (
           <>
-            <p className="text-sm font-semibold text-foreground">{fmt.monthDay(date)}</p>
-            <p className="text-[11px] text-muted">{weekday}</p>
+            <p className="truncate text-sm font-semibold text-foreground">
+              {fmt.monthDay(date)} <span className="font-normal text-muted">{weekday}</span>
+            </p>
           </>
         )}
         <div className="mt-0.5 flex items-center justify-center gap-1">

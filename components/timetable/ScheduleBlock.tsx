@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
-import { GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
 import { holdScroll, TIMETABLE_SCROLLER_ID } from "@/lib/utils/scroll-lock";
@@ -186,7 +185,8 @@ export function ScheduleBlock({
         // edges. The text clips itself instead.
         "absolute left-1 right-1 z-10 flex touch-manipulation cursor-pointer flex-col rounded-[4px] border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
-        !isInteractive && "pointer-events-none",
+        // Faded while another mode (wake time) owns the grid's clicks.
+        !isInteractive && "pointer-events-none opacity-40",
         isSelected && (textColor === "#111827" ? "ring-2 ring-black/40" : "ring-2 ring-white/70"),
         isDragging && "opacity-70"
       )}
@@ -207,11 +207,10 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 top-0 flex h-2 touch-none select-none items-center justify-center text-current opacity-70 [-webkit-touch-callout:none]"
+        className="absolute inset-x-0 top-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]"
         onPointerDown={(event) => startResize("top", event)}
         aria-label="Resize event start"
       >
-        <GripHorizontal size={12} />
         <HandleReach edge="top" />
       </button>
       <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-hidden">
@@ -258,11 +257,10 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 bottom-0 flex h-2 touch-none select-none items-center justify-center text-current opacity-70 [-webkit-touch-callout:none]"
+        className="absolute inset-x-0 bottom-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]"
         onPointerDown={(event) => startResize("bottom", event)}
         aria-label="Resize event end"
       >
-        <GripHorizontal size={12} />
         <HandleReach edge="bottom" />
       </button>
     </div>

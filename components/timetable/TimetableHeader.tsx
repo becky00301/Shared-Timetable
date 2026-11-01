@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { AlarmClock, ArrowLeft, CalendarDays, Clock, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
@@ -32,8 +33,21 @@ export function TimetableHeader({
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const isGuest = useProjectStore((state) => state.isGuest);
   const t = useT();
+  const wakeMode = viewMode === "grid" && activeMode === "wake";
+
+  // Esc leaves the mode, unless something open (the wake-time popover) has
+  // already taken the key.
+  useEffect(() => {
+    if (!wakeMode) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) setMode("schedule");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [wakeMode, setMode]);
 
   return (
+    <>
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {mobileTitle ? (
@@ -104,7 +118,7 @@ export function TimetableHeader({
                 className={cn(
                   "flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border px-2.5 text-sm font-medium transition sm:px-3",
                   activeMode === "wake"
-                    ? "border-primary bg-primary text-white"
+                    ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
                     : "border-border bg-card text-muted hover:bg-black/6 hover:text-foreground"
                 )}
               >
@@ -181,5 +195,27 @@ export function TimetableHeader({
         </div>
       ) : null}
     </div>
+    {/* Only on this screen: the others see this person's cursor anyway, so
+        the mode itself isn't broadcast. */}
+    {wakeMode ? (
+      <div
+        role="status"
+        className="flex items-center gap-2.5 border-b border-[color-mix(in_oklab,var(--accent)_35%,transparent)] bg-[color-mix(in_oklab,var(--accent)_10%,white)] px-4 py-2 text-sm"
+      >
+        <AlarmClock size={16} aria-hidden className="shrink-0 text-[var(--accent)]" />
+        <p className="min-w-0 flex-1 leading-5">
+          <span className="font-semibold text-foreground">{t("grid.wakeMode.on")}</span>{" "}
+          <span className="text-muted">{t("grid.wakeMode.hint")}</span>
+        </p>
+        <button
+          type="button"
+          onClick={() => setMode("schedule")}
+          className="shrink-0 rounded-full bg-[var(--accent)] px-3.5 py-1.5 text-xs font-semibold text-[var(--accent-foreground)] transition hover:bg-[var(--accent-hover)]"
+        >
+          {t("grid.wakeMode.done")}
+        </button>
+      </div>
+    ) : null}
+    </>
   );
 }
