@@ -1,10 +1,24 @@
 "use client";
 
+import { createElement } from "react";
+import { ChevronDown, Crown, Eye, Pencil, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { RoleBadge } from "@/components/project/RoleBadge";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import type { ProjectMember } from "@/types/project";
+
+/** One box for every role in the list, whether it is a fixed badge or the
+    owner's select, so the column reads as a single edge. */
+const ROLE_BOX = "h-7 w-[4.75rem] rounded-full text-xs";
+
+/** Fixed roles carry an icon where the select has its chevron, so the two
+    read as one shape. Not a chevron: these can't be opened. */
+const ROLE_ICONS: Record<ProjectMember["role"], LucideIcon> = {
+  owner: Crown,
+  editor: Pencil,
+  viewer: Eye
+};
 
 export function ParticipantList({
   members,
@@ -44,17 +58,31 @@ export function ParticipantList({
             <p className="truncate text-sm text-foreground">{member.user?.name ?? "Member"}</p>
           </div>
           {canManage && member.role !== "owner" ? (
-            <select
-              className="h-7 shrink-0 rounded-md border border-border bg-background px-1.5 text-xs text-foreground outline-none"
-              value={member.role}
-              onChange={(event) => changeRole(member, event.target.value as "editor" | "viewer")}
-              aria-label={t("members.changeRoleLabel")}
-            >
-              <option value="editor">{t("role.editor")}</option>
-              <option value="viewer">{t("role.viewer")}</option>
-            </select>
+            // appearance-none with a drawn chevron: left to itself, iOS
+            // renders the select as a taller pill of its own, and the role
+            // badges beside it no longer line up.
+            <div className="relative shrink-0">
+              <select
+                className={`${ROLE_BOX} appearance-none border border-border bg-background pl-3 pr-6 text-foreground outline-none`}
+                value={member.role}
+                onChange={(event) => changeRole(member, event.target.value as "editor" | "viewer")}
+                aria-label={t("members.changeRoleLabel")}
+              >
+                <option value="editor">{t("role.editor")}</option>
+                <option value="viewer">{t("role.viewer")}</option>
+              </select>
+              <ChevronDown
+                size={13}
+                aria-hidden
+                className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted"
+              />
+            </div>
           ) : (
-            <RoleBadge role={member.role} />
+            <RoleBadge
+              role={member.role}
+              className={`${ROLE_BOX} shrink-0 justify-between pl-3 pr-2`}
+              icon={createElement(ROLE_ICONS[member.role], { size: 13, "aria-hidden": true, className: "shrink-0" })}
+            />
           )}
         </div>
       ))}
