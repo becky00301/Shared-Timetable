@@ -35,7 +35,9 @@ export type LocalDraft = { dayId: string; startMinutes: number; endMinutes: numb
 
 type DraftPayload = Omit<PeerDraft, "at"> | { userId: string; clear: true };
 
-const SEND_INTERVAL_MS = 60;
+// Ten updates a second: smooth enough to follow a pointer, and each one
+// counts against the realtime quota once sent plus once per viewer.
+const SEND_INTERVAL_MS = 100;
 const STALE_AFTER_MS = 8000;
 // Re-announce an open draft well inside STALE_AFTER_MS: while someone types a
 // name their pointer stops, so without this their block would be pruned.
@@ -59,7 +61,10 @@ export function cursorColor(userId: string) {
  * project's realtime channel, and returns everyone else's.
  *
  * Sends are held until the channel reports SUBSCRIBED — Supabase drops
- * broadcasts published on a channel that hasn't finished joining.
+ * broadcasts published on a channel that hasn't finished joining — and until
+ * someone else is on the channel. Every broadcast counts against the
+ * project's monthly realtime quota, and a pointer moving with nobody watching
+ * would spend it at up to ~16 messages a second for nothing.
  */
 export function useLiveCursors({
   projectId,
@@ -96,8 +101,24 @@ export function useLiveCursors({
     const supabase = createSupabaseBrowserClient();
     if (!supabase || !projectId || !userId) return;
 
+    // Presence keyed by user, so the same person in two tabs counts once and
+    // never as company for themself.
     const channel = supabase.channel(`cursors:${projectId}`, {
-      config: { broadcast: { self: false } }
+      config: { broadcast: { self: false }, presence: { key: userId } }
+    });
+
+    // Whether anyone other than this user is on the channel right now.
+    let hasPeers = false;
+    channel.on("presence", { event: "sync" }, () => {
+      const peers = Object.keys(channel.presenceState()).some((key) => key !== userId);
+      // Someone just arrived: forget what was last sent so the next tick
+      // tells them where this pointer and draft are, even if neither moves.
+      if (peers && !hasPeers) {
+        lastSent = null;
+        lastSentChat = "";
+        lastDraftKey = "";
+      }
+      hasPeers = peers;
     });
 
     channel.on("broadcast", { event: "cursor" }, ({ payload }) => {
@@ -132,12 +153,17 @@ export function useLiveCursors({
     let joined = false;
     channel.subscribe((status) => {
       joined = status === "SUBSCRIBED";
+      if (joined) channel.track({}).catch((error) => console.error(error));
     });
 
     const color = cursorColor(userId);
     let pending: { x: number; y: number } | null = null;
     let lastSent: { x: number; y: number } | null = null;
     let inside = false;
+    let lastSentChat = "";
+    let lastCursorAt = 0;
+    let lastDraftKey = "";
+    let lastDraftAt = 0;
 
     const onPointerMove = (event: PointerEvent) => {
       const el = contentRef.current;
@@ -152,7 +178,7 @@ export function useLiveCursors({
         pending = null;
         if (inside) {
           inside = false;
-          if (joined) channel.send({ type: "broadcast", event: "cursor-leave", payload: { userId } });
+          if (joined && hasPeers) channel.send({ type: "broadcast", event: "cursor-leave", payload: { userId } });
         }
         return;
       }
@@ -163,15 +189,11 @@ export function useLiveCursors({
 
     window.addEventListener("pointermove", onPointerMove);
 
-    let lastSentChat = "";
-    let lastCursorAt = 0;
-    let lastDraftKey = "";
-    let lastDraftAt = 0;
     const draftKey = (d: LocalDraft) =>
       d ? `${d.dayId}:${d.startMinutes}:${d.endMinutes}` : "";
 
     const sendTimer = window.setInterval(() => {
-      if (!joined) return;
+      if (!joined || !hasPeers) return;
 
       // Chat has to reach people even when the pointer is still — someone
       // typing a message stops moving — and an open message has to keep being
@@ -230,7 +252,7 @@ export function useLiveCursors({
       window.removeEventListener("pointermove", onPointerMove);
       window.clearInterval(sendTimer);
       window.clearInterval(pruneTimer);
-      if (joined) {
+      if (joined && hasPeers) {
         channel.send({ type: "broadcast", event: "cursor-leave", payload: { userId } });
         channel.send({ type: "broadcast", event: "draft", payload: { userId, clear: true } });
       }
