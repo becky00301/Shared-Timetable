@@ -731,6 +731,34 @@ export const messages = {
   "members.transfer.confirm": { ko: "임명하기", en: "Make owner" },
   "members.transfer.done": { ko: "{name}님이 소유자가 됐어요.", en: "{name} now owns this timetable." },
   "members.transfer.failed": { ko: "소유자를 위임하지 못했어요.", en: "Couldn't transfer ownership." },
+  "members.transfer.confirmTitle": {
+    ko: "{name}님을 소유자로 전환하시겠습니까?",
+    en: "Make {name} the owner?"
+  },
+  "members.transfer.switch": { ko: "전환하기", en: "Make owner" },
+  "members.remove.option": { ko: "삭제", en: "Remove" },
+  "members.remove.confirmTitle": {
+    ko: "{name}님을 참여자에서 삭제하시겠습니까?",
+    en: "Remove {name} from this timetable?"
+  },
+  "members.remove.body": {
+    ko: "삭제하면 이 시간표를 더 이상 볼 수 없어요. 프로젝트 링크를 다시 받으면 참여할 수 있어요.",
+    en: "They won't be able to see this timetable anymore. They can rejoin if they get the project link again."
+  },
+  "members.remove.done": { ko: "{name}님을 참여자에서 삭제했어요.", en: "Removed {name}." },
+  "members.remove.failed": { ko: "참여자를 삭제하지 못했어요.", en: "Couldn't remove the member." },
+  "members.removed.title": {
+    ko: "{name}님이 열람 권한을 삭제했습니다.",
+    en: "{name} removed your access to this timetable."
+  },
+  "members.removed.titleUnknown": {
+    ko: "소유자가 열람 권한을 삭제했습니다.",
+    en: "The owner removed your access to this timetable."
+  },
+  "members.removed.body": {
+    ko: "이 시간표는 더 이상 볼 수 없어요.",
+    en: "You can no longer view this timetable."
+  },
 
   // ---------------------------------------------------------------- share
   "share.title": { ko: "시간표 공유", en: "Share timetable" },

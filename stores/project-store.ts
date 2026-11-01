@@ -92,6 +92,7 @@ type ProjectStore = {
   joinByInviteToken: (token: string) => Promise<string>;
   updateMemberRole: (memberId: string, role: "editor" | "viewer") => Promise<void>;
   transferOwnership: (projectId: string, newOwnerId: string) => Promise<void>;
+  removeMember: (memberId: string) => Promise<void>;
   getProjectBySlug: (slug: string) => Project | undefined;
 };
 
@@ -1016,6 +1017,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         return member;
       })
     }));
+  },
+
+  // The owner's own policy already covers deleting a membership row.
+  removeMember: async (memberId) => {
+    const supabase = requireClient();
+    const { error } = await supabase.from("project_members").delete().eq("id", memberId);
+    if (error) throw error;
+    set((state) => ({ members: state.members.filter((member) => member.id !== memberId) }));
   },
 
   getProjectBySlug: (slug) => get().projects.find((project) => project.slug === slug)

@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ProjectSetup } from "@/components/project/ProjectSetup";
 import { GuestLinkBanner } from "@/components/project/GuestLinkBanner";
 import { MobileProjectBar } from "@/components/project/MobileProjectBar";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
+import { RemovedFromProjectNotice } from "@/components/project/RemovedFromProjectNotice";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
 import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
 import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 import { TimetableHeader } from "@/components/timetable/TimetableHeader";
+import { useMemberRemovalNotice } from "@/lib/supabase/member-events";
 import { useProjectRealtime } from "@/lib/supabase/realtime";
 import { useT } from "@/lib/i18n/locale";
 import { SITE_NAME } from "@/lib/seo";
@@ -34,6 +36,9 @@ export default function ProjectPage() {
   const viewMode = useUiStore((state) => state.viewMode);
   const weekStartsOnSunday = useUiStore((state) => state.weekStartsOnSunday);
   const [notFound, setNotFound] = useState(false);
+  // Who removed this reader from the timetable, once that happens; "" when
+  // only the fallback below noticed and the name isn't known.
+  const [removedBy, setRemovedBy] = useState<string | null>(null);
   const t = useT();
   const currentRole = project
     ? allMembers.find((member) => member.project_id === project.id && member.user_id === currentUserId)?.role ?? "viewer"
@@ -85,10 +90,25 @@ export default function ProjectPage() {
     );
   }, [project?.embed_token]);
 
+  // The owner's name, kept for the fallback: by the time a reload finds the
+  // timetable gone, the member list it came from can't be read any more.
+  const ownerNameRef = useRef("");
+  ownerNameRef.current =
+    allMembers.find((member) => member.project_id === project?.id && member.role === "owner")?.user?.name ??
+    ownerNameRef.current;
+
   const onSync = useCallback(() => {
-    loadProject(params.slug).catch((error) => console.error(error));
+    loadProject(params.slug)
+      .then((result) => {
+        // A reload that can no longer see a timetable this tab was showing
+        // means the reader was taken out of it, even if the owner's
+        // announcement never arrived.
+        if (!result) setRemovedBy((current) => current ?? ownerNameRef.current);
+      })
+      .catch((error) => console.error(error));
   }, [params.slug, loadProject]);
   useProjectRealtime(project?.id ?? "", onSync);
+  useMemberRemovalNotice(project?.id ?? "", currentUserId, setRemovedBy);
 
   useEffect(() => {
     const projectId = project?.id;
@@ -133,6 +153,7 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-5 text-foreground">
+        <RemovedFromProjectNotice removedBy={removedBy} />
         <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center">
           <h1 className="text-2xl font-semibold">{notFound ? t("project.notFound") : t("common.loading")}</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
@@ -215,6 +236,7 @@ export default function ProjectPage() {
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
       <ShareModal project={project} />
+      <RemovedFromProjectNotice removedBy={removedBy} />
     </main>
   );
 }
