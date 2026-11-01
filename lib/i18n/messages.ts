@@ -650,6 +650,9 @@ export const messages = {
     en: "{days} date(s) fall outside the new range. Nothing is scheduled on them."
   },
   "sidebar.notes": { ko: "메모", en: "Notes" },
+  "mobileBar.timetable": { ko: "시간표", en: "Timetable" },
+  "mobileBar.refresh": { ko: "새로고침", en: "Refresh" },
+  "mobileBar.refreshFailed": { ko: "시간표를 다시 불러오지 못했어요.", en: "Couldn't reload the timetable." },
   "sidebar.scheduleMemos": { ko: "일정에 적은 메모", en: "Notes on schedules" },
   "sidebar.renameHint": { ko: "클릭해서 이름 수정", en: "Click to rename" },
   "sidebar.memoEmpty": {

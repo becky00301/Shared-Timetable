@@ -24,6 +24,12 @@ import { cursorColor, useLiveCursors } from "@/lib/supabase/cursors";
 import { googleMapsApiKey } from "@/lib/maps/loader";
 import { useT } from "@/lib/i18n/locale";
 import { useDateFormat } from "@/lib/i18n/dates";
+import {
+  holdScroll,
+  TIMETABLE_SCROLLER_ID,
+  TOUCH_LONG_PRESS_MS,
+  TOUCH_MOVE_TOLERANCE
+} from "@/lib/utils/scroll-lock";
 import { cn } from "@/lib/utils/cn";
 import {
   DAY_END_MINUTES,
@@ -38,8 +44,6 @@ import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay, ProjectMember } from "@/types/project";
 
-const TOUCH_LONG_PRESS_MS = 450;
-const TOUCH_MOVE_TOLERANCE = 10;
 
 function isResizeHandle(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest("[data-resize-handle]"));
@@ -113,6 +117,7 @@ export function TimetableGrid({
   const dragRef = useRef<{ dayId: string; start: number; end: number } | null>(null);
   const colsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollReleaseRef = useRef<(() => void) | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const timedRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -426,7 +431,13 @@ export function TimetableGrid({
     setDraft(null);
   }
 
+  function releaseScroll() {
+    scrollReleaseRef.current?.();
+    scrollReleaseRef.current = null;
+  }
+
   function onDragEnd(event: DragEndEvent) {
+    releaseScroll();
     const item = schedules.find((schedule) => schedule.id === event.active.id);
     if (!item || !canEdit) return;
     const deltaMinutes = snapMinutes((event.delta.y / hourHeight) * 60);
@@ -500,6 +511,12 @@ export function TimetableGrid({
       id={`timetable-${projectId}`}
       sensors={sensors}
       autoScroll={false}
+      // The drop position comes from the pointer's delta, so the grid must not
+      // scroll under a moving block.
+      onDragStart={() => {
+        scrollReleaseRef.current = holdScroll();
+      }}
+      onDragCancel={releaseScroll}
       onDragEnd={onDragEnd}
       modifiers={[restrictToWindowEdges]}
     >
@@ -525,8 +542,8 @@ export function TimetableGrid({
       ) : null}
       <div
         ref={scrollRef}
-        id="timetable-export"
-        className="min-h-0 flex-1 overflow-auto bg-background"
+        id={TIMETABLE_SCROLLER_ID}
+        className="min-h-0 flex-1 overflow-auto overscroll-none bg-background"
       >
         <div ref={contentRef} className={cn("relative", hScroll ? "w-max min-w-full" : "min-w-full")}>
           <LiveCursors cursors={cursors} />
@@ -543,7 +560,7 @@ export function TimetableGrid({
             </div>
           ) : null}
           {/* Date headers */}
-          <div className="sticky top-0 z-30 flex bg-surface">
+          <div data-grid-sticky-head className="sticky top-0 z-30 flex bg-surface">
             <div className="sticky left-0 z-40 h-14 w-16 shrink-0 border-b border-r border-border bg-surface" />
             <div ref={colsRef} className={hScroll ? "flex" : "flex flex-1"}>
               {days.map((day) => (
@@ -628,6 +645,9 @@ export function TimetableGrid({
             </div>
           </div>
         </div>
+        {/* Room to scroll the last hours out from under the phone's bottom
+            bar. Left out of exports. */}
+        <div aria-hidden data-export-skip className="h-20 lg:hidden" />
       </div>
     </DndContext>
   );

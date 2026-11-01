@@ -105,7 +105,17 @@ body {
     100% calc(var(--hour-h) / 12);
 }
 
-.export-mode .editor-only {
+/* The phone timetable's bottom bar takes this corner, so the survey button
+   steps aside wherever the bar is on screen. 64rem is Tailwind's lg, where
+   the bar hides again. */
+@media (width < 64rem) {
+  body:has([data-mobile-project-bar]) [data-feedback-button] {
+    display: none;
+  }
+}
+
+.export-mode .editor-only,
+.export-mode [data-export-skip] {
   display: none !important;
 }
 

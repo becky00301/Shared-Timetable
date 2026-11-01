@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProjectSetup } from "@/components/project/ProjectSetup";
 import { GuestLinkBanner } from "@/components/project/GuestLinkBanner";
+import { MobileProjectBar } from "@/components/project/MobileProjectBar";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
@@ -53,6 +54,20 @@ export default function ProjectPage() {
   // The layout's static title covers the load, then the tab takes the
   // timetable's own name — which is how you tell four open plans apart. It
   // follows a rename too, since the sidebar can retitle the project in place.
+  // Nothing on this page scrolls the document, so a drag that starts on the
+  // top bar (or runs past the grid's edge) would only rubber-band the whole
+  // page on a phone. Locked here rather than globally, since the landing and
+  // dashboard do scroll the document.
+  useEffect(() => {
+    const root = document.documentElement;
+    const previous = [root.style.overscrollBehavior, document.body.style.overscrollBehavior];
+    root.style.overscrollBehavior = "none";
+    document.body.style.overscrollBehavior = "none";
+    return () => {
+      [root.style.overscrollBehavior, document.body.style.overscrollBehavior] = previous;
+    };
+  }, []);
+
   useEffect(() => {
     if (project?.title) document.title = `${project.title} | ${SITE_NAME}`;
   }, [project?.title]);
@@ -141,7 +156,9 @@ export default function ProjectPage() {
   );
   const members = allMembers.filter((member) => member.project_id === project.id);
   return (
-    <main className="flex h-screen overflow-hidden bg-background text-foreground">
+    // h-dvh, not h-screen: on phones 100vh is taller than the visible area, so
+    // the page itself would scroll and drag the top bar with it.
+    <main className="flex h-dvh overflow-hidden bg-background text-foreground">
       <ProjectSidebar
         project={project}
         days={days}
@@ -187,6 +204,12 @@ export default function ProjectPage() {
                 />
               </div>
             )}
+            <MobileProjectBar
+              project={project}
+              days={days}
+              canEdit={canEdit}
+              onRefresh={() => loadProject(params.slug)}
+            />
           </>
         )}
       </section>

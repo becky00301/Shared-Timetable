@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
 import { GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
+import { holdScroll, TIMETABLE_SCROLLER_ID } from "@/lib/utils/scroll-lock";
 import { useT } from "@/lib/i18n/locale";
 import { useContextMenu } from "@/components/ui/context-menu";
 import {
@@ -19,6 +20,11 @@ import {
   timeToMinutes
 } from "@/lib/utils/time";
 import type { ScheduleItem } from "@/types/schedule";
+
+/** How close to the edge of the visible hours a resize starts scrolling (wide
+    enough for a fingertip), and the fastest it goes per frame. */
+const AUTO_SCROLL_EDGE = 72;
+const AUTO_SCROLL_MAX_STEP = 14;
 
 export function ScheduleBlock({
   item,
@@ -52,6 +58,7 @@ export function ScheduleBlock({
   const { onContextMenu, menu } = useContextMenu(
     canEdit ? [{ label: t("common.delete"), onSelect: onDelete, danger: true }] : []
   );
+  const blockRef = useRef<HTMLDivElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     disabled: !canEdit || !isInteractive,
@@ -77,16 +84,26 @@ export function ScheduleBlock({
 
   function startResize(edge: "top" | "bottom", event: React.PointerEvent) {
     if (!canEdit) return;
+    // Starts on a plain drag, finger or mouse: the handles opt out of touch
+    // panning (touch-none), so a drag that begins on one is always a resize
+    // and never a scroll or a move.
     event.preventDefault();
     event.stopPropagation();
+    const scroller = event.currentTarget.closest<HTMLElement>(`#${TIMETABLE_SCROLLER_ID}`);
     const startY = event.clientY;
+    const startScrollTop = scroller?.scrollTop ?? 0;
+    let pointerY = startY;
     let nextStart = baseStart;
     let nextEnd = baseEnd;
+    let frame: number | null = null;
+    const releaseScroll = holdScroll();
     setResize({ startMinutes: baseStart, endMinutes: baseEnd });
 
-    const onMove = (moveEvent: PointerEvent) => {
-      moveEvent.preventDefault();
-      const deltaMinutes = snapMinutes(((moveEvent.clientY - startY) / hourHeight) * 60);
+    // Measured against the grid, not the screen: the scroller may have moved
+    // under the finger, and the block has to follow the time it now points at.
+    function apply() {
+      const travel = pointerY - startY + ((scroller?.scrollTop ?? 0) - startScrollTop);
+      const deltaMinutes = snapMinutes((travel / hourHeight) * 60);
       nextStart = edge === "top"
         ? Math.min(baseEnd - MIN_DURATION_MINUTES, Math.max(0, baseStart + deltaMinutes))
         : baseStart;
@@ -94,12 +111,50 @@ export function ScheduleBlock({
         ? Math.max(baseStart + MIN_DURATION_MINUTES, Math.min(DAY_END_MINUTES, baseEnd + deltaMinutes))
         : baseEnd;
       setResize({ startMinutes: nextStart, endMinutes: nextEnd });
+    }
+
+    // Held near the top or bottom of the visible hours, the grid scrolls on
+    // its own so a block can be stretched to a time that is off screen. The
+    // visible hours run from under the sticky date row to the top of the
+    // phone's bottom bar, when there is one.
+    function autoScroll() {
+      frame = null;
+      if (!scroller) return;
+      const box = scroller.getBoundingClientRect();
+      const head = scroller.querySelector("[data-grid-sticky-head]");
+      const bar = document.querySelector("[data-mobile-project-bar]");
+      const top = head ? head.getBoundingClientRect().bottom : box.top;
+      const barTop = bar?.getBoundingClientRect().top;
+      const bottom = barTop && barTop > 0 ? Math.min(box.bottom, barTop) : box.bottom;
+      // Whichever is further out, the finger or the edge being dragged: on a
+      // phone the finger sits a little off the edge it is holding.
+      const edgeBox = blockRef.current?.getBoundingClientRect();
+      const reachUp = Math.min(pointerY, edge === "top" && edgeBox ? edgeBox.top : Infinity);
+      const reachDown = Math.max(pointerY, edge === "bottom" && edgeBox ? edgeBox.bottom : -Infinity);
+      let speed = 0;
+      if (reachUp < top + AUTO_SCROLL_EDGE) speed = -(top + AUTO_SCROLL_EDGE - reachUp);
+      else if (reachDown > bottom - AUTO_SCROLL_EDGE) speed = reachDown - (bottom - AUTO_SCROLL_EDGE);
+      if (!speed) return;
+      const before = scroller.scrollTop;
+      scroller.scrollTop += Math.sign(speed) * Math.min(AUTO_SCROLL_MAX_STEP, Math.ceil(Math.abs(speed) / 3));
+      if (scroller.scrollTop === before) return;
+      apply();
+      frame = window.requestAnimationFrame(autoScroll);
+    }
+
+    const onMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault();
+      pointerY = moveEvent.clientY;
+      apply();
+      if (frame === null) frame = window.requestAnimationFrame(autoScroll);
     };
-    const cleanup = () => {
+    function cleanup() {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      releaseScroll();
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
-    };
+    }
     const onUp = () => {
       cleanup();
       if (nextStart !== baseStart || nextEnd !== baseEnd) {
@@ -111,6 +166,7 @@ export function ScheduleBlock({
       cleanup();
       setResize(null);
     };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onCancel);
@@ -118,12 +174,17 @@ export function ScheduleBlock({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        blockRef.current = node;
+        setNodeRef(node);
+      }}
       data-schedule-id={item.id}
       title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
       className={cn(
         // transition-colors only: animating transform makes the block lag the cursor.
-        "absolute left-1 right-1 z-10 touch-manipulation cursor-pointer overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:p-2",
+        // Not overflow-hidden: the handles' touch areas reach past the block's
+        // edges. The text clips itself instead.
+        "absolute left-1 right-1 z-10 flex touch-manipulation cursor-pointer flex-col rounded-[4px] border border-black/20 px-1.5 py-2 text-left shadow-lg transition-colors sm:left-2 sm:right-2 sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
         !isInteractive && "pointer-events-none",
         isSelected && (textColor === "#111827" ? "ring-2 ring-black/40" : "ring-2 ring-white/70"),
@@ -146,13 +207,14 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 top-0 flex h-2 items-center justify-center text-current opacity-70"
+        className="absolute inset-x-0 top-0 flex h-2 touch-none select-none items-center justify-center text-current opacity-70 [-webkit-touch-callout:none]"
         onPointerDown={(event) => startResize("top", event)}
         aria-label="Resize schedule start"
       >
         <GripHorizontal size={12} />
+        <HandleReach edge="top" />
       </button>
-      <div className="mt-1 min-w-0">
+      <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-hidden">
         <p
           className={cn(
             "font-semibold leading-tight text-current",
@@ -196,12 +258,25 @@ export function ScheduleBlock({
       <button
         type="button"
         data-resize-handle
-        className="absolute inset-x-0 bottom-0 flex h-2 items-center justify-center text-current opacity-70"
+        className="absolute inset-x-0 bottom-0 flex h-2 touch-none select-none items-center justify-center text-current opacity-70 [-webkit-touch-callout:none]"
         onPointerDown={(event) => startResize("bottom", event)}
         aria-label="Resize schedule end"
       >
         <GripHorizontal size={12} />
+        <HandleReach edge="bottom" />
       </button>
     </div>
+  );
+}
+
+/** The handle's touch area on a finger-driven screen: 22px tall, mostly past
+    the block's edge so it doesn't eat into the part that moves the block. A
+    mouse keeps the 8px strip it can hit precisely. */
+function HandleReach({ edge }: { edge: "top" | "bottom" }) {
+  return (
+    <span
+      aria-hidden
+      className={cn("absolute inset-x-0 h-[22px] pointer-fine:hidden", edge === "top" ? "-top-3" : "-bottom-3")}
+    />
   );
 }

@@ -44,7 +44,7 @@ export function MonthCalendarView({ projectId, days }: { projectId: string; days
   const today = format(new Date(), "yyyy-MM-dd");
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-background p-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-none bg-background p-4 pb-24 lg:pb-4">
       <div className="mb-3 flex items-center justify-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => setMonth((current) => addMonths(current, -1))}>
           ‹
