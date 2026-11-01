@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
+  ACCENT_CHANGE_EVENT,
   ACCENTS,
   accentForeground,
   applyAccent,
@@ -15,9 +17,9 @@ import { useT } from "@/lib/i18n/locale";
  * Lets someone pick the accent — the colour of every primary button, here and
  * on the landing page.
  *
- * The choice lives in this browser rather than on the account, so it needs no
- * migration and applies instantly. The trade is that it does not follow anyone
- * to a second device.
+ * The choice applies instantly from this browser's copy and is saved to the
+ * account as well, so it follows the person to their other devices (see
+ * AccentEffect).
  */
 export function AccentPicker() {
   const t = useT();
@@ -27,12 +29,21 @@ export function AccentPicker() {
 
   useEffect(() => {
     setSelected(readStoredAccent());
+    // The account's colour can arrive after mount, from another device.
+    const follow = (event: Event) => setSelected((event as CustomEvent<string>).detail);
+    window.addEventListener(ACCENT_CHANGE_EVENT, follow);
+    return () => window.removeEventListener(ACCENT_CHANGE_EVENT, follow);
   }, []);
 
   function choose(hex: string) {
     applyAccent(hex);
     storeAccent(hex);
     setSelected(hex);
+    const supabase = createSupabaseBrowserClient();
+    supabase?.auth
+      .getSession()
+      .then(({ data }) => (data.session ? supabase.auth.updateUser({ data: { accent: hex } }) : null))
+      .catch((error) => console.error(error));
   }
 
   return (

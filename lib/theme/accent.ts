@@ -105,12 +105,34 @@ export function watchAccentFavicon(hex: string) {
   return () => observer.disconnect();
 }
 
+/** Fired on window whenever the accent is applied, so a picker on screen can
+    follow a change that came from the account rather than from a click. */
+export const ACCENT_CHANGE_EVENT = "plantogether:accent";
+
 export function applyAccent(hex: string) {
   const root = document.documentElement;
   root.style.setProperty("--accent", hex);
   root.style.setProperty("--accent-hover", darken(hex));
   root.style.setProperty("--accent-foreground", accentForeground(hex));
   applyAccentFavicon(hex);
+  window.dispatchEvent(new CustomEvent(ACCENT_CHANGE_EVENT, { detail: hex }));
+}
+
+/** Whether this browser has a colour of its own saved, as opposed to falling
+    back to the default. */
+export function hasStoredAccent() {
+  try {
+    return isAccent(window.localStorage.getItem(ACCENT_STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
+/** The accent saved on the signed-in account, in its Supabase user metadata —
+    which follows the person to every device without a schema change. */
+export function accountAccent(metadata: Record<string, unknown> | undefined) {
+  const value = metadata?.accent;
+  return typeof value === "string" && isAccent(value) ? value : null;
 }
 
 export function readStoredAccent() {
