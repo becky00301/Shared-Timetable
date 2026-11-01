@@ -276,7 +276,7 @@ const SECTIONS_EN: Section[] = [
 
 const COPY = {
   ko: {
-    back: "← 플래너 투게더",
+    back: "← 뒤로",
     title: "개인정보처리방침",
     intro:
       "Planner Together(이하 “서비스”)는 개인정보 보호법 제30조에 따라 이용자의 개인정보를 보호하고 관련 요청과 고충을 신속하게 처리하기 위해 다음과 같이 개인정보처리방침을 공개합니다.",
@@ -289,7 +289,7 @@ const COPY = {
     sections: SECTIONS_KO
   },
   en: {
-    back: "← Planner Together",
+    back: "← Back",
     title: "Privacy Policy",
     intro:
       "Planner Together (the “Service”) publishes this policy to protect personal data and handle privacy requests and complaints under Article 30 of Korea's Personal Information Protection Act.",

@@ -267,10 +267,6 @@ export const messages = {
     ko: "이메일 확인이 필요해요. 받은 편지함의 인증 메일을 확인한 뒤 다시 로그인해 주세요.",
     en: "Please open the verification email in your inbox, then sign in again."
   },
-  "auth.consent.body": {
-    ko: "로그인 식별정보와 작성한 시간표가 저장되며, 서비스 운영을 위해 Supabase·Vercel에 처리를 위탁해요.",
-    en: "Your sign-in identifiers and timetables are stored, and processing is handled by Supabase and Vercel on our behalf."
-  },
   "auth.submitting": { ko: "처리 중...", en: "Working…" },
   "auth.signup.submit": { ko: "가입하기", en: "Create account" },
   "auth.toSignup": { ko: "계정이 없으신가요? ", en: "No account yet? " },

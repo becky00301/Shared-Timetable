@@ -249,13 +249,13 @@ function LoginForm() {
                   disabled={busy}
                   className="mt-1 size-4 shrink-0 accent-[color:var(--primary)]"
                 />
+                {/* Same shape as the terms line above: one linked sentence. What
+                    is collected and who processes it is on the linked page. */}
                 <span>
-                  <span className="text-foreground">{t("auth.consent.label")}</span> {t("auth.consent.required")}
-                  <br />
-                  {t("auth.consent.body")}{" "}
                   <Link href="/privacy" target="_blank" className="font-medium text-primary underline underline-offset-2">
-                    {t("common.privacy")}
-                  </Link>
+                    {t("auth.consent.label")}
+                  </Link>{" "}
+                  {t("auth.consent.required")}
                 </span>
               </label>
             </>

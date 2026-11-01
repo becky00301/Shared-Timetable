@@ -226,7 +226,7 @@ const SECTIONS_EN: Section[] = [
 
 const COPY = {
   ko: {
-    back: "← 플래너 투게더",
+    back: "← 뒤로",
     title: "서비스 이용약관",
     intro: "함께 시간표를 만들고 공유할 때 적용되는 이용 조건입니다. 계정 관리, 공유 범위, 콘텐츠의 권리와 탈퇴 시 처리 내용을 확인해주세요.",
     dateLabel: "작성일",
@@ -239,7 +239,7 @@ const COPY = {
     sections: SECTIONS_KO
   },
   en: {
-    back: "← Planner Together",
+    back: "← Back",
     title: "Terms of Service",
     intro: "These are the conditions for creating and sharing timetables together. Please review account security, sharing permissions, content rights and what happens when you close your account.",
     dateLabel: "Prepared",
