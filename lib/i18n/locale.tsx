@@ -32,6 +32,9 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("ko");
 
   useEffect(() => {
+    // Crawlers render with an English browser locale, so following it would
+    // index the Korean site in English. They keep the Korean markup instead.
+    if (/bot|crawl|spider|slurp|yeti/i.test(navigator.userAgent)) return;
     const next = readStoredLocale() ?? (navigator.language.startsWith("ko") ? "ko" : "en");
     setLocaleState(next);
   }, []);

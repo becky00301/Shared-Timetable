@@ -13,6 +13,7 @@ import { getScheduleInkColor } from "@/lib/utils/schedule-colors";
 import { useLocale, useT } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { useProjectStore } from "@/stores/project-store";
+import { LANDING_FAQ } from "@/lib/landing-faq";
 
 /** A use case, illustrated. The drawing carries the situation at a glance;
     the words underneath only have to add the detail it cannot show. */
@@ -250,13 +251,8 @@ const BENTO: {
   }
 ];
 
-const FAQ: [MessageKey, MessageKey][] = [
-  ["landing.faq.q1", "landing.faq.a1"],
-  ["landing.faq.q2", "landing.faq.a2"],
-  ["landing.faq.q3", "landing.faq.a3"],
-  ["landing.faq.q4", "landing.faq.a4"],
-  ["landing.faq.q5", "landing.faq.a5"]
-];
+/** Spreadsheet first, then us, row by row. */
+const EXCEL_ROWS = ["dates", "move", "share", "phone", "file"] as const;
 
 /** Two groups, one per timetable kind, so a reader lands on the mode that
     fits them before the create dialog ever asks. */
@@ -490,6 +486,45 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
         </div>
       </section>
 
+      {/* ------------------------------------------------------------- vs excel */}
+      {/* keep-all, or the narrow table columns split Korean words mid-syllable. */}
+      <section className="break-keep border-t border-border px-5 py-24 sm:py-32">
+        <div className="mx-auto max-w-3xl">
+          <Reveal className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">{t("landing.excel.eyebrow")}</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+              {t("landing.excel.title")}
+            </h2>
+          </Reveal>
+          <div className="mt-12 overflow-hidden rounded-2xl border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-[#F7F8F9] text-muted">
+                <tr>
+                  <td className="px-4 py-3" />
+                  <th scope="col" className="px-4 py-3 font-medium">
+                    {t("landing.excel.colExcel")}
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-medium text-foreground">
+                    {t("landing.excel.colUs")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {EXCEL_ROWS.map((row) => (
+                  <tr key={row} className="border-t border-border align-top">
+                    <th scope="row" className="px-4 py-3 font-medium text-foreground">
+                      {t(`landing.excel.${row}.row`)}
+                    </th>
+                    <td className="px-4 py-3 text-muted">{t(`landing.excel.${row}.excel`)}</td>
+                    <td className="px-4 py-3 text-foreground">{t(`landing.excel.${row}.us`)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* ------------------------------------------------------------------ faq */}
       <section id="faq" className="scroll-mt-24 border-t border-border px-5 py-24 sm:py-32">
         <div className="mx-auto max-w-3xl">
@@ -502,7 +537,7 @@ export function LandingContent({ loggedIn }: { loggedIn: boolean }) {
           {/* <details> so a question can be opened before the page has
               hydrated, and so the browser's own find-in-page reaches it. */}
           <div className="mt-12 border-t border-border">
-            {FAQ.map(([question, answer]) => (
+            {LANDING_FAQ.map(([question, answer]) => (
               <details key={question} className="group border-b border-border py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-medium text-foreground [&::-webkit-details-marker]:hidden">
                   {t(question)}

@@ -4,9 +4,11 @@ export const SITE_URL = "https://www.planner-together.com";
 export const SITE_NAME = "Planner Together";
 export const SITE_NAME_KO = "플래너 투게더";
 export const SITE_DISPLAY_NAME = `${SITE_NAME_KO} (${SITE_NAME})`;
-export const HOME_TITLE = `${SITE_DISPLAY_NAME} | 함께 만드는 공유 시간표`;
+// Leads with the phrase people actually search for a trip plan with; the
+// brand still closes the title.
+export const HOME_TITLE = `여행 계획표, 엑셀 대신 함께 만드는 공유 시간표 | ${SITE_DISPLAY_NAME}`;
 export const HOME_DESCRIPTION =
-  "플래너 투게더(Planner Together)는 여행, MT, 스터디, 프로젝트 일정을 함께 만드는 무료 공유 시간표입니다. 원하는 날짜를 고르고 일정을 드래그해 만든 뒤 링크 하나로 간편하게 공유하세요.";
+  "엑셀 여행 계획표 양식 대신, 여행 날짜만 고르면 시간대별 여행 일정표가 생깁니다. 플래너 투게더(Planner Together)는 여행·MT·스터디 일정을 드래그로 만들고 링크 하나로 함께 편집하는 무료 공유 시간표예요. 필요하면 엑셀로도 내보낼 수 있어요.";
 
 export const SITE_SHARE_IMAGE = {
   url: `${SITE_URL}/og/planner-together-v1.png`,

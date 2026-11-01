@@ -63,7 +63,7 @@ export const messages = {
     en: "Drag to build, share with one link."
   },
   "landing.hero.body2": {
-    ko: "여행·MT·스터디·프로젝트까지, 필요한 날짜만 골라 함께 채우는 시간표",
+    ko: "여행 계획표부터 MT·스터디까지, 엑셀 양식 없이 필요한 날짜만 골라 함께 채우는 시간표",
     en: "Trips, study groups, projects — pick the dates that matter and fill them in together."
   },
   // ------------------------------------------------------------- use cases
@@ -80,7 +80,7 @@ export const messages = {
 
   "landing.cases.trip.title": { ko: "여행", en: "Trips" },
   "landing.cases.trip.body": {
-    ko: "2박 3일 동선을 시간대별로. 비행기·숙소·맛집에 지출까지 한 화면에서 정리돼요.",
+    ko: "엑셀 여행 계획표 대신, 2박 3일 동선을 시간대별로. 비행기·숙소·맛집에 지출까지 한 화면에서 정리돼요.",
     en: "Lay out each day by the hour — flights, hotels, places to eat, and what it all costs, on one screen."
   },
   "landing.cases.mt.title": { ko: "MT·워크숍", en: "Retreats and offsites" },
@@ -148,9 +148,42 @@ export const messages = {
     en: "Planner Together puts all three on one page. Pick only the dates you need, drag to fill them in, and share one link."
   },
 
+  // --------------------------------------------------- landing: vs Excel
+  // The spreadsheet column comes first in each row, since that is the
+  // experience someone searching for an Excel itinerary arrives with.
+  "landing.excel.eyebrow": { ko: "엑셀 여행 계획표와 비교", en: "Compared with a spreadsheet" },
+  "landing.excel.title": {
+    ko: "여행 계획표, 이제 엑셀 양식 없이",
+    en: "Travel itineraries without the spreadsheet"
+  },
+  "landing.excel.colExcel": { ko: "엑셀 양식", en: "Excel template" },
+  "landing.excel.colUs": { ko: "플래너 투게더", en: "Planner Together" },
+  "landing.excel.dates.row": { ko: "날짜 칸 만들기", en: "Setting up days" },
+  "landing.excel.dates.excel": { ko: "날짜·요일·시간 칸을 직접 그리고 병합", en: "Draw and merge date and hour cells" },
+  "landing.excel.dates.us": { ko: "여행 날짜만 고르면 시간표가 생겨요", en: "Pick your dates and the grid is there" },
+  "landing.excel.move.row": { ko: "일정 옮기기", en: "Moving plans" },
+  "landing.excel.move.excel": { ko: "셀을 잘라 붙이고 병합 다시 풀기", en: "Cut, paste, unmerge, re-merge" },
+  "landing.excel.move.us": { ko: "블록을 드래그해서 옮기고 늘이기", en: "Drag a block to move or stretch it" },
+  "landing.excel.share.row": { ko: "일행과 같이 쓰기", en: "Planning with others" },
+  "landing.excel.share.excel": { ko: "단톡방에 파일 올리고 최종본 찾기", en: "Pass files around, hunt for the latest" },
+  "landing.excel.share.us": { ko: "링크 하나로 동시에 편집", en: "Edit together from one link" },
+  "landing.excel.phone.row": { ko: "휴대폰에서 보기", en: "On a phone" },
+  "landing.excel.phone.excel": { ko: "확대하고 옆으로 밀면서 읽기", en: "Pinch and scroll sideways" },
+  "landing.excel.phone.us": { ko: "세로 타임라인으로 바뀌어요", en: "Turns into a vertical timeline" },
+  "landing.excel.file.row": { ko: "엑셀 파일이 필요할 때", en: "When you need the file" },
+  "landing.excel.file.excel": { ko: "—", en: "—" },
+  "landing.excel.file.us": { ko: "완성한 일정표를 엑셀로 내보내기", en: "Export the finished plan to Excel" },
   // ---------------------------------------------------------- landing: FAQ
   "landing.faq.eyebrow": { ko: "자주 묻는 질문", en: "FAQ" },
   "landing.faq.title": { ko: "궁금할 만한 것들", en: "The usual questions" },
+  "landing.faq.q0": {
+    ko: "엑셀 여행 계획표 양식 대신 쓸 수 있나요?",
+    en: "Can it replace an Excel travel itinerary template?"
+  },
+  "landing.faq.a0": {
+    ko: "네. 날짜·요일·시간 칸을 직접 그리고 병합할 필요 없이, 여행 날짜만 고르면 시간대별 여행 일정표가 바로 생겨요. 일정은 드래그로 넣고 옮기면 됩니다.",
+    en: "Yes. Instead of drawing and merging date, weekday and hour cells, pick your travel dates and an hour-by-hour itinerary is ready. Drag plans in and move them around."
+  },
   "landing.faq.q1": { ko: "무료인가요?", en: "Is it free?" },
   "landing.faq.a1": {
     ko: "네. 지금은 모든 기능이 무료이고, 결제 수단을 받지 않습니다.",
@@ -174,10 +207,10 @@ export const messages = {
     ko: "됩니다. 좁은 화면에서는 촘촘한 격자 대신 세로 타임라인으로 바뀌어서 읽기 편해요.",
     en: "It does. On a narrow screen the dense grid becomes a vertical timeline that is easier to read."
   },
-  "landing.faq.q5": { ko: "다른 데로 내보낼 수 있나요?", en: "Can I export it?" },
+  "landing.faq.q5": { ko: "엑셀 파일로 내보낼 수 있나요?", en: "Can I export it to Excel?" },
   "landing.faq.a5": {
-    ko: "PNG 이미지, PDF, 엑셀, HTML 네 가지로 내보낼 수 있습니다. HTML은 글자가 그대로 남아서 검색도 되고 블로그나 문서에 붙이기도 좋아요.",
-    en: "As a PNG image, a PDF, an Excel file, or HTML. The HTML keeps everything as text, so it stays searchable and drops neatly into a blog or a doc."
+    ko: "네. 엑셀 외에도 PNG 이미지, PDF, HTML로 내보낼 수 있습니다. HTML은 글자가 그대로 남아서 검색도 되고 블로그나 문서에 붙이기도 좋아요.",
+    en: "Yes — and also as a PNG image, a PDF, or HTML. The HTML keeps everything as text, so it stays searchable and drops neatly into a blog or a doc."
   },
 
   "landing.how.eyebrow": { ko: "어떻게 쓰나요", en: "How it works" },
