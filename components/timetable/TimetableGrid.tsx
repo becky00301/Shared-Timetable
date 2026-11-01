@@ -224,7 +224,7 @@ export function TimetableGrid({
     scroller.scrollTop = offset + (centre * hourHeight) / previous - scroller.clientHeight / 2;
   }, [hourHeight]);
 
-  const TIME_COL_WIDTH = 64; // matches TimeColumn w-16
+  const TIME_COL_WIDTH = 48; // matches TimeColumn w-12
   const MAX_VISIBLE_DAYS = 7;
   const MIN_DAY_COL_WIDTH = 96;
   // Floor for zoomed-out columns: below this the date header stops being
@@ -581,7 +581,7 @@ export function TimetableGrid({
           ) : null}
           {/* Date headers */}
           <div data-grid-sticky-head className="sticky top-0 z-30 flex bg-surface">
-            <div className="sticky left-0 z-40 h-14 w-16 shrink-0 border-b border-r border-border bg-surface" />
+            <div className="sticky left-0 z-40 h-14 w-12 shrink-0 border-b border-r border-border bg-surface" />
             <div ref={colsRef} className={hScroll ? "flex" : "flex flex-1"}>
               {days.map((day) => (
                 <DayHeaderCell
@@ -604,7 +604,7 @@ export function TimetableGrid({
               lane, pushing the timed grid below it down. Not sticky — a tall
               band would otherwise pin itself over most of the viewport. */}
           <div className="z-30 flex bg-surface">
-            <div className="sticky left-0 z-40 w-16 shrink-0 border-b border-r border-border bg-surface pr-2 pt-1 text-right text-[11px] text-muted">
+            <div className="sticky left-0 z-40 w-12 shrink-0 border-b border-r border-border bg-surface pr-2 pt-1 text-right text-[11px] text-muted">
               {t("grid.allDay")}
             </div>
             {/* Bars are positioned as a percentage of this element, so with

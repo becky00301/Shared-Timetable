@@ -165,7 +165,7 @@ export function EmbeddedTimetable({
   }, [router]);
 
   const projectHref = `/plans/${slug}`;
-  const minWidth = 64 + sortedDays.length * MIN_DAY_WIDTH;
+  const minWidth = 48 + sortedDays.length * MIN_DAY_WIDTH; // 48: TimeColumn w-12
 
   const frameClass = "flex h-dvh flex-col overflow-hidden bg-background text-foreground";
   const header = standalone ? (
@@ -215,7 +215,7 @@ export function EmbeddedTimetable({
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto bg-background">
           <div className="min-w-full" style={{ width: Math.max(minWidth, 1) }}>
             <div className="sticky top-0 z-30 flex bg-surface">
-              <div className="h-12 w-16 shrink-0 border-b border-r border-border" />
+              <div className="h-12 w-12 shrink-0 border-b border-r border-border" />
               <div className="flex flex-1">
                 {sortedDays.map((day) => {
                   const date = new Date(day.date);
@@ -239,7 +239,7 @@ export function EmbeddedTimetable({
             </div>
 
             <div className="flex bg-surface">
-              <div className="w-16 shrink-0 border-b border-r border-border pr-2 pt-1 text-right text-[10px] text-muted">
+              <div className="w-12 shrink-0 border-b border-r border-border pr-2 pt-1 text-right text-[10px] text-muted">
                 {t("grid.allDay")}
               </div>
               <div
