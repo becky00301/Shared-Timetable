@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { ChevronDown, FileDown, ImageDown, MousePointer2, Sheet } from "lucide-react";
+import { ChevronDown, FileDown, ImageDown, Loader2, MousePointer2, Sheet } from "lucide-react";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { REVEAL_EASE, Reveal } from "@/components/ui/reveal";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -299,6 +299,19 @@ function useSignedIn() {
   return signedIn;
 }
 
+/**
+ * A button label that waits for the session. The label stays in the layout,
+ * invisible, so the button keeps its size, and a spinner sits over it.
+ */
+function AuthLabel({ pending, children }: { pending: boolean; children: ReactNode }) {
+  return (
+    <span className="relative inline-flex items-center justify-center" aria-busy={pending || undefined}>
+      <span className={cn(pending && "invisible")}>{children}</span>
+      {pending ? <Loader2 size={16} aria-hidden className="absolute animate-spin" /> : null}
+    </span>
+  );
+}
+
 export function LandingContent() {
   const t = useT();
   // Honoured by hand here rather than only in Reveal, because these cards
@@ -306,10 +319,10 @@ export function LandingContent() {
   const reduceMotion = useReducedMotion();
   const signedIn = useSignedIn();
   const loggedIn = signedIn === true;
-  // The account-dependent buttons keep their place but stay hidden until the
-  // session has been read, so a signed-in reader never sees "get started"
-  // flash before it turns into "my timetables".
-  const authHidden = signedIn === null ? "invisible" : "";
+  // Until the session has been read, the account-dependent buttons show a
+  // spinner in place of their label, so a signed-in reader never sees "get
+  // started" flash before it turns into "my timetables".
+  const authPending = signedIn === null;
   // Signed out visitors land in the dashboard too: it asks for an account
   // at the point they try to make something, not at the door.
   const appHref = "/dashboard";
@@ -355,11 +368,12 @@ export function LandingContent() {
             <Link
               href={appHref}
               className={cn(
-                "whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-4 py-2 text-xs font-semibold transition sm:text-sm",
-                authHidden
+                "whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-4 py-2 text-xs font-semibold transition sm:text-sm"
               )}
             >
-              {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
+              <AuthLabel pending={authPending}>
+                {loggedIn ? t("landing.cta.mine") : t("landing.nav.start")}
+              </AuthLabel>
             </Link>
           </div>
         </nav>
@@ -381,19 +395,21 @@ export function LandingContent() {
             <span className="block">{t("landing.hero.body1")}</span>
             <span className="block">{t("landing.hero.body2")}</span>
           </p>
-          <div className={cn("mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row", authHidden)}>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={appHref}
               className="w-full whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-7 py-3.5 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 active:translate-y-0 sm:w-auto"
             >
-              {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+              <AuthLabel pending={authPending}>
+                {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+              </AuthLabel>
             </Link>
             {loggedIn ? null : (
               <Link
                 href="/login"
                 className="w-full whitespace-nowrap rounded-full border border-border px-7 py-3.5 text-sm font-semibold text-foreground transition hover:bg-black/[0.03] sm:w-auto"
               >
-                {t("landing.final.login")}
+                <AuthLabel pending={authPending}>{t("landing.final.login")}</AuthLabel>
               </Link>
             )}
           </div>
@@ -590,19 +606,21 @@ export function LandingContent() {
             {t("landing.final.title")}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/70">{t("landing.final.body")}</p>
-          <div className={cn("mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row", authHidden)}>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={appHref}
               className="w-full whitespace-nowrap rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] px-7 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5 active:translate-y-0 sm:w-auto"
             >
-              {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+              <AuthLabel pending={authPending}>
+                {loggedIn ? t("landing.cta.mine") : t("landing.cta.start")}
+              </AuthLabel>
             </Link>
             {loggedIn ? null : (
               <Link
                 href="/login"
                 className="w-full whitespace-nowrap rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
               >
-                {t("landing.final.login")}
+                <AuthLabel pending={authPending}>{t("landing.final.login")}</AuthLabel>
               </Link>
             )}
           </div>
@@ -620,8 +638,8 @@ export function LandingContent() {
             <Link href="/privacy" className="transition hover:text-foreground">
               {t("common.privacy")}
             </Link>
-            <Link href={appHref} className={cn("transition hover:text-foreground", authHidden)}>
-              {loggedIn ? t("common.dashboard") : t("common.login")}
+            <Link href={appHref} className="transition hover:text-foreground">
+              <AuthLabel pending={authPending}>{loggedIn ? t("common.dashboard") : t("common.login")}</AuthLabel>
             </Link>
           </div>
         </div>
