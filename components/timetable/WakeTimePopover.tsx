@@ -69,10 +69,14 @@ export function WakeTimePopover({
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      // Taken here, so the same key doesn't also leave wake-time mode.
+      event.preventDefault();
+      onClose();
     }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    // Capture phase, so it runs before the mode's own Esc listener.
+    window.addEventListener("keydown", closeOnEscape, true);
+    return () => window.removeEventListener("keydown", closeOnEscape, true);
   }, [onClose]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -81,7 +85,9 @@ export function WakeTimePopover({
     setSaving(true);
     try {
       await onSave(day.id, wakeTime, sleepDuration);
+      onClose();
     } catch {
+      // The grid owns the error toast; stay open with the saved value back.
       setWakeTime(day.wake_time?.slice(0, 5) || "07:00");
     } finally {
       setSaving(false);
