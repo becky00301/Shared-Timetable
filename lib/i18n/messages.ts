@@ -60,7 +60,7 @@ export const messages = {
   // <br>, so each language breaks where its own sentence ends.
   "landing.hero.body1": {
     ko: "드래그로 만들고 링크 하나로 공유하세요.",
-    en: "Drag to build it. Share it with one link."
+    en: "A free trip planner for groups: drag to plan, share with one link."
   },
   "landing.hero.body2": {
     ko: "여행 계획표부터 MT·스터디까지, 엑셀 양식 없이 필요한 날짜만 골라 함께 채우는 시간표",

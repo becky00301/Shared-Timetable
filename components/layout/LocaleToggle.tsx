@@ -1,7 +1,12 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
-import { useLocale } from "@/lib/i18n/locale";
+import { useLocale, type Locale } from "@/lib/i18n/locale";
+
+/** The landing has an address per language; switching there moves between
+    them so the address always matches what is on screen. */
+const LANDING_PATHS: Record<Locale, string> = { ko: "/", en: "/en" };
 
 const OPTIONS = [
   { value: "ko", label: "한국어" },
@@ -19,6 +24,14 @@ export function LocaleToggle({
   invert?: boolean;
 }) {
   const { locale, setLocale } = useLocale();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  function choose(next: Locale) {
+    setLocale(next);
+    const onLanding = pathname === LANDING_PATHS.ko || pathname === LANDING_PATHS.en;
+    if (onLanding && pathname !== LANDING_PATHS[next]) router.push(LANDING_PATHS[next]);
+  }
 
   return (
     <div
@@ -33,7 +46,7 @@ export function LocaleToggle({
         <button
           key={option.value}
           type="button"
-          onClick={() => setLocale(option.value)}
+          onClick={() => choose(option.value)}
           aria-pressed={locale === option.value}
           className={cn(
             "whitespace-nowrap rounded-full px-2.5 py-1 font-medium transition-colors",

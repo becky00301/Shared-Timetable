@@ -6,7 +6,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: SITE_URL,
       changeFrequency: "weekly",
-      priority: 1
+      priority: 1,
+      alternates: { languages: { ko: SITE_URL, en: `${SITE_URL}/en` } }
+    },
+    {
+      url: `${SITE_URL}/en`,
+      changeFrequency: "weekly",
+      priority: 0.9,
+      alternates: { languages: { ko: SITE_URL, en: `${SITE_URL}/en` } }
     },
     {
       url: `${SITE_URL}/terms`,

@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
 import { LandingContent } from "@/components/layout/LandingContent";
-import { LANDING_FAQ } from "@/lib/landing-faq";
-import { messages } from "@/lib/i18n/messages";
+import { landingFaqStructuredData } from "@/lib/landing-faq";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getUserWithin } from "@/lib/supabase/session";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME_KO, SITE_SHARE_IMAGE, WEBSITE_STRUCTURED_DATA } from "@/lib/seo";
+import {
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  LANDING_LANGUAGES,
+  SITE_NAME_KO,
+  SITE_SHARE_IMAGE,
+  WEBSITE_STRUCTURED_DATA
+} from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: HOME_TITLE },
   description: HOME_DESCRIPTION,
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", languages: LANDING_LANGUAGES },
   openGraph: {
     type: "website",
     url: "/",
@@ -30,17 +36,7 @@ export const metadata: Metadata = {
   }
 };
 
-// The same questions the landing shows, in the Korean the page is served in,
-// so the answers can appear directly under the search result.
-const FAQ_STRUCTURED_DATA = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: LANDING_FAQ.map(([question, answer]) => ({
-    "@type": "Question",
-    name: messages[question].ko,
-    acceptedAnswer: { "@type": "Answer", text: messages[answer].ko }
-  }))
-};
+const FAQ_STRUCTURED_DATA = landingFaqStructuredData("ko");
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
