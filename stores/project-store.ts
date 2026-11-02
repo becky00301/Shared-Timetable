@@ -648,7 +648,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       .select("*")
       .single();
     if (error) throw error;
-    set((state) => ({ notes: [...state.notes, data as ProjectNote] }));
+    const note = data as ProjectNote;
+    // The database appends every new note; this one belongs first, right
+    // under the input it was typed in. Reordering through the same call a
+    // drag uses keeps everyone's list in that order. If it fails the note
+    // simply stays at the end.
+    const others = get()
+      .notes.filter((existing) => existing.project_id === projectId)
+      .sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at))
+      .map((existing) => existing.id);
+    set((state) => ({ notes: [...state.notes, { ...note, sort_order: -1 }] }));
+    await get()
+      .reorderNotes(projectId, [note.id, ...others])
+      .catch((reorderError) => console.error(reorderError));
   },
 
   updateNote: async (noteId, body) => {
