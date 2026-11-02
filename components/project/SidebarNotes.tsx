@@ -19,6 +19,7 @@ import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
+import { LinkPreviewCard, LinkTitle, splitUrls } from "@/components/project/LinkPreviewCard";
 import { useT } from "@/lib/i18n/locale";
 import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
@@ -199,6 +200,11 @@ function SidebarNoteRow({
   const cancelled = useRef(false);
   const t = useT();
   const disabled = !canEdit || busy || editing;
+  const parts = splitUrls(body);
+  const urls = parts.filter((part) => part.kind === "url").map((part) => part.value);
+  // One link gets a picture card below the note; several each get a title
+  // line beneath them, in the text.
+  const cardUrl = urls.length === 1 ? urls[0] : null;
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging, transform, transition } = useSortable({
     id,
     disabled,
@@ -255,7 +261,7 @@ function SidebarNoteRow({
         beginEdit();
       }}
       className={cn(
-        "group flex items-start gap-1 rounded-lg border border-border bg-black/[0.02] px-2.5 py-2",
+        "group flex flex-wrap items-start gap-1 rounded-lg border border-border bg-black/[0.02] px-2.5 py-2",
         isDragging && "opacity-0"
       )}
     >
@@ -305,9 +311,12 @@ function SidebarNoteRow({
               <GripVertical size={14} />
             </button>
           ) : null}
-          <button
-            type="button"
-            disabled={!canEdit || busy}
+          {/* Not a <button>: links inside it must stay clickable, which a
+              button can't contain. Keyboard and touch behave as before. */}
+          <div
+            role="button"
+            tabIndex={!canEdit || busy ? -1 : 0}
+            aria-disabled={!canEdit || busy}
             onMouseDown={(event) => listeners?.onMouseDown?.(event)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === "F2" || event.key === " ") {
@@ -329,11 +338,36 @@ function SidebarNoteRow({
             }}
             onTouchEnd={cancelLongPress}
             onTouchCancel={cancelLongPress}
-            className="min-w-0 flex-1 whitespace-pre-wrap break-words text-left text-xs leading-5 text-foreground cursor-grab active:cursor-grabbing disabled:cursor-default"
+            className={cn(
+              "min-w-0 flex-1 whitespace-pre-wrap break-words text-left text-xs leading-5 text-foreground",
+              canEdit && !busy ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+            )}
             title={canEdit ? t("notes.editHint") : undefined}
           >
-            {body}
-          </button>
+            {urls.length > 1
+              ? parts.map((part, index) =>
+                  part.kind === "text" ? (
+                    part.value
+                  ) : (
+                    <a
+                      key={index}
+                      href={part.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      // The link's own: no edit, drag or edit menu from it.
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onTouchStart={(event) => event.stopPropagation()}
+                      onContextMenu={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => event.stopPropagation()}
+                      className="break-all text-[var(--accent)] underline-offset-2 hover:underline"
+                    >
+                      {part.value}
+                      <LinkTitle url={part.value} />
+                    </a>
+                  )
+                )
+              : body}
+          </div>
           {canEdit ? (
             <button
               type="button"
@@ -344,6 +378,13 @@ function SidebarNoteRow({
             >
               <Trash2 size={13} />
             </button>
+          ) : null}
+          {/* A link in the note shows as its page's preview card, on its own
+              line beneath the text. */}
+          {cardUrl ? (
+            <div className="mt-1 basis-full">
+              <LinkPreviewCard url={cardUrl} />
+            </div>
           ) : null}
         </>
       )}
