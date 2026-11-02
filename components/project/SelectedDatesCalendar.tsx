@@ -8,6 +8,7 @@ import { Pencil, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CollapsibleTitle } from "@/components/project/CollapsibleTitle";
 import { RangeCalendar } from "@/components/project/RangeCalendar";
 import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
@@ -18,11 +19,16 @@ import type { ProjectDay } from "@/types/project";
 export function SelectedDatesCalendar({
   days,
   projectId,
-  canEdit = false
+  canEdit = false,
+  collapsed = false,
+  onToggle
 }: {
   days: ProjectDay[];
   projectId?: string;
   canEdit?: boolean;
+  /** Folded to its header row, when the sidebar offers folding. */
+  collapsed?: boolean;
+  onToggle?: () => void;
 }) {
   const dayByDate = useMemo(() => new Map(days.map((day) => [day.date, day])), [days]);
   const schedules = useProjectStore((state) => state.schedules);
@@ -94,8 +100,17 @@ export function SelectedDatesCalendar({
   return (
     <>
       {/* Doubles as the surrounding card's header row. */}
-      <div className="flex items-center justify-between gap-2 border-b border-border-muted px-3 py-2">
-        <h2 className="text-xs font-semibold text-muted">{t("sidebar.selectedDates")}</h2>
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 px-3 py-2",
+          !collapsed && "border-b border-border-muted"
+        )}
+      >
+        {onToggle ? (
+          <CollapsibleTitle title={t("sidebar.selectedDates")} collapsed={collapsed} onToggle={onToggle} />
+        ) : (
+          <h2 className="text-xs font-semibold text-muted">{t("sidebar.selectedDates")}</h2>
+        )}
         {canEdit && projectId ? (
           <button
             type="button"
@@ -108,7 +123,7 @@ export function SelectedDatesCalendar({
         ) : null}
       </div>
 
-      <div className="p-3">
+      <div className={cn("p-3", collapsed && "hidden")}>
         <div className="flex items-center justify-between">
           <button
             type="button"
