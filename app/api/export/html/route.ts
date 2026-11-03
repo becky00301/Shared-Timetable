@@ -7,6 +7,7 @@ import {
   type Item
 } from "@/lib/export/timetable-html";
 import { exportFilename } from "@/lib/export/filename";
+import { noteForExport } from "@/lib/notes/todo";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
     project.title,
     (days ?? []) as Day[],
     (items ?? []) as Item[],
-    (notes ?? []).map((note) => note.body),
+    (notes ?? []).map((note) => noteForExport(note.body)),
     labels,
     locale
   );

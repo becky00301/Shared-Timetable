@@ -15,12 +15,13 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { Check, GripVertical, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { LinkPreviewCard, LinkTitle, splitUrls } from "@/components/project/LinkPreviewCard";
 import { useT } from "@/lib/i18n/locale";
+import { parseNote, todoBody } from "@/lib/notes/todo";
 import { cn } from "@/lib/utils/cn";
 import { useProjectStore } from "@/stores/project-store";
 
@@ -35,6 +36,8 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
   const t = useT();
 
   const [draft, setDraft] = useState("");
+  // What the next entry becomes: a plain note or a to-do with a checkbox.
+  const [kind, setKind] = useState<"note" | "todo">("note");
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState(false);
   const reorderPending = useRef(false);
@@ -52,7 +55,7 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
     if (!body) return;
     setSaving(true);
     try {
-      await addNote(projectId, body);
+      await addNote(projectId, kind === "todo" ? todoBody(body, false) : body);
       setDraft("");
     } catch (error) {
       console.error(error);
@@ -98,13 +101,38 @@ export function SidebarNotes({ projectId, canEdit }: { projectId: string; canEdi
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder={t("notes.placeholder")}
+            placeholder={t(kind === "todo" ? "notes.todoPlaceholder" : "notes.placeholder")}
             className="min-h-16 rounded-none border-0 bg-transparent text-sm focus:border-transparent focus:ring-0"
           />
-          <div className="flex justify-end px-2 pb-2">
+          {/* The note/to-do choice sits beside the add button, the last thing
+              settled before sending. */}
+          <div className="flex items-center justify-between gap-2 px-2 pb-2">
+            <div
+              role="radiogroup"
+              aria-label={t("notes.kind.label")}
+              className="inline-grid grid-cols-2 gap-0.5 rounded-[8px] bg-black/[0.05] p-0.5"
+            >
+              {(["note", "todo"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={kind === option}
+                  onClick={() => setKind(option)}
+                  className={cn(
+                    "rounded-[6px] px-2.5 py-1 text-xs transition",
+                    kind === option
+                      ? "bg-background font-medium text-foreground shadow-[0_1px_2px_oklch(0_0_0/8%)]"
+                      : "text-muted hover:text-foreground"
+                  )}
+                >
+                  {t(option === "todo" ? "notes.kind.todo" : "notes.kind.note")}
+                </button>
+              ))}
+            </div>
             <Button type="submit" size="sm" disabled={!draft.trim() || saving || reordering}>
               <Plus size={15} />
-              {saving ? t("notes.adding") : t("notes.add")}
+              {saving ? t("notes.adding") : t(kind === "todo" ? "notes.addTodo" : "notes.add")}
             </Button>
           </div>
         </form>
@@ -200,7 +228,8 @@ function SidebarNoteRow({
   const cancelled = useRef(false);
   const t = useT();
   const disabled = !canEdit || busy || editing;
-  const parts = splitUrls(body);
+  const note = parseNote(body);
+  const parts = splitUrls(note.text);
   const urls = parts.filter((part) => part.kind === "url").map((part) => part.value);
   // One link gets a picture card below the note; several each get a title
   // line beneath them, in the text.
@@ -224,7 +253,7 @@ function SidebarNoteRow({
     if (!canEdit || busy || isDragging) return;
     cancelLongPress();
     cancelled.current = false;
-    setValue(body);
+    setValue(note.text);
     setEditing(true);
   }
 
@@ -234,14 +263,16 @@ function SidebarNoteRow({
       return;
     }
     const next = value.trim();
-    if (!next || next === body) {
-      setValue(body);
+    // A to-do keeps its mark and checked state through an edit of its text.
+    const nextBody = note.kind === "todo" ? todoBody(next, note.done) : next;
+    if (!next || nextBody === body) {
+      setValue(note.text);
       setEditing(false);
       return;
     }
     setSaving(true);
     try {
-      await onSave(next);
+      await onSave(nextBody);
       setEditing(false);
     } catch {
       // Keep the draft available when saving fails.
@@ -277,7 +308,7 @@ function SidebarNoteRow({
             if (event.key === "Escape") {
               event.preventDefault();
               cancelled.current = true;
-              setValue(body);
+              setValue(note.text);
               setEditing(false);
             }
             if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
@@ -311,6 +342,24 @@ function SidebarNoteRow({
               <GripVertical size={14} />
             </button>
           ) : null}
+          {note.kind === "todo" ? (
+            <button
+              type="button"
+              disabled={!canEdit || busy}
+              onClick={() => void onSave(todoBody(note.text, !note.done)).catch(() => {})}
+              aria-pressed={note.done}
+              aria-label={t(note.done ? "notes.markUndone" : "notes.markDone")}
+              title={t(note.done ? "notes.markUndone" : "notes.markDone")}
+              className={cn(
+                "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition disabled:cursor-default",
+                note.done
+                  ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
+                  : "border-black/25 bg-background hover:border-[var(--accent)]"
+              )}
+            >
+              {note.done ? <Check size={11} strokeWidth={3} aria-hidden /> : null}
+            </button>
+          ) : null}
           {/* Not a <button>: links inside it must stay clickable, which a
               button can't contain. Keyboard and touch behave as before. */}
           <div
@@ -340,7 +389,8 @@ function SidebarNoteRow({
             onTouchCancel={cancelLongPress}
             className={cn(
               "min-w-0 flex-1 whitespace-pre-wrap break-words text-left text-xs leading-5 text-foreground",
-              canEdit && !busy ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+              canEdit && !busy ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+              note.done && "text-muted line-through"
             )}
             title={canEdit ? t("notes.editHint") : undefined}
           >
@@ -366,7 +416,7 @@ function SidebarNoteRow({
                     </a>
                   )
                 )
-              : body}
+              : note.text}
           </div>
           {canEdit ? (
             <button

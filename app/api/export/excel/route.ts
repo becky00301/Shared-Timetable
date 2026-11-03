@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import writeXlsxFile, { getSheetData, type CellObject, type Column, type SheetData } from "write-excel-file/node";
 import { exportFilename } from "@/lib/export/filename";
 import { BUDGET_LABELS, buildBudgetSheets, moneyColumn } from "@/lib/export/budget-excel";
+import { noteForExport } from "@/lib/notes/todo";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
 
@@ -487,7 +488,7 @@ export async function GET(request: Request) {
     });
 
   const noteRows: NoteRow[] = (notes ?? []).map((note) => ({
-    body: note.body,
+    body: noteForExport(note.body),
     createdAt: note.created_at.slice(0, 10)
   }));
 
