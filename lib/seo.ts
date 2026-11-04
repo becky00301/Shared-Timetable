@@ -4,11 +4,9 @@ export const SITE_URL = "https://www.planner-together.com";
 export const SITE_NAME = "Planner Together";
 export const SITE_NAME_KO = "플래너 투게더";
 export const SITE_DISPLAY_NAME = `${SITE_NAME_KO} (${SITE_NAME})`;
-// Leads with the phrase people actually search for a trip plan with; the
-// brand still closes the title.
-export const HOME_TITLE = `여행 계획표, 엑셀 대신 함께 만드는 공유 시간표 | ${SITE_DISPLAY_NAME}`;
+export const HOME_TITLE = `${SITE_DISPLAY_NAME} | 함께 만드는 공유 시간표`;
 export const HOME_DESCRIPTION =
-  "엑셀 여행 계획표 양식 대신, 여행 날짜만 고르면 시간대별 여행 일정표가 생깁니다. 플래너 투게더(Planner Together)는 여행·MT·스터디 일정을 드래그로 만들고 링크 하나로 함께 편집하는 무료 공유 시간표예요. 필요하면 엑셀로도 내보낼 수 있어요.";
+  "혼자 일정표 만들다가 지치셨나요? 이제는 친구들과 함께 쉽게 만들고 편집하고 공유해요.";
 
 // The English landing at /en, written for the searches English speakers make
 // for this: "trip planner", "travel planner", "itinerary".
