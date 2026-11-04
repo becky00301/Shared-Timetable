@@ -37,8 +37,8 @@ export const messages = {
   },
   "landing.feature.dates.title": { ko: "필요한 날짜만", en: "Only the dates you need" },
   "landing.feature.dates.body": {
-    ko: "일주일 틀이나 여행·MT 기간처럼, 원하는 날짜만 골라 시간표를 만들어요.",
-    en: "Start from a weekly template, or pick the exact dates of a trip or event."
+    ko: "여행·MT 기간처럼 필요한 날짜만 고르면, 그 날짜들이 하나의 프로젝트로 만들어져요.",
+    en: "Pick just the dates of a trip or event, and they become one project."
   },
   "landing.feature.collab.title": { ko: "함께 편집", en: "Edit together" },
   "landing.feature.collab.body": {
