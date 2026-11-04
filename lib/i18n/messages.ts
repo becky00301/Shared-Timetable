@@ -817,10 +817,6 @@ export const messages = {
     ko: "이 날짜에는 위치가 입력된 일정이 없어요. 일정의 위치 칸에 주소나 장소 이름을 넣어주세요.",
     en: "No events on this day have a location yet. Add an address or place name to an event's location field."
   },
-  "map.noKey": {
-    ko: "지도를 쓰려면 구글 지도 API 키가 필요해요. NEXT_PUBLIC_GOOGLE_MAPS_API_KEY 환경 변수를 설정해주세요.",
-    en: "The map needs a Google Maps API key. Set the NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable."
-  },
   "map.failed": {
     ko: "지도를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
     en: "Couldn't load the map. Please try again in a moment."
@@ -834,6 +830,18 @@ export const messages = {
     ko: "{count}개 일정의 위치를 지도에서 찾지 못했어요. 더 구체적인 주소로 바꾸면 표시됩니다.",
     en: "Couldn't place {count} event(s) on the map. A more specific address will fix it."
   },
+
+  "map.allDays": { ko: "전체", en: "All days" },
+  "map.listView": { ko: "목록", en: "List" },
+  "map.mapView": { ko: "지도", en: "Map" },
+  "map.walk": { ko: "도보", en: "Walk" },
+  "map.drive": { ko: "차량", en: "Drive" },
+  "map.minutes": { ko: "{m}분", en: "{m} min" },
+  "map.hours": { ko: "{h}시간 {m}분", en: "{h} h {m} min" },
+  "map.routing": { ko: "이동시간 계산 중…", en: "Working out travel time…" },
+  "map.routeFailed": { ko: "이동시간을 계산하지 못했어요", en: "Couldn't work out travel time" },
+  "map.transit": { ko: "구글 지도에서 대중교통 길찾기", en: "Transit directions in Google Maps" },
+  "map.travelMode": { ko: "이동 수단", en: "Travel mode" },
 
   // ---------------------------------------------------------------- invite
   "invite.eyebrow": { ko: "플래너 투게더 초대", en: "You're invited to Planner Together" },

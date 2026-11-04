@@ -21,7 +21,6 @@ import { WakeTimeDialog } from "@/components/timetable/WakeTimeDialog";
 import { WakeTimePopover } from "@/components/timetable/WakeTimePopover";
 import { AlarmClock, Map as MapIcon } from "lucide-react";
 import { cursorColor, useLiveCursors } from "@/lib/supabase/cursors";
-import { googleMapsApiKey } from "@/lib/maps/loader";
 import { useT } from "@/lib/i18n/locale";
 import { useDateFormat } from "@/lib/i18n/dates";
 import {
@@ -733,19 +732,15 @@ function DayHeaderCell({
               <span>{wakeTime}</span>
             </div>
           ) : null}
-          {/* Without a Maps key the dialog has nothing to show, so the entry
-              point stays hidden rather than opening onto a setup notice. */}
-          {googleMapsApiKey() ? (
-            <button
-              type="button"
-              className="flex h-4 items-center justify-center rounded px-1 text-muted/70 transition hover:bg-black/6 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
-              onClick={onOpenMap}
-              title={t("grid.openMap")}
-              aria-label={`${day.date} ${t("grid.openMap")}`}
-            >
-              <MapIcon size={10} aria-hidden="true" />
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="flex h-4 items-center justify-center rounded px-1 text-muted/70 transition hover:bg-black/6 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+            onClick={onOpenMap}
+            title={t("grid.openMap")}
+            aria-label={`${day.date} ${t("grid.openMap")}`}
+          >
+            <MapIcon size={10} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </div>
