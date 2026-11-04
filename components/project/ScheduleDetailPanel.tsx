@@ -329,6 +329,10 @@ export function ScheduleDetailPanel({
             placeholder={t("common.optional")}
             onChange={(event) => setLocation(event.target.value)}
             onBlur={() => save({ location: location.trim() })}
+            onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
           />
         </label>
 
@@ -369,6 +373,14 @@ export function ScheduleDetailPanel({
             placeholder={t("common.optional")}
             onChange={(event) => setDescription(event.target.value)}
             onBlur={() => save({ description: description.trim() })}
+            onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+              // Shift+Enter still breaks the line for a longer memo.
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                event.currentTarget.blur();
+              }
+            }}
           />
         </label>
 
