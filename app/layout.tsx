@@ -49,6 +49,10 @@ export const metadata: Metadata = {
     "팀 일정 관리"
   ],
   category: "productivity",
+  // Ownership checks for search consoles, rendered as <meta> in every head.
+  verification: {
+    other: { "naver-site-verification": "ce02356084668b253aa35b4210c9f69f69f19df2" }
+  },
   robots: {
     index: true,
     follow: true,
