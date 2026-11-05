@@ -523,6 +523,9 @@ function RouteMap({
     import("maplibre-gl").then((module) => {
       const lib = (module as unknown as { default?: typeof import("maplibre-gl") }).default ?? module;
       if (cancelled || !containerRef.current) return;
+      // MapLibre 6 runs its tile worker from a separate file that a bundler
+      // can't find on its own; webpack emits it and hands back its URL.
+      lib.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
       libRef.current = lib;
       map = new lib.Map({
         container: containerRef.current,
