@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { useContextMenu, useLongPress } from "@/components/ui/context-menu";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -386,6 +387,24 @@ function ExpenseRow({
   const { locale } = useLocale();
   const t = useT();
 
+  function startEdit() {
+    setLabelDraft(label);
+    setAmountDraft(amountToInput(amount));
+    setEditing(true);
+  }
+
+  // The delete button only shows on hover, so on a phone a long press is
+  // where edit and delete live.
+  const { openAt, menu } = useContextMenu(
+    canEdit
+      ? [
+          { label: t("common.edit"), onSelect: startEdit },
+          { label: t("common.delete"), onSelect: onDelete, danger: true }
+        ]
+      : []
+  );
+  const longPress = useLongPress(openAt, canEdit && !editing);
+
   function commit() {
     setEditing(false);
     const nextLabel = labelDraft.trim();
@@ -440,12 +459,15 @@ function ExpenseRow({
       <button
         type="button"
         disabled={!canEdit}
-        onClick={() => {
-          setLabelDraft(label);
-          setAmountDraft(amountToInput(amount));
-          setEditing(true);
+        onClick={startEdit}
+        {...longPress}
+        onContextMenu={(event) => {
+          // Android reports a long press as a context menu too.
+          if (!canEdit || !window.matchMedia("(pointer: coarse)").matches) return;
+          event.preventDefault();
+          openAt(event.clientX, event.clientY);
         }}
-        className="flex min-w-0 flex-1 items-baseline justify-between gap-2 text-left disabled:cursor-default"
+        className="flex min-w-0 flex-1 items-baseline justify-between gap-2 text-left disabled:cursor-default pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]"
         title={canEdit ? t("budget.expenseEditHint") : undefined}
       >
         <span className="truncate text-xs text-foreground">{label}</span>
@@ -463,6 +485,7 @@ function ExpenseRow({
           <Trash2 size={13} />
         </button>
       ) : null}
+      {menu}
     </div>
   );
 }

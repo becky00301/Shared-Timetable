@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   closestCenter,
   defaultDropAnimationSideEffects,
@@ -18,6 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Check, GripVertical, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useContextMenu, useLongPress } from "@/components/ui/context-menu";
 import { Textarea } from "@/components/ui/input";
 import { LinkPreviewCard, LinkTitle, splitUrls } from "@/components/project/LinkPreviewCard";
 import { useT } from "@/lib/i18n/locale";
@@ -223,8 +224,6 @@ function SidebarNoteRow({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [value, setValue] = useState(body);
-  const longPress = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchOrigin = useRef<{ x: number; y: number } | null>(null);
   const cancelled = useRef(false);
   const t = useT();
   const disabled = !canEdit || busy || editing;
@@ -240,22 +239,24 @@ function SidebarNoteRow({
     transition: { duration: 180, easing: "cubic-bezier(0.25, 1, 0.5, 1)" }
   });
 
-  function cancelLongPress() {
-    if (longPress.current !== null) clearTimeout(longPress.current);
-    longPress.current = null;
-  }
-
-  useEffect(() => () => {
-    if (longPress.current !== null) clearTimeout(longPress.current);
-  }, []);
-
   function beginEdit() {
     if (!canEdit || busy || isDragging) return;
-    cancelLongPress();
     cancelled.current = false;
     setValue(note.text);
     setEditing(true);
   }
+
+  // On a phone a long press offers edit or delete; a right-click on a
+  // computer still goes straight to editing.
+  const { openAt, menu } = useContextMenu(
+    canEdit
+      ? [
+          { label: t("common.edit"), onSelect: beginEdit },
+          { label: t("common.delete"), onSelect: onDelete, danger: true }
+        ]
+      : []
+  );
+  const longPress = useLongPress(openAt, canEdit && !busy && !editing);
 
   async function save() {
     if (cancelled.current) {
@@ -289,7 +290,9 @@ function SidebarNoteRow({
         if (!canEdit || editing || busy) return;
         event.preventDefault();
         event.stopPropagation();
-        beginEdit();
+        // Android reports a long press as a context menu too.
+        if (window.matchMedia("(pointer: coarse)").matches) openAt(event.clientX, event.clientY);
+        else beginEdit();
       }}
       className={cn(
         "group flex flex-wrap items-start gap-1 rounded-lg border border-border bg-black/[0.02] px-2.5 py-2",
@@ -373,22 +376,11 @@ function SidebarNoteRow({
                 beginEdit();
               }
             }}
-            onTouchStart={(event) => {
-              const touch = event.touches[0];
-              if (!touch || event.touches.length !== 1) return;
-              touchOrigin.current = { x: touch.clientX, y: touch.clientY };
-              cancelLongPress();
-              longPress.current = setTimeout(beginEdit, 550);
-            }}
-            onTouchMove={(event) => {
-              const touch = event.touches[0];
-              if (!touch || !touchOrigin.current) return;
-              if (Math.hypot(touch.clientX - touchOrigin.current.x, touch.clientY - touchOrigin.current.y) > 8) cancelLongPress();
-            }}
-            onTouchEnd={cancelLongPress}
-            onTouchCancel={cancelLongPress}
+            {...longPress}
             className={cn(
               "min-w-0 flex-1 whitespace-pre-wrap break-words text-left text-xs leading-5 text-foreground",
+              // A held finger opens the menu, not the text selection.
+              canEdit && "pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]",
               canEdit && !busy ? "cursor-grab active:cursor-grabbing" : "cursor-default",
               note.done && "text-muted line-through"
             )}
@@ -438,6 +430,7 @@ function SidebarNoteRow({
           ) : null}
         </>
       )}
+      {menu}
     </div>
   );
 }

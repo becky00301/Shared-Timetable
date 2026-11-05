@@ -10,6 +10,7 @@ export const messages = {
   "common.login": { ko: "로그인", en: "Log in" },
   "common.logout": { ko: "로그아웃", en: "Log out" },
   "common.signup": { ko: "회원가입", en: "Sign up" },
+  "common.edit": { ko: "수정", en: "Edit" },
   "common.delete": { ko: "삭제", en: "Delete" },
   "common.back": { ko: "뒤로", en: "Back" },
   "common.next": { ko: "다음", en: "Next" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils/cn";
 
@@ -20,6 +20,9 @@ export function useContextMenu(items: ContextMenuItem[]) {
     event.stopPropagation();
     setPos({ x: event.clientX, y: event.clientY });
   }, []);
+
+  /** Opens the menu at a point, for a long press on a phone. */
+  const openAt = useCallback((x: number, y: number) => setPos({ x, y }), []);
 
   useEffect(() => {
     if (!pos) return;
@@ -44,7 +47,12 @@ export function useContextMenu(items: ContextMenuItem[]) {
       ? createPortal(
           <div
             className="fixed z-[100] min-w-36 overflow-hidden rounded-lg border border-border bg-background py-1 shadow-glow"
-            style={{ top: pos.y, left: pos.x }}
+            // Kept on screen: a press near a phone's right or bottom edge would
+            // otherwise open the menu half outside it.
+            style={{
+              top: Math.max(8, Math.min(pos.y, window.innerHeight - 8 - items.length * 32 - 8)),
+              left: Math.max(8, Math.min(pos.x, window.innerWidth - 8 - 144))
+            }}
             onClick={(event) => event.stopPropagation()}
             onContextMenu={(event) => event.preventDefault()}
           >
@@ -69,5 +77,52 @@ export function useContextMenu(items: ContextMenuItem[]) {
         )
       : null;
 
-  return { onContextMenu, menu };
+  return { onContextMenu, openAt, menu };
+}
+
+const LONG_PRESS_MS = 500;
+const LONG_PRESS_TOLERANCE = 8;
+
+/**
+ * A finger held still on an element for half a second. Spread the returned
+ * handlers on it; `onLongPress` gets the touch point. The lift that ends a
+ * long press is swallowed, so it doesn't also land as a tap.
+ */
+export function useLongPress(onLongPress: (x: number, y: number) => void, enabled = true) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const origin = useRef<{ x: number; y: number } | null>(null);
+  const fired = useRef(false);
+
+  const clear = useCallback(() => {
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = null;
+  }, []);
+
+  useEffect(() => clear, [clear]);
+
+  return {
+    onTouchStart(event: React.TouchEvent) {
+      fired.current = false;
+      clear();
+      const touch = event.touches[0];
+      if (!enabled || !touch || event.touches.length !== 1) return;
+      const point = { x: touch.clientX, y: touch.clientY };
+      origin.current = point;
+      timer.current = setTimeout(() => {
+        timer.current = null;
+        fired.current = true;
+        onLongPress(point.x, point.y);
+      }, LONG_PRESS_MS);
+    },
+    onTouchMove(event: React.TouchEvent) {
+      const touch = event.touches[0];
+      if (!touch || !origin.current) return;
+      if (Math.hypot(touch.clientX - origin.current.x, touch.clientY - origin.current.y) > LONG_PRESS_TOLERANCE) clear();
+    },
+    onTouchEnd(event: React.TouchEvent) {
+      clear();
+      if (fired.current && event.cancelable) event.preventDefault();
+    },
+    onTouchCancel: clear
+  };
 }
