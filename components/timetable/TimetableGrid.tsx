@@ -323,14 +323,21 @@ export function TimetableGrid({
     const origin = { x: event.clientX, y: event.clientY };
     let activated = !requiresLongPress;
     let longPressTimer: number | null = null;
+    let releaseScroll: (() => void) | null = null;
 
     function beginDraft() {
+      // Once a finger has armed a draft, its travel draws the block. Left to
+      // itself the browser would start panning the grid instead and cancel
+      // the pointer, dropping the draft mid-drag.
+      if (requiresLongPress) releaseScroll = holdScroll();
       dragRef.current = { dayId, start: anchor, end: anchor + MIN_DURATION_MINUTES };
       setDraft({ dayId, startMinutes: anchor, endMinutes: anchor + MIN_DURATION_MINUTES, naming: false });
     }
 
     function cleanup() {
       if (longPressTimer !== null) window.clearTimeout(longPressTimer);
+      releaseScroll?.();
+      releaseScroll = null;
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);

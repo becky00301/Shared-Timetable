@@ -72,8 +72,11 @@ export function DraftScheduleBlock({
             }}
             onBlur={finish}
             placeholder={t("grid.draftPlaceholder")}
-            // 16px on phones: iOS zooms the page into any smaller input.
-            className="w-full bg-transparent text-base font-semibold leading-tight text-current placeholder:text-current placeholder:opacity-60 focus:outline-none sm:text-sm"
+            // On phones the input stays 16px, since iOS zooms the page into any
+            // smaller input, but is drawn at 11/16 so it reads like the saved
+            // event's 11px title. The wider box and negative margin undo the
+            // scale's effect on width and line height.
+            className="block w-[145.4545%] origin-top-left scale-[0.6875] -mb-[6.25px] bg-transparent text-base font-semibold leading-tight text-current placeholder:text-current placeholder:opacity-60 focus:outline-none sm:mb-0 sm:w-full sm:scale-100 sm:text-sm"
           />
         ) : (
           <p className="text-[11px] font-semibold leading-tight text-current sm:text-sm">{t("grid.newSchedule")}</p>
