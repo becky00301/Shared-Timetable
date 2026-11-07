@@ -370,7 +370,7 @@ export function ScheduleDetailPanel({
           <Textarea
             value={description}
             disabled={!canEdit}
-            placeholder={t("common.optional")}
+            placeholder={t("detail.memoPlaceholder")}
             onChange={(event) => setDescription(event.target.value)}
             onBlur={() => save({ description: description.trim() })}
             onKeyDown={(event) => {

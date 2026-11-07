@@ -953,6 +953,7 @@ export const messages = {
   "detail.amount": { ko: "금액", en: "Amount" },
   "detail.amountPlaceholder": { ko: "예: 25000", en: "e.g. 25000" },
   "detail.memo": { ko: "메모", en: "Notes" },
+  "detail.memoPlaceholder": { ko: "Shift + Enter로 줄바꿈", en: "Shift + Enter for a new line" },
   "detail.color": { ko: "색상", en: "Color" },
   "detail.colorLabel": { ko: "색상 {color}", en: "Color {color}" },
   "detail.deleteHint": {
