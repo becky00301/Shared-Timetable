@@ -432,7 +432,8 @@ begin
           'start_time', s.start_time,
           'end_time', s.end_time,
           'color', s.color,
-          'all_day', s.all_day
+          'all_day', s.all_day,
+          'image_path', s.image_path
         )
         order by s.day_id, s.start_time, s.id
       )
@@ -603,3 +604,73 @@ $$;
 
 revoke all on function public.update_project_budget(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.update_project_budget(uuid, jsonb) to authenticated;
+
+-- Private bucket: 2 MB per file, images only. The app resizes to WebP before
+-- uploading, so a normal photo lands around 150-300 KB.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('schedule-photos', 'schedule-photos', false, 2097152, array['image/webp', 'image/jpeg', 'image/png'])
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+-- The project a storage path belongs to, or null when the first folder is not
+-- a uuid (so a malformed name is refused instead of raising a cast error).
+create or replace function public.schedule_photo_project(object_name text)
+returns uuid
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  folder text := split_part(object_name, '/', 1);
+begin
+  if folder ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' then
+    return folder::uuid;
+  end if;
+  return null;
+end;
+$$;
+
+revoke execute on function public.schedule_photo_project(text) from public, anon;
+grant execute on function public.schedule_photo_project(text) to authenticated;
+
+drop policy if exists "members read schedule photos" on storage.objects;
+create policy "members read schedule photos"
+on storage.objects for select
+to authenticated
+using (
+  bucket_id = 'schedule-photos'
+  and coalesce(public.is_project_member(public.schedule_photo_project(name)), false)
+);
+
+drop policy if exists "editors add schedule photos" on storage.objects;
+create policy "editors add schedule photos"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'schedule-photos'
+  and coalesce(public.can_edit_project(public.schedule_photo_project(name)), false)
+);
+
+drop policy if exists "editors update schedule photos" on storage.objects;
+create policy "editors update schedule photos"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'schedule-photos'
+  and coalesce(public.can_edit_project(public.schedule_photo_project(name)), false)
+)
+with check (
+  bucket_id = 'schedule-photos'
+  and coalesce(public.can_edit_project(public.schedule_photo_project(name)), false)
+);
+
+drop policy if exists "editors remove schedule photos" on storage.objects;
+create policy "editors remove schedule photos"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'schedule-photos'
+  and coalesce(public.can_edit_project(public.schedule_photo_project(name)), false)
+);

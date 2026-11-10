@@ -31,7 +31,19 @@ export default function InvitePage() {
         console.error(error);
         return null;
       }
-      return parseTimetable(data);
+      const timetable = parseTimetable(data);
+      if (!timetable || !timetable.schedules.some((item) => item.image_path)) return timetable;
+      // Photos sit in a private bucket; the server signs them for the view key.
+      try {
+        const response = await fetch(`/api/embed/photos?token=${encodeURIComponent(viewKey)}`);
+        const urls = response.ok ? ((await response.json()) as Record<string, string>) : {};
+        return {
+          ...timetable,
+          schedules: timetable.schedules.map((item) => ({ ...item, image_url: urls[item.id] ?? null }))
+        };
+      } catch {
+        return timetable;
+      }
     }
 
     async function run() {

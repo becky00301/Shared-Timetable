@@ -14,6 +14,8 @@ export type ScheduleItem = {
   /** What this item costs. Null means no amount was entered, which is
       different from a free item at 0. */
   amount?: number | null;
+  /** Path of the item's photo in the schedule-photos Storage bucket. */
+  image_path?: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { X, Trash2 } from "lucide-react";
+import { ImagePlus, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@appica/ui-react/switch";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
@@ -14,7 +15,9 @@ import {
   parseAmountInput
 } from "@/lib/utils/money";
 import { SCHEDULE_COLOR_GROUPS } from "@/lib/utils/schedule-colors";
-import { timeToMinutes } from "@/lib/utils/time";
+import { absoluteSpan, fromAbsoluteSpan } from "@/lib/utils/schedule-span";
+import { nextFreeHour, timeToMinutes } from "@/lib/utils/time";
+import { useSchedulePhotoUrl } from "@/stores/photo-store";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay } from "@/types/project";
@@ -33,6 +36,8 @@ export function ScheduleDetailPanel({
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
   const deleteSchedule = useProjectStore((state) => state.deleteSchedule);
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
+  const setSchedulePhoto = useProjectStore((state) => state.setSchedulePhoto);
+  const removeSchedulePhoto = useProjectStore((state) => state.removeSchedulePhoto);
   const schedules = useProjectStore((state) => state.schedules);
   const projects = useProjectStore((state) => state.projects);
   const budgetSchemaMissing = useProjectStore((state) => state.budgetSchemaMissing);
@@ -49,6 +54,9 @@ export function ScheduleDetailPanel({
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoUrl = useSchedulePhotoUrl(item?.image_path);
 
   useEffect(() => {
     if (!item) return;
@@ -168,8 +176,59 @@ export function ScheduleDetailPanel({
     if (!item || !canEdit) return;
     upsertSchedule({ ...item, ...patch }).catch((error) => {
       console.error(error);
-      toast.error(t("detail.saveFailed"));
+      // 23514: the database still has the old "end after start" check.
+      toast.error(
+        (error as { code?: string } | null)?.code === "23514"
+          ? t("detail.overnightNotMigrated")
+          : t("detail.saveFailed")
+      );
     });
+  }
+
+  function pickPhoto(file: File | undefined) {
+    if (!file || !item || !canEdit) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("photo.notImage"));
+      return;
+    }
+    setPhotoBusy(true);
+    setSchedulePhoto(item.id, file)
+      .catch((error) => {
+        console.error(error);
+        const message = error instanceof Error ? error.message : "";
+        toast.error(
+          message === "too-large"
+            ? t("photo.tooLarge")
+            : message === t("photo.notMigrated")
+              ? message
+              : t("photo.uploadFailed")
+        );
+      })
+      .finally(() => setPhotoBusy(false));
+  }
+
+  function clearPhoto() {
+    if (!item || !canEdit) return;
+    setPhotoBusy(true);
+    removeSchedulePhoto(item.id)
+      .catch((error) => {
+        console.error(error);
+        toast.error(t("photo.removeFailed"));
+      })
+      .finally(() => setPhotoBusy(false));
+  }
+
+  // All-day keeps no times of its own, so turning it back into a timed event
+  // gives it the next free hour of its start day, and a multi-day span
+  // shrinks to that one day.
+  function setAllDay(next: boolean) {
+    if (!item || next === Boolean(item.all_day)) return;
+    if (next) {
+      save({ all_day: true, start_time: "00:00", end_time: "23:59", end_day_id: null });
+      return;
+    }
+    const sameDay = schedules.filter((other) => other.day_id === item.day_id && other.id !== item.id);
+    save({ all_day: false, end_day_id: null, ...nextFreeHour(sameDay) });
   }
 
   function saveTitle() {
@@ -196,13 +255,53 @@ export function ScheduleDetailPanel({
     if (parsed !== item!.amount) save({ amount: parsed });
   }
 
-  function saveTimes(nextStart: string, nextEnd: string) {
-    if (timeToMinutes(nextEnd) <= timeToMinutes(nextStart)) {
+  // A timed event's start and end are each a date and a time, so one can run
+  // past midnight into a later date of the timetable.
+  const dayOrder = days.map((day) => day.id);
+  const columnOf = (id: string) => Math.max(0, dayOrder.indexOf(id));
+
+  function saveSpan(startDay: string, start: string, endDay: string, end: string) {
+    const startAbs = columnOf(startDay) * 24 * 60 + timeToMinutes(start);
+    const endAbs = columnOf(endDay) * 24 * 60 + timeToMinutes(end);
+    if (endAbs <= startAbs) {
       toast.error(t("detail.endBeforeStart"));
+      // Put the dates back to what is saved. A time stays as typed, since
+      // the reader may be about to change the date that makes it valid.
+      setDayId(item!.day_id);
+      setEndDayId(item!.end_day_id ?? item!.day_id);
       return;
     }
-    save({ start_time: nextStart, end_time: nextEnd });
+    save(fromAbsoluteSpan(startAbs, endAbs, dayOrder));
   }
+
+  // A new start date keeps the event's length: the end moves with it,
+  // stopping at midnight after the last date.
+  function moveStartDay(nextDay: string) {
+    const span = absoluteSpan(item!, dayOrder);
+    const shift = (columnOf(nextDay) - columnOf(item!.day_id)) * 24 * 60;
+    const start = span.start + shift;
+    const end = Math.max(start + 5, Math.min(dayOrder.length * 24 * 60, span.end + shift));
+    save(fromAbsoluteSpan(start, end, dayOrder));
+  }
+
+  const selectClass =
+    "h-10 min-w-0 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground outline-none disabled:opacity-60 sm:text-sm";
+
+  function timeField(value: string, onChange: (next: string) => void) {
+    return (
+      <div className="w-full min-w-0 overflow-hidden rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+        <Input
+          type="time"
+          className="max-w-full rounded-none border-0 bg-transparent focus:border-transparent focus:ring-0 [inline-size:100%] [min-inline-size:0]"
+          step={300}
+          value={value}
+          disabled={!canEdit}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+    );
+  }
+
 
   return (
     <aside
@@ -242,83 +341,114 @@ export function ScheduleDetailPanel({
           />
         </label>
 
-        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
-          {item.all_day ? t("detail.startDate") : t("detail.date")}
-          <select
-            className="h-10 min-w-0 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground outline-none disabled:opacity-60 sm:text-sm"
-            value={dayId}
+        <div className="flex items-center justify-between text-muted">
+          {t("grid.allDay")}
+          <Switch
+            checked={Boolean(item.all_day)}
             disabled={!canEdit}
-            onChange={(event) => {
-              setDayId(event.target.value);
-              save({ day_id: event.target.value });
-            }}
-          >
-            {days.map((day) => (
-              <option key={day.id} value={day.id}>
-                {day.date}
-              </option>
-            ))}
-          </select>
-        </label>
+            aria-label={t("grid.allDay")}
+            onCheckedChange={(checked) => setAllDay(checked)}
+          />
+        </div>
 
         {item.all_day ? (
-          <label className="flex min-w-0 flex-col gap-1.5 text-muted">
-            {t("detail.endDate")}
-            <select
-              className="h-10 min-w-0 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground outline-none disabled:opacity-60 sm:text-sm"
-              value={endDayId}
-              disabled={!canEdit}
-              onChange={(event) => {
-                const next = event.target.value;
-                setEndDayId(next);
-                // Same day as the start means a single-day item.
-                save({ end_day_id: next === dayId ? null : next });
-              }}
-            >
-              {days
-                .filter((day) => day.date >= (days.find((d) => d.id === dayId)?.date ?? ""))
-                .map((day) => (
+          <>
+            <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+              {t("detail.startDate")}
+              <select
+                className={selectClass}
+                value={dayId}
+                disabled={!canEdit}
+                onChange={(event) => {
+                  setDayId(event.target.value);
+                  save({ day_id: event.target.value });
+                }}
+              >
+                {days.map((day) => (
                   <option key={day.id} value={day.id}>
                     {day.date}
                   </option>
                 ))}
-            </select>
-          </label>
+              </select>
+            </label>
+            <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+              {t("detail.endDate")}
+              <select
+                className={selectClass}
+                value={endDayId}
+                disabled={!canEdit}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setEndDayId(next);
+                  // Same day as the start means a single-day item.
+                  save({ end_day_id: next === dayId ? null : next });
+                }}
+              >
+                {days
+                  .filter((day) => day.date >= (days.find((d) => d.id === dayId)?.date ?? ""))
+                  .map((day) => (
+                    <option key={day.id} value={day.id}>
+                      {day.date}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          </>
         ) : (
-          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-            <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+          <>
+            <div className="flex min-w-0 flex-col gap-1.5 text-muted">
               {t("detail.start")}
-              <div className="w-full min-w-0 overflow-hidden rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                <Input
-                  type="time"
-                  className="max-w-full rounded-none border-0 bg-transparent focus:border-transparent focus:ring-0 [inline-size:100%] [min-inline-size:0]"
-                  step={300}
-                  value={startTime}
+              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
+                <select
+                  className={selectClass}
+                  value={dayId}
                   disabled={!canEdit}
+                  aria-label={t("detail.startDate")}
                   onChange={(event) => {
-                    setStartTime(event.target.value);
-                    saveTimes(event.target.value, endTime);
+                    setDayId(event.target.value);
+                    moveStartDay(event.target.value);
                   }}
-                />
+                >
+                  {days.map((day) => (
+                    <option key={day.id} value={day.id}>
+                      {day.date}
+                    </option>
+                  ))}
+                </select>
+                {timeField(startTime, (next) => {
+                  setStartTime(next);
+                  saveSpan(dayId, next, endDayId, endTime);
+                })}
               </div>
-            </label>
-            <label className="flex min-w-0 flex-col gap-1.5 text-muted">
+            </div>
+            <div className="flex min-w-0 flex-col gap-1.5 text-muted">
               {t("detail.end")}
-              <div className="w-full min-w-0 overflow-hidden rounded-lg border border-border bg-background transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                <Input
-                  type="time"
-                  className="max-w-full rounded-none border-0 bg-transparent focus:border-transparent focus:ring-0 [inline-size:100%] [min-inline-size:0]"
-                  step={300}
-                  value={endTime}
+              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
+                <select
+                  className={selectClass}
+                  value={endDayId}
                   disabled={!canEdit}
+                  aria-label={t("detail.endDate")}
                   onChange={(event) => {
-                    setEndTime(event.target.value);
-                    saveTimes(startTime, event.target.value);
+                    setEndDayId(event.target.value);
+                    saveSpan(dayId, startTime, event.target.value, endTime);
                   }}
-                />
+                >
+                  {days
+                    .filter((day) => columnOf(day.id) >= columnOf(dayId))
+                    .map((day) => (
+                      <option key={day.id} value={day.id}>
+                        {day.date}
+                      </option>
+                    ))}
+                </select>
+                {timeField(endTime, (next) => {
+                  setEndTime(next);
+                  saveSpan(dayId, startTime, endDayId, next);
+                })}
               </div>
-            </label>
-          </div>
+            </div>
+          </>
         )}
 
         <label className="flex min-w-0 flex-col gap-1.5 text-muted">
@@ -411,6 +541,57 @@ export function ScheduleDetailPanel({
             ))}
           </div>
         </div>
+
+        {canEdit || item.image_path ? (
+          <div className="flex flex-col gap-1.5 text-muted">
+            {t("photo.label")}
+            {item.image_path ? (
+              <div className="relative h-24 overflow-hidden rounded-md border border-border bg-black/5">
+                {photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL
+                  <img src={photoUrl} alt="" className="size-full object-cover" />
+                ) : null}
+              </div>
+            ) : null}
+            {canEdit ? (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  disabled={photoBusy}
+                  onClick={() => photoInputRef.current?.click()}
+                >
+                  <ImagePlus size={16} />
+                  {photoBusy ? t("photo.uploading") : item.image_path ? t("photo.replace") : t("photo.add")}
+                </Button>
+                {item.image_path ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled={photoBusy}
+                    onClick={clearPhoto}
+                  >
+                    {t("photo.remove")}
+                  </Button>
+                ) : null}
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => {
+                    pickPhoto(event.target.files?.[0]);
+                    event.target.value = "";
+                  }}
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-6">

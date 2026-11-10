@@ -3,6 +3,10 @@
  * escaping can be exercised directly — it is the part that matters, and the
  * route around it needs a database and a session to run at all.
  */
+
+import { timedSegments } from "@/lib/utils/schedule-span";
+import { minutesToTime } from "@/lib/utils/time";
+
 export type Locale = "ko" | "en";
 
 export const LABELS = {
@@ -71,7 +75,15 @@ export type Item = {
   end_time: string;
   all_day: boolean;
   color: string | null;
+  /** The item's photo inlined as a base64 data URL, so the file stays
+      self-contained. */
+  photo?: string | null;
+  /** The full time range when this is one date's part of an event running
+      past midnight. */
+  timeLabel?: string;
 };
+
+const PHOTO_DATA_URL = /^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/]+=*$/;
 
 /** Pixels per hour in the exported sheet. Small enough that a few days fit a
     printed page, large enough that a 30-minute item still shows its title. */
@@ -135,10 +147,18 @@ function renderBlock(item: Item, lane: number, laneCount: number, windowStart: n
   const height = Math.max(((end - start) / 60) * HOUR_PX, MIN_BLOCK_PX);
   const width = 100 / laneCount;
   const fill = safeColor(item.color);
-  const ink = readableInk(fill);
-  const time = `${esc(item.start_time.slice(0, 5))}–${esc(item.end_time.slice(0, 5))}`;
+  const photo = item.photo && PHOTO_DATA_URL.test(item.photo) ? item.photo : null;
+  const ink = photo ? "#FFFFFF" : readableInk(fill);
+  // Same treatment as the app: the photo fills the box, darkened most at the
+  // top where the title sits.
+  const background = photo
+    ? `linear-gradient(to bottom,rgba(0,0,0,.65),rgba(0,0,0,.4) 50%,rgba(0,0,0,.25)),url(${photo}) center/cover no-repeat,${fill}`
+    : fill;
+  const time = item.timeLabel
+    ? esc(item.timeLabel)
+    : `${esc(item.start_time.slice(0, 5))}–${esc(item.end_time.slice(0, 5))}`;
   const where = item.location ? `<span class="where">${esc(item.location)}</span>` : "";
-  return `<div class="block" style="top:${top}px;height:${height}px;left:${lane * width}%;width:${width}%;background:${fill};color:${ink}" title="${esc(item.title)}">
+  return `<div class="block" style="top:${top}px;height:${height}px;left:${lane * width}%;width:${width}%;background:${background};color:${ink}"${photo ? ' data-photo=""' : ""} title="${esc(item.title)}">
             <span class="btitle">${esc(item.title)}</span>
             <span class="btime">${time}</span>
             ${where}
@@ -167,12 +187,30 @@ export function renderDocument(
   );
   const dayIndex = new Map(sortedDays.map((day, i) => [day.id, i]));
 
+  // A timed item running past midnight is drawn on each date it covers, as
+  // that date's part, labelled with its whole time range.
+  const dayOrder = sortedDays.map((day) => day.id);
+  const timedPieces: Item[] = [];
   const timedByDay = new Map<string, Item[]>();
   for (const item of items) {
     if (item.all_day) continue;
-    const list = timedByDay.get(item.day_id) ?? [];
-    list.push(item);
-    timedByDay.set(item.day_id, list);
+    const segments = timedSegments(item, dayOrder);
+    for (const segment of segments) {
+      const piece: Item =
+        segments.length > 1
+          ? {
+              ...item,
+              day_id: segment.dayId,
+              start_time: minutesToTime(segment.startMinutes),
+              end_time: minutesToTime(segment.endMinutes),
+              timeLabel: `${item.start_time.slice(0, 5)}–${item.end_time.slice(0, 5)}`
+            }
+          : item;
+      timedPieces.push(piece);
+      const list = timedByDay.get(segment.dayId) ?? [];
+      list.push(piece);
+      timedByDay.set(segment.dayId, list);
+    }
   }
 
   // An all-day item shows on every day it covers, not only where it starts.
@@ -191,7 +229,7 @@ export function renderDocument(
     }
   }
 
-  const [windowStart, windowEnd] = hourWindow(items);
+  const [windowStart, windowEnd] = hourWindow(timedPieces);
   const hours: number[] = [];
   for (let m = windowStart; m < windowEnd; m += 60) hours.push(m);
   const bodyHeight = hours.length * HOUR_PX;
@@ -331,6 +369,7 @@ ${notes.map((note) => `        <li>${esc(note)}</li>`).join("\n")}
     position: absolute; overflow: hidden; border-radius: 4px;
     padding: 3px 5px; display: flex; flex-direction: column; gap: 1px;
   }
+  .block[data-photo] { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
   .btitle { font-size: 11px; font-weight: 600; line-height: 1.25; }
   .btime, .where {
     font-size: 10px; line-height: 1.25; opacity: 0.85;

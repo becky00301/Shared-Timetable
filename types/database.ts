@@ -164,6 +164,7 @@ export type Database = {
           all_day: boolean;
           end_day_id: string | null;
           amount: number | null;
+          image_path: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -181,6 +182,7 @@ export type Database = {
           all_day?: boolean;
           end_day_id?: string | null;
           amount?: number | null;
+          image_path?: string | null;
           created_at?: string;
           updated_at?: string;
         };

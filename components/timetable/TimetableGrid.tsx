@@ -31,6 +31,13 @@ import {
 } from "@/lib/utils/scroll-lock";
 import { cn } from "@/lib/utils/cn";
 import {
+  absoluteSpan,
+  fromAbsoluteSpan,
+  isOvernight,
+  timedSegments,
+  type DaySegment
+} from "@/lib/utils/schedule-span";
+import {
   DAY_END_MINUTES,
   MIN_DURATION_MINUTES,
   minutesToTime,
@@ -42,6 +49,7 @@ import {
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 import type { ProjectDay, ProjectMember } from "@/types/project";
+import type { ScheduleItem } from "@/types/schedule";
 
 
 function isResizeHandle(target: EventTarget | null) {
@@ -73,6 +81,15 @@ class ScheduleTouchSensor extends TouchSensor {
     ) => !isResizeHandle(event.nativeEvent.target) && activator.handler(event, options)
   }));
 }
+
+/** How far into another date's column the pointer must be before a drawn
+    event runs into that date, so a little sideways wobble does not turn a
+    one-hour draft into a day-long one. */
+const COLUMN_SWITCH_MARGIN = 16;
+/** Drawing near the top or bottom of the visible hours scrolls the grid, so
+    an event can be drawn to a time that is off screen. */
+const DRAW_AUTO_SCROLL_EDGE = 56;
+const DRAW_AUTO_SCROLL_MAX_STEP = 14;
 
 export function TimetableGrid({
   projectId,
@@ -125,6 +142,21 @@ export function TimetableGrid({
   const [viewportWidth, setViewportWidth] = useState(0);
   const [timedViewportHeight, setTimedViewportHeight] = useState(0);
   const allDayItems = schedules.filter((item) => item.all_day);
+  // Timed events per column. One that runs past midnight shows up in every
+  // column it touches, placed by its part on that date.
+  const dayOrder = days.map((day) => day.id);
+  const timedByDay = new Map<string, { items: ScheduleItem[]; segments: Record<string, DaySegment> }>();
+  for (const day of days) timedByDay.set(day.id, { items: [], segments: {} });
+  for (const item of schedules) {
+    if (item.all_day) continue;
+    const segments = timedSegments(item, dayOrder);
+    for (const segment of segments) {
+      const column = timedByDay.get(segment.dayId);
+      if (!column) continue;
+      column.items.push(item);
+      if (segments.length > 1) column.segments[item.id] = segment;
+    }
+  }
 
   useEffect(() => {
     initializeGridZoom(window.matchMedia("(max-width: 639px)").matches);
@@ -146,7 +178,11 @@ export function TimetableGrid({
     name: me?.user?.name || me?.user?.email?.split("@")[0] || t("role.viewer"),
     contentRef,
     draft: draft
-      ? { dayId: draft.dayId, startMinutes: draft.startMinutes, endMinutes: draft.endMinutes }
+      ? {
+          dayId: draft.dayId,
+          startMinutes: draft.startMinutes,
+          endMinutes: Math.min(DAY_END_MINUTES, draft.endMinutes)
+        }
       : null,
     chatText: cursorChat
   });
@@ -324,6 +360,67 @@ export function TimetableGrid({
     let activated = !requiresLongPress;
     let longPressTimer: number | null = null;
     let releaseScroll: (() => void) | null = null;
+    // Drawn on a running clock across the columns: minutes from the first
+    // date's midnight. Dragging into a later (or earlier) date's column runs
+    // the event into that date.
+    const gridEl = event.currentTarget;
+    const dayCount = days.length;
+    const anchorColumn = Math.max(0, days.findIndex((day) => day.id === dayId));
+    const anchorAbs = anchorColumn * DAY_END_MINUTES + anchor;
+    let currentColumn = anchorColumn;
+    let pointer = { x: event.clientX, y: event.clientY };
+    let frame: number | null = null;
+
+    function columnUnder(x: number) {
+      const columns = timedRef.current?.querySelectorAll<HTMLElement>("[data-day-column]") ?? [];
+      for (let index = 0; index < columns.length; index += 1) {
+        if (index === currentColumn) continue;
+        const box = columns[index].getBoundingClientRect();
+        if (x >= box.left + COLUMN_SWITCH_MARGIN && x <= box.right - COLUMN_SWITCH_MARGIN) return index;
+      }
+      return currentColumn;
+    }
+
+    function applyPointer() {
+      currentColumn = columnUnder(pointer.x);
+      const top = gridEl.getBoundingClientRect().top;
+      const minutes = timeToMinutes(pointerYToTime(pointer.y - top, hourHeight));
+      const currentAbs = currentColumn * DAY_END_MINUTES + Math.max(0, Math.min(DAY_END_MINUTES, minutes));
+      const start = Math.min(anchorAbs, currentAbs);
+      const end = Math.min(dayCount * DAY_END_MINUTES, Math.max(anchorAbs + MIN_DURATION_MINUTES, currentAbs));
+      const column = Math.min(dayCount - 1, Math.floor(start / DAY_END_MINUTES));
+      const offset = column * DAY_END_MINUTES;
+      const startDayId = days[column]?.id ?? dayId;
+      if (dragRef.current) {
+        dragRef.current.dayId = startDayId;
+        dragRef.current.start = start - offset;
+        dragRef.current.end = end - offset;
+      }
+      setDraft((prev) =>
+        prev ? { ...prev, dayId: startDayId, startMinutes: start - offset, endMinutes: end - offset } : prev
+      );
+    }
+
+    function autoScroll() {
+      frame = null;
+      const scroller = scrollRef.current;
+      if (!scroller) return;
+      const box = scroller.getBoundingClientRect();
+      const head = scroller.querySelector("[data-grid-sticky-head]");
+      const bar = document.querySelector("[data-mobile-project-bar]");
+      const top = head ? head.getBoundingClientRect().bottom : box.top;
+      const barTop = bar?.getBoundingClientRect().top;
+      const bottom = barTop && barTop > 0 ? Math.min(box.bottom, barTop) : box.bottom;
+      let speed = 0;
+      if (pointer.y < top + DRAW_AUTO_SCROLL_EDGE) speed = -(top + DRAW_AUTO_SCROLL_EDGE - pointer.y);
+      else if (pointer.y > bottom - DRAW_AUTO_SCROLL_EDGE) speed = pointer.y - (bottom - DRAW_AUTO_SCROLL_EDGE);
+      if (!speed) return;
+      const before = scroller.scrollTop;
+      scroller.scrollTop += Math.sign(speed) * Math.min(DRAW_AUTO_SCROLL_MAX_STEP, Math.ceil(Math.abs(speed) / 3));
+      if (scroller.scrollTop === before) return;
+      applyPointer();
+      frame = window.requestAnimationFrame(autoScroll);
+    }
 
     function beginDraft() {
       // Once a finger has armed a draft, its travel draws the block. Left to
@@ -336,6 +433,8 @@ export function TimetableGrid({
 
     function cleanup() {
       if (longPressTimer !== null) window.clearTimeout(longPressTimer);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
       releaseScroll?.();
       releaseScroll = null;
       window.removeEventListener("pointermove", onMove);
@@ -351,14 +450,9 @@ export function TimetableGrid({
       }
 
       moveEvent.preventDefault();
-      const current = timeToMinutes(pointerYToTime(moveEvent.clientY - rect.top, hourHeight));
-      const start = Math.min(anchor, current);
-      const end = Math.min(DAY_END_MINUTES, Math.max(anchor + MIN_DURATION_MINUTES, current));
-      if (dragRef.current) {
-        dragRef.current.start = start;
-        dragRef.current.end = end;
-      }
-      setDraft((prev) => (prev ? { ...prev, startMinutes: start, endMinutes: end } : prev));
+      pointer = { x: moveEvent.clientX, y: moveEvent.clientY };
+      applyPointer();
+      if (frame === null) frame = window.requestAnimationFrame(autoScroll);
     };
     const onUp = () => {
       const shouldOpenNaming = activated;
@@ -418,6 +512,29 @@ export function TimetableGrid({
       });
   }
 
+  // The draft's part in one column. One drawn past midnight shows in each
+  // column it reaches; the name is typed into the first part.
+  function draftPieceFor(columnIndex: number) {
+    if (!draft) return null;
+    const startColumn = dayOrder.indexOf(draft.dayId);
+    if (startColumn === -1) return null;
+    const start = startColumn * DAY_END_MINUTES + draft.startMinutes;
+    const end = startColumn * DAY_END_MINUTES + draft.endMinutes;
+    const columnStart = columnIndex * DAY_END_MINUTES;
+    const pieceStart = Math.max(start, columnStart);
+    const pieceEnd = Math.min(end, columnStart + DAY_END_MINUTES);
+    if (pieceEnd <= pieceStart) return null;
+    const crosses = end > startColumn * DAY_END_MINUTES + DAY_END_MINUTES;
+    return {
+      start_time: minutesToTime(pieceStart - columnStart),
+      end_time: minutesToTime(pieceEnd - columnStart),
+      naming: draft.naming && columnIndex === startColumn,
+      timeLabel: crosses
+        ? `${minutesToTime(draft.startMinutes % DAY_END_MINUTES)} - ${minutesToTime(end % DAY_END_MINUTES)}`
+        : undefined
+    };
+  }
+
   function commitDraft(title: string) {
     if (!draft) return;
     const name = title.trim();
@@ -426,12 +543,12 @@ export function TimetableGrid({
       setDraft(null);
       return;
     }
+    // A draft drawn past midnight ends on a later date.
+    const offset = Math.max(0, dayOrder.indexOf(draft.dayId)) * DAY_END_MINUTES;
     upsertSchedule({
       project_id: projectId,
-      day_id: draft.dayId,
       title: name,
-      start_time: minutesToTime(draft.startMinutes),
-      end_time: minutesToTime(draft.endMinutes)
+      ...fromAbsoluteSpan(offset + draft.startMinutes, offset + draft.endMinutes, dayOrder)
     })
       .then((item) => setSelectedSchedule(item.id))
       .catch((error) => {
@@ -448,9 +565,14 @@ export function TimetableGrid({
 
   function onDragEnd(event: DragEndEvent) {
     releaseScroll();
-    const item = schedules.find((schedule) => schedule.id === event.active.id);
+    const dragged = (event.active.data.current as { item?: ScheduleItem } | undefined)?.item;
+    const item = schedules.find((schedule) => schedule.id === (dragged?.id ?? event.active.id));
     if (!item || !canEdit) return;
     const deltaMinutes = snapMinutes((event.delta.y / hourHeight) * 60);
+    if (isOvernight(item, dayOrder)) {
+      moveOvernight(item, deltaMinutes, event.delta.x);
+      return;
+    }
     const start = Math.max(0, Math.min(DAY_END_MINUTES - MIN_DURATION_MINUTES, timeToMinutes(item.start_time) + deltaMinutes));
     const duration = timeToMinutes(item.end_time) - timeToMinutes(item.start_time);
     const currentDayIndex = days.findIndex((day) => day.id === item.day_id);
@@ -471,13 +593,42 @@ export function TimetableGrid({
     });
   }
 
-  function resizeItem(itemId: string, startTime: string, endTime: string) {
-    const item = schedules.find((candidate) => candidate.id === itemId);
-    if (!item) return;
+  function columnShiftFor(deltaX: number) {
+    const measuredWidth = colsRef.current ? colsRef.current.offsetWidth / days.length : 208;
+    return Math.round(deltaX / Math.max(1, colWidth ?? measuredWidth));
+  }
+
+  // An overnight event moves as one piece: its start and end shift by the
+  // same amount, across dates as needed, and stay within the timetable.
+  function moveOvernight(item: ScheduleItem, deltaMinutes: number, deltaX: number) {
+    const span = absoluteSpan(item, dayOrder);
+    const shift = columnShiftFor(deltaX) * DAY_END_MINUTES + deltaMinutes;
+    const total = dayOrder.length * DAY_END_MINUTES;
+    const clamped = Math.max(-span.start, Math.min(total - span.end, shift));
+    if (!clamped) return;
     upsertSchedule({
       ...item,
-      start_time: startTime,
-      end_time: endTime
+      ...fromAbsoluteSpan(span.start + clamped, span.end + clamped, dayOrder)
+    }).catch((error) => {
+      console.error(error);
+      toast.error(`${t("grid.moveFailed")}: ${error instanceof Error ? error.message : ""}`);
+    });
+  }
+
+  function resizeItem(itemId: string, startTime: string, endTime: string, segment?: DaySegment) {
+    const item = schedules.find((candidate) => candidate.id === itemId);
+    if (!item) return;
+    // On a part of an overnight event only its own edge moves: the first
+    // part's top is the start, the last part's bottom the end.
+    const patch = !segment
+      ? { start_time: startTime, end_time: endTime }
+      : {
+          ...(segment.first ? { start_time: startTime } : {}),
+          ...(segment.last ? { end_time: endTime } : {})
+        };
+    upsertSchedule({
+      ...item,
+      ...patch
     }).catch((error) => {
       console.error(error);
       toast.error(`${t("grid.resizeFailed")}: ${error instanceof Error ? error.message : ""}`);
@@ -649,22 +800,15 @@ export function TimetableGrid({
                   hourHeight={hourHeight}
                   selectedScheduleId={selectedScheduleId}
                   armedScheduleId={armedId}
-                  schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
+                  schedules={timedByDay.get(day.id)?.items ?? []}
+                  segments={timedByDay.get(day.id)?.segments}
                   availability={availability.filter((slot) => slot.day_id === day.id)}
-                  draft={
-                    draft && draft.dayId === day.id
-                      ? {
-                          start_time: minutesToTime(draft.startMinutes),
-                          end_time: minutesToTime(draft.endMinutes),
-                          naming: draft.naming
-                        }
-                      : null
-                  }
+                  draft={draftPieceFor(dayIndex)}
                   peerDrafts={peerDrafts.filter((peer) => peer.dayId === day.id)}
                   onDraftCommit={commitDraft}
                   onDraftCancel={() => setDraft(null)}
                   onSelectSchedule={setSelectedSchedule}
-                  onResize={(item, startTime, endTime) => resizeItem(item.id, startTime, endTime)}
+                  onResize={(item, startTime, endTime, segment) => resizeItem(item.id, startTime, endTime, segment)}
                   onDeleteSchedule={removeSchedule}
                   onPointerStart={onPointerStart}
                 />

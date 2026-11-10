@@ -226,7 +226,7 @@ export default function ProjectPage() {
           <>
             <TimetableHeader isWeekly={isWeekly} mobileTitle={project.title} canEdit={canEdit} />
             {viewMode === "month" ? (
-              <MonthCalendarView projectId={project.id} days={days} />
+              <MonthCalendarView projectId={project.id} days={days} canEdit={canEdit} />
             ) : (
               <div className="flex min-h-0 flex-1">
                 <TimetableGrid

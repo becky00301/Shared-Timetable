@@ -168,6 +168,77 @@ alter table public.schedule_items
   add constraint schedule_items_amount_check
   check (amount is null or amount >= 0);
 
+-- Timed items may run past midnight into end_day_id.
+-- The table's original, unnamed check required end_time > start_time on every
+-- row. Drop it by definition, whatever name Postgres gave it.
+do $$
+declare
+  constraint_name text;
+begin
+  for constraint_name in
+    select c.conname
+    from pg_constraint c
+    where c.conrelid = 'public.schedule_items'::regclass
+      and c.contype = 'c'
+      and pg_get_constraintdef(c.oid) ilike '%end_time > start_time%'
+      and c.conname <> 'schedule_items_time_order_check'
+  loop
+    execute format('alter table public.schedule_items drop constraint %I', constraint_name);
+  end loop;
+end;
+$$;
+
+alter table public.schedule_items
+  drop constraint if exists schedule_items_time_order_check;
+
+alter table public.schedule_items
+  add constraint schedule_items_time_order_check
+  check (end_time > start_time or (end_day_id is not null and end_day_id <> day_id));
+
+-- Removing a timetable date sets end_day_id to null on items that ended on it.
+-- An overnight item would then break the check above, and the date could not
+-- be removed; instead it is cut back to end at midnight on its start day.
+create or replace function public.clip_orphaned_overnight_schedule()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.end_day_id is null and new.end_time <= new.start_time then
+    new.end_time := '24:00';
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.clip_orphaned_overnight_schedule() from public, anon, authenticated;
+
+drop trigger if exists clip_orphaned_overnight_schedule on public.schedule_items;
+create trigger clip_orphaned_overnight_schedule
+before insert or update on public.schedule_items
+for each row execute function public.clip_orphaned_overnight_schedule();
+
+-- Storage path of the item's photo in the schedule-photos bucket.
+alter table public.schedule_items
+  add column if not exists image_path text;
+
+-- A path must sit inside the item's own project folder. The read-only embed
+-- signs these paths with the service key, so a path pointing at another
+-- project's photo must never be storable.
+alter table public.schedule_items
+  drop constraint if exists schedule_items_image_path_check;
+
+alter table public.schedule_items
+  add constraint schedule_items_image_path_check
+  check (
+    image_path is null
+    or (
+      split_part(image_path, '/', 1) = project_id::text
+      and image_path !~ '\.\.'
+      and length(image_path) <= 300
+    )
+  );
+
 create table if not exists public.availability (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,

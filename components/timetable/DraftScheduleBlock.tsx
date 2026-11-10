@@ -11,6 +11,7 @@ export function DraftScheduleBlock({
   startTime,
   endTime,
   naming,
+  timeLabel,
   hourHeight,
   onCommit,
   onCancel
@@ -18,6 +19,9 @@ export function DraftScheduleBlock({
   startTime: string;
   endTime: string;
   naming: boolean;
+  /** The whole range, when this is one date's part of a draft running past
+      midnight. */
+  timeLabel?: string;
   hourHeight: number;
   onCommit: (title: string) => void;
   onCancel: () => void;
@@ -82,7 +86,7 @@ export function DraftScheduleBlock({
           <p className="text-[11px] font-semibold leading-tight text-current sm:text-sm">{t("grid.newSchedule")}</p>
         )}
         <p className="mt-1 truncate text-[9px] leading-tight text-current opacity-[0.82] sm:text-xs">
-          {formatTimeRange(startTime, endTime)}
+          {timeLabel ?? formatTimeRange(startTime, endTime)}
         </p>
       </div>
     </div>

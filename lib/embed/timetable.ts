@@ -61,6 +61,7 @@ function isEmbeddedSchedule(value: Json): value is EmbeddedSchedule {
     typeof value.start_time === "string" &&
     typeof value.end_time === "string" &&
     (value.color === null || typeof value.color === "string") &&
-    typeof value.all_day === "boolean"
+    typeof value.all_day === "boolean" &&
+    (value.image_path === undefined || value.image_path === null || typeof value.image_path === "string")
   );
 }

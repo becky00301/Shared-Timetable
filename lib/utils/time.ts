@@ -53,3 +53,12 @@ export function pointerYToTime(y: number, hourHeight: number = HOUR_HEIGHT) {
 export function formatTimeRange(start: string, end: string) {
   return `${start.slice(0, 5)} - ${end.slice(0, 5)}`;
 }
+
+/** Where a new or newly timed event goes on a day: right after the day's last
+    timed event (on the hour), or 9:00 when there is none. One hour long. */
+export function nextFreeHour(items: { all_day?: boolean | null; end_time: string }[]) {
+  const ends = items.filter((item) => !item.all_day).map((item) => timeToMinutes(item.end_time));
+  const start = ends.length ? Math.ceil(Math.max(...ends) / 60) * 60 : 9 * 60;
+  const clamped = Math.min(start, 23 * 60);
+  return { start_time: minutesToTime(clamped), end_time: minutesToTime(clamped + 60) };
+}

@@ -534,6 +534,7 @@ export const messages = {
   "card.renameHint": { ko: "Enter로 저장 · Esc로 취소", en: "Enter to save · Esc to cancel" },
   "card.noDates": { ko: "아직 날짜가 없어요", en: "No dates yet" },
   "card.scheduleCount": { ko: "일정 {count}개", en: "{count} events" },
+  "calendar.scheduleCount": { ko: "{count}개", en: "{count}" },
   "card.memberCount": { ko: "{count}명", en: "{count} people" },
   "card.contextHint": { ko: "우클릭 메뉴", en: "Right-click for menu" },
 
@@ -900,6 +901,7 @@ export const messages = {
     en: "Add some dates to start building your timetable."
   },
   "grid.newSchedule": { ko: "새 일정", en: "New event" },
+  "month.addSchedule": { ko: "일정 추가", en: "Add event" },
   "grid.draftPlaceholder": {
     ko: "일정 이름 (비우면 취소)",
     en: "Event name (leave empty to cancel)"
@@ -946,6 +948,10 @@ export const messages = {
   },
   "detail.date": { ko: "날짜", en: "Date" },
   "detail.startDate": { ko: "시작 날짜", en: "Start date" },
+  "detail.overnightNotMigrated": {
+    ko: "다음날까지 이어지는 일정은 데이터베이스 업데이트 후에 저장할 수 있어요.",
+    en: "Events past midnight can be saved after a database update."
+  },
   "detail.endDate": { ko: "종료 날짜", en: "End date" },
   "detail.start": { ko: "시작", en: "Starts" },
   "detail.end": { ko: "종료", en: "Ends" },
@@ -956,6 +962,20 @@ export const messages = {
   "detail.memoPlaceholder": { ko: "Shift + Enter로 줄바꿈", en: "Shift + Enter for a new line" },
   "detail.color": { ko: "색상", en: "Color" },
   "detail.colorLabel": { ko: "색상 {color}", en: "Color {color}" },
+  "sidebar.resize": { ko: "사이드바 너비 조절", en: "Resize sidebar" },
+  "photo.label": { ko: "사진", en: "Photo" },
+  "photo.add": { ko: "사진 넣기", en: "Add photo" },
+  "photo.replace": { ko: "바꾸기", en: "Replace" },
+  "photo.remove": { ko: "사진 빼기", en: "Remove photo" },
+  "photo.uploading": { ko: "올리는 중…", en: "Uploading…" },
+  "photo.uploadFailed": { ko: "사진을 올리지 못했어요.", en: "Couldn't upload the photo." },
+  "photo.removeFailed": { ko: "사진을 빼지 못했어요.", en: "Couldn't remove the photo." },
+  "photo.notImage": { ko: "사진 파일만 넣을 수 있어요.", en: "Only image files can be added." },
+  "photo.tooLarge": { ko: "사진이 너무 커요. 다른 사진을 골라 주세요.", en: "That photo is too large. Try another one." },
+  "photo.notMigrated": {
+    ko: "사진 기능을 쓰려면 데이터베이스 업데이트가 필요해요.",
+    en: "Photos need a database update before they can be saved."
+  },
   "detail.deleteHint": {
     ko: "Delete 키로도 삭제할 수 있어요.",
     en: "You can also press Delete."

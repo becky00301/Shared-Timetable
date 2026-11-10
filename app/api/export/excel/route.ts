@@ -5,6 +5,8 @@ import { BUDGET_LABELS, buildBudgetSheets, moneyColumn } from "@/lib/export/budg
 import { noteForExport } from "@/lib/notes/todo";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
+import { timedSegments } from "@/lib/utils/schedule-span";
+import { minutesToTime } from "@/lib/utils/time";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +104,9 @@ type ExportItem = {
   end_time: string;
   all_day?: boolean | null;
   color?: string | null;
+  /** The full time range when this is one date's part of an event running
+      past midnight. */
+  timeLabel?: string;
 };
 
 type VisualSheet = {
@@ -256,7 +261,21 @@ function buildTimetableSheet(
     .slice()
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.date.localeCompare(b.date));
   const dayIds = new Set(days.map((day) => day.id));
-  const timedItems = itemsInput.filter((item) => !item.all_day && dayIds.has(item.day_id));
+  // An event running past midnight is split into each date's part.
+  const dayOrder = days.map((day) => day.id);
+  const timedItems = itemsInput
+    .filter((item) => !item.all_day && dayIds.has(item.day_id))
+    .flatMap((item) => {
+      const segments = timedSegments(item, dayOrder);
+      if (segments.length < 2) return [item];
+      return segments.map((segment) => ({
+        ...item,
+        day_id: segment.dayId,
+        start_time: minutesToTime(segment.startMinutes),
+        end_time: minutesToTime(segment.endMinutes),
+        timeLabel: `${item.start_time.slice(0, 5)}~${item.end_time.slice(0, 5)}`
+      }));
+    });
   const allDayItems = itemsInput.filter((item) => item.all_day && dayIds.has(item.day_id));
   const packedByDay = new Map(days.map((day) => [day.id, packTimedItems(timedItems.filter((item) => item.day_id === day.id))]));
   const laneCounts = days.map((day) => Math.max(1, Math.max(0, ...(packedByDay.get(day.id) ?? []).map((entry) => entry.lane + 1))));
@@ -377,7 +396,7 @@ function buildTimetableSheet(
       const rowIndex = bodyStartRow + (clippedStart - startMinute) / HALF_HOUR;
       const rowSpan = Math.max(1, (clippedEnd - clippedStart) / HALF_HOUR);
       const columnIndex = startCol + lane;
-      const label = [item.title, item.location, `${item.start_time.slice(0, 5)}~${item.end_time.slice(0, 5)}`]
+      const label = [item.title, item.location, item.timeLabel ?? `${item.start_time.slice(0, 5)}~${item.end_time.slice(0, 5)}`]
         .filter(Boolean)
         .join("\n");
       data[rowIndex][columnIndex] = cell(label, {

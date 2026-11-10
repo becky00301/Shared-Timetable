@@ -8,6 +8,12 @@ import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
 import { defaultScheduleColor } from "@/lib/utils/schedule-colors";
+import {
+  compressSchedulePhoto,
+  SCHEDULE_PHOTO_BUCKET,
+  schedulePhotoPath
+} from "@/lib/schedule-photos";
+import { usePhotoStore } from "@/stores/photo-store";
 import type {
   Project,
   ProjectDay,
@@ -87,6 +93,10 @@ type ProjectStore = {
   ) => Promise<ScheduleItem>;
   undoScheduleChange: (projectId: string) => Promise<boolean>;
   deleteSchedule: (itemId: string) => Promise<void>;
+  /** Resizes the picked photo, uploads it and points the item at it. The
+      item's previous photo, if any, is removed. */
+  setSchedulePhoto: (itemId: string, file: File) => Promise<void>;
+  removeSchedulePhoto: (itemId: string) => Promise<void>;
   addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
   reset: () => void;
   joinByInviteToken: (token: string) => Promise<string>;
@@ -153,6 +163,27 @@ function normalizeExpense(row: ProjectExpense): ProjectExpense {
 // breaking the timetable that happens to sit next to it.
 function isMissingRelation(error: { code?: string } | null) {
   return error?.code === "42P01" || error?.code === "PGRST205" || error?.code === "PGRST106";
+}
+
+/** Points a schedule item at a photo (or at none). Kept apart from
+    upsertSchedule so a database without the image_path column still saves
+    every other field. */
+async function saveImagePath(itemId: string, path: string | null) {
+  const supabase = requireClient();
+  const { data, error } = await supabase
+    .from("schedule_items")
+    .update({ image_path: path })
+    .eq("id", itemId)
+    .select("*")
+    .single();
+  if (isMissingColumn(error, "image_path")) throw new Error(translate("photo.notMigrated"));
+  if (error) throw error;
+  const saved = normalizeSchedule(data as ScheduleItem);
+  useProjectStore.setState((state) => ({
+    schedules: state.schedules.map((schedule) =>
+      schedule.id === saved.id ? { ...schedule, image_path: saved.image_path ?? null } : schedule
+    )
+  }));
 }
 
 function isMissingColumn(error: { code?: string; message?: string } | null, column: string) {
@@ -932,6 +963,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!data?.length) {
       throw new Error(translate("error.scheduleDeleteDenied"));
     }
+    const photo = get().schedules.find((item) => item.id === itemId)?.image_path;
+    if (photo) {
+      // Best effort: the row is gone either way, and a leftover file is only
+      // storage, never shown.
+      void supabase.storage.from(SCHEDULE_PHOTO_BUCKET).remove([photo]).catch(console.error);
+    }
     pendingScheduleUpdates.delete(itemId);
     for (let index = scheduleHistory.length - 1; index >= 0; index -= 1) {
       if (scheduleHistory[index].after.id === itemId) scheduleHistory.splice(index, 1);
@@ -940,6 +977,37 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       schedules: state.schedules.filter((item) => item.id !== itemId),
       attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)
     }));
+  },
+
+  setSchedulePhoto: async (itemId, file) => {
+    const supabase = requireClient();
+    const item = get().schedules.find((schedule) => schedule.id === itemId);
+    if (!item) throw new Error(translate("photo.uploadFailed"));
+    const compressed = await compressSchedulePhoto(file);
+    const path = schedulePhotoPath(item.project_id, item.id, compressed.extension);
+    const { error: uploadError } = await supabase.storage
+      .from(SCHEDULE_PHOTO_BUCKET)
+      .upload(path, compressed.blob, { contentType: compressed.type, upsert: false });
+    if (uploadError) throw uploadError;
+    // Shown from the local file at once; signing it would only add a round trip.
+    usePhotoStore.getState().rememberUrl(path, URL.createObjectURL(compressed.blob));
+    try {
+      await saveImagePath(itemId, path);
+    } catch (error) {
+      await supabase.storage.from(SCHEDULE_PHOTO_BUCKET).remove([path]);
+      throw error;
+    }
+    if (item.image_path) {
+      await supabase.storage.from(SCHEDULE_PHOTO_BUCKET).remove([item.image_path]);
+    }
+  },
+
+  removeSchedulePhoto: async (itemId) => {
+    const supabase = requireClient();
+    const item = get().schedules.find((schedule) => schedule.id === itemId);
+    if (!item?.image_path) return;
+    await saveImagePath(itemId, null);
+    await supabase.storage.from(SCHEDULE_PHOTO_BUCKET).remove([item.image_path]);
   },
 
   addAvailability: async (slot) => {

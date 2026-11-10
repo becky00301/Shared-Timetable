@@ -32,6 +32,12 @@ export function SelectedDatesCalendar({
 }) {
   const dayByDate = useMemo(() => new Map(days.map((day) => [day.date, day])), [days]);
   const schedules = useProjectStore((state) => state.schedules);
+  // How many events each date holds, shown under its number.
+  const countByDayId = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of schedules) counts.set(item.day_id, (counts.get(item.day_id) ?? 0) + 1);
+    return counts;
+  }, [schedules]);
   const replaceDays = useProjectStore((state) => state.replaceDays);
   const t = useT();
   const fmt = useDateFormat();
@@ -154,16 +160,25 @@ export function SelectedDatesCalendar({
           {cells.map((date, index) => {
             if (!date) return <span key={index} />;
             const iso = format(date, "yyyy-MM-dd");
-            const selected = dayByDate.has(iso);
+            const day = dayByDate.get(iso);
+            const count = day ? countByDayId.get(day.id) ?? 0 : 0;
+            // Fixed height, not square: a widened sidebar makes the cells
+            // wider but no taller.
             return (
               <span
                 key={index}
+                title={count ? t("card.scheduleCount", { count }) : undefined}
                 className={cn(
-                  "flex aspect-square items-center justify-center rounded-md text-xs",
-                  selected ? "bg-primary font-medium text-white" : "text-foreground/70"
+                  "flex h-10 flex-col items-center justify-center rounded-md text-xs leading-none",
+                  day ? "bg-primary font-medium text-white" : "text-foreground/70"
                 )}
               >
                 {date.getDate()}
+                {count ? (
+                  <span className="mt-1 text-[9px] font-normal opacity-75">
+                    {t("calendar.scheduleCount", { count })}
+                  </span>
+                ) : null}
               </span>
             );
           })}

@@ -11,14 +11,16 @@ import { useContextMenu } from "@/components/ui/context-menu";
 import {
   DAY_END_MINUTES,
   MIN_DURATION_MINUTES,
-  durationToHeight,
   formatTimeRange,
   minutesToTime,
   minutesToTop,
   snapMinutes,
   timeToMinutes
 } from "@/lib/utils/time";
+import { useSchedulePhotoUrl } from "@/stores/photo-store";
+import type { DaySegment } from "@/lib/utils/schedule-span";
 import type { ScheduleItem } from "@/types/schedule";
+import { PHOTO_TEXT_COLOR, PHOTO_TEXT_SHADOW, SchedulePhotoBackdrop } from "./SchedulePhotoBackdrop";
 
 /** Space between a block and its column's sides, and between a block and the
     hour lines it starts and ends on. */
@@ -32,6 +34,7 @@ const AUTO_SCROLL_MAX_STEP = 14;
 
 export function ScheduleBlock({
   item,
+  segment,
   lane,
   laneCount,
   isSelected,
@@ -44,6 +47,10 @@ export function ScheduleBlock({
   onDelete
 }: {
   item: ScheduleItem;
+  /** For an event running past midnight: the part drawn in this column. Only
+      the part holding the start has a top handle, only the one holding the
+      end a bottom handle. */
+  segment?: DaySegment;
   lane: number;
   laneCount: number;
   isSelected: boolean;
@@ -67,15 +74,20 @@ export function ScheduleBlock({
     canEdit ? [{ label: t("common.delete"), onSelect: onDelete, danger: true }] : []
   );
   const blockRef = useRef<HTMLDivElement | null>(null);
+  // Each part of an overnight event drags on its own id; any of them moves
+  // the whole event.
+  const continuation = segment && !segment.first;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: item.id,
+    id: continuation ? `${item.id}@${segment.dayId}` : item.id,
     disabled: !canEdit || !isInteractive,
-    data: { dayId: item.day_id, item }
+    data: { dayId: segment?.dayId ?? item.day_id, item }
   });
-  const baseStart = timeToMinutes(item.start_time);
-  const baseEnd = timeToMinutes(item.end_time);
+  const hasTop = !segment || segment.first;
+  const hasBottom = !segment || segment.last;
+  const baseStart = segment ? segment.startMinutes : timeToMinutes(item.start_time);
+  const baseEnd = segment ? segment.endMinutes : timeToMinutes(item.end_time);
   const baseTop = minutesToTop(baseStart, hourHeight);
-  const baseHeight = Math.max(34, durationToHeight(item.start_time, item.end_time, hourHeight));
+  const baseHeight = Math.max(34, minutesToTop(baseEnd - baseStart, hourHeight));
   const top = resize ? minutesToTop(resize.startMinutes, hourHeight) : baseTop;
   const height = resize
     ? Math.max(34, minutesToTop(resize.endMinutes - resize.startMinutes, hourHeight))
@@ -91,7 +103,8 @@ export function ScheduleBlock({
         }
       : undefined;
   const isSplit = laneCount > 1;
-  const textColor = getScheduleTextColor(item.color);
+  const photoUrl = useSchedulePhotoUrl(item.image_path);
+  const textColor = photoUrl ? PHOTO_TEXT_COLOR : getScheduleTextColor(item.color);
 
   function startResize(edge: "top" | "bottom", event: React.PointerEvent) {
     if (!canEdit) return;
@@ -201,7 +214,10 @@ export function ScheduleBlock({
         !isInteractive && "pointer-events-none opacity-40",
         isSelected && (textColor === "#111827" ? "ring-2 ring-black/40" : "ring-2 ring-white/70"),
         resizeArmed && "z-20 shadow-xl",
-        isDragging && "opacity-70"
+        isDragging && "opacity-70",
+        // Square where the event carries on into the next or previous date.
+        !hasBottom && "rounded-b-none",
+        !hasTop && "rounded-t-none"
       )}
       style={{
         top: top + VERTICAL_INSET,
@@ -217,6 +233,8 @@ export function ScheduleBlock({
       {...listeners}
     >
       {menu}
+      {photoUrl ? <SchedulePhotoBackdrop url={photoUrl} /> : null}
+      {hasTop ? (
       <button
         type="button"
         data-resize-handle
@@ -232,7 +250,8 @@ export function ScheduleBlock({
         <HandleReach edge="top" />
         {resizeArmed ? <HandleDot edge="top" color={item.color} /> : null}
       </button>
-      <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-hidden">
+      ) : null}
+      <div className={cn("relative mt-1 min-h-0 min-w-0 flex-1 overflow-hidden", photoUrl && PHOTO_TEXT_SHADOW)}>
         <p
           className={cn(
             "font-semibold leading-tight text-current",
@@ -273,6 +292,7 @@ export function ScheduleBlock({
           </p>
         ) : null}
       </div>
+      {hasBottom ? (
       <button
         type="button"
         data-resize-handle
@@ -288,6 +308,7 @@ export function ScheduleBlock({
         <HandleReach edge="bottom" />
         {resizeArmed ? <HandleDot edge="bottom" color={item.color} /> : null}
       </button>
+      ) : null}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { minutesToTop, timeToMinutes } from "@/lib/utils/time";
 import { useT } from "@/lib/i18n/locale";
 import type { PeerDraft } from "@/lib/supabase/cursors";
 import type { ProjectDay } from "@/types/project";
+import type { DaySegment } from "@/lib/utils/schedule-span";
 import type { AvailabilitySlot, ScheduleItem } from "@/types/schedule";
 
 type PositionedSchedule = {
@@ -18,20 +19,27 @@ type PositionedSchedule = {
   laneCount: number;
 };
 
-function positionOverlappingSchedules(schedules: ScheduleItem[]): PositionedSchedule[] {
+/** Lays out this date's events in side-by-side lanes where they overlap. An
+    event running past midnight is placed by the part of it on this date. */
+function positionOverlappingSchedules(
+  schedules: ScheduleItem[],
+  segments: Record<string, DaySegment>
+): PositionedSchedule[] {
+  const startOf = (item: ScheduleItem) => segments[item.id]?.startMinutes ?? timeToMinutes(item.start_time);
+  const endOf = (item: ScheduleItem) => segments[item.id]?.endMinutes ?? timeToMinutes(item.end_time);
   const sorted = [...schedules].sort((a, b) => {
-    const startDifference = timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+    const startDifference = startOf(a) - startOf(b);
     if (startDifference !== 0) return startDifference;
 
-    const endDifference = timeToMinutes(b.end_time) - timeToMinutes(a.end_time);
+    const endDifference = endOf(b) - endOf(a);
     return endDifference !== 0 ? endDifference : a.id.localeCompare(b.id);
   });
   const groups: ScheduleItem[][] = [];
   let groupEnd = -1;
 
   for (const item of sorted) {
-    const start = timeToMinutes(item.start_time);
-    const end = timeToMinutes(item.end_time);
+    const start = startOf(item);
+    const end = endOf(item);
     if (!groups.length || start >= groupEnd) {
       groups.push([item]);
       groupEnd = end;
@@ -44,8 +52,8 @@ function positionOverlappingSchedules(schedules: ScheduleItem[]): PositionedSche
   return groups.flatMap((group) => {
     const laneEnds: number[] = [];
     const positioned = group.map((item) => {
-      const start = timeToMinutes(item.start_time);
-      const end = timeToMinutes(item.end_time);
+      const start = startOf(item);
+      const end = endOf(item);
       let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
 
       if (lane === -1) {
@@ -68,6 +76,7 @@ export function DateColumn({
   day,
   nextDay,
   schedules,
+  segments = {},
   availability,
   memberCount,
   activeMode,
@@ -88,6 +97,8 @@ export function DateColumn({
   day: ProjectDay;
   nextDay: ProjectDay | null;
   schedules: ScheduleItem[];
+  /** For events that run past midnight: the part of each on this date. */
+  segments?: Record<string, DaySegment>;
   availability: AvailabilitySlot[];
   memberCount: number;
   activeMode: "schedule" | "availability" | "wake";
@@ -96,17 +107,17 @@ export function DateColumn({
   canEdit: boolean;
   width?: number;
   hourHeight: number;
-  draft: { start_time: string; end_time: string; naming: boolean } | null;
+  draft: { start_time: string; end_time: string; naming: boolean; timeLabel?: string } | null;
   peerDrafts: PeerDraft[];
   onDraftCommit: (title: string) => void;
   onDraftCancel: () => void;
   onSelectSchedule: (id: string) => void;
-  onResize: (item: ScheduleItem, startTime: string, endTime: string) => void;
+  onResize: (item: ScheduleItem, startTime: string, endTime: string, segment?: DaySegment) => void;
   onDeleteSchedule: (id: string) => void;
   onPointerStart: (dayId: string, event: React.PointerEvent<HTMLDivElement>) => void;
 }) {
   const t = useT();
-  const positionedSchedules = positionOverlappingSchedules(schedules);
+  const positionedSchedules = positionOverlappingSchedules(schedules, segments);
   const wakeMinutes = day.wake_time ? timeToMinutes(day.wake_time) : null;
   const sleepDuration = day.sleep_duration_minutes ?? 420;
   const morningSleepStart = wakeMinutes === null ? null : Math.max(0, wakeMinutes - sleepDuration);
@@ -125,6 +136,7 @@ export function DateColumn({
 
   return (
     <div
+      data-day-column={day.id}
       className={cn("border-r border-border last:border-r-0", width ? "shrink-0" : "min-w-0 flex-1")}
       style={width ? { width } : undefined}
     >
@@ -190,6 +202,7 @@ export function DateColumn({
           <ScheduleBlock
             key={item.id}
             item={item}
+            segment={segments[item.id]}
             lane={lane}
             laneCount={laneCount}
             canEdit={canEdit}
@@ -198,7 +211,7 @@ export function DateColumn({
             resizeArmed={armedScheduleId === item.id}
             hourHeight={hourHeight}
             onSelect={() => onSelectSchedule(item.id)}
-            onResize={(startTime, endTime) => onResize(item, startTime, endTime)}
+            onResize={(startTime, endTime) => onResize(item, startTime, endTime, segments[item.id])}
             onDelete={() => onDeleteSchedule(item.id)}
           />
         ))}
@@ -217,6 +230,7 @@ export function DateColumn({
             startTime={draft.start_time}
             endTime={draft.end_time}
             naming={draft.naming}
+            timeLabel={draft.timeLabel}
             hourHeight={hourHeight}
             onCommit={onDraftCommit}
             onCancel={onDraftCancel}

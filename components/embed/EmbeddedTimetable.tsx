@@ -9,7 +9,13 @@ import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useT } from "@/lib/i18n/locale";
 import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
-import { durationToHeight, formatTimeRange, minutesToTop, timeToMinutes } from "@/lib/utils/time";
+import {
+  PHOTO_TEXT_COLOR,
+  PHOTO_TEXT_SHADOW,
+  SchedulePhotoBackdrop
+} from "@/components/timetable/SchedulePhotoBackdrop";
+import { timedSegments, type DaySegment } from "@/lib/utils/schedule-span";
+import { formatTimeRange, minutesToTop, timeToMinutes } from "@/lib/utils/time";
 import type { ProjectKind } from "@/types/project";
 
 export type EmbeddedDay = {
@@ -28,6 +34,10 @@ export type EmbeddedSchedule = {
   end_time: string;
   color: string | null;
   all_day: boolean;
+  /** Storage path of the item's photo, as the RPC returns it. */
+  image_path?: string | null;
+  /** A signed URL for that photo, filled in on the server. */
+  image_url?: string | null;
 };
 
 type PositionedSchedule = {
@@ -46,18 +56,23 @@ type AllDaySpan = {
 const HOUR_HEIGHT = 54;
 const MIN_DAY_WIDTH = 112;
 
-function positionSchedules(schedules: EmbeddedSchedule[]): PositionedSchedule[] {
+function positionSchedules(
+  schedules: EmbeddedSchedule[],
+  segments: Record<string, DaySegment>
+): PositionedSchedule[] {
+  const startOf = (item: EmbeddedSchedule) => segments[item.id]?.startMinutes ?? timeToMinutes(item.start_time);
+  const endOf = (item: EmbeddedSchedule) => segments[item.id]?.endMinutes ?? timeToMinutes(item.end_time);
   const sorted = [...schedules].sort((a, b) => {
-    const startDifference = timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+    const startDifference = startOf(a) - startOf(b);
     if (startDifference !== 0) return startDifference;
-    return timeToMinutes(b.end_time) - timeToMinutes(a.end_time) || a.id.localeCompare(b.id);
+    return endOf(b) - endOf(a) || a.id.localeCompare(b.id);
   });
   const groups: EmbeddedSchedule[][] = [];
   let groupEnd = -1;
 
   for (const item of sorted) {
-    const start = timeToMinutes(item.start_time);
-    const end = timeToMinutes(item.end_time);
+    const start = startOf(item);
+    const end = endOf(item);
     if (!groups.length || start >= groupEnd) {
       groups.push([item]);
       groupEnd = end;
@@ -70,8 +85,8 @@ function positionSchedules(schedules: EmbeddedSchedule[]): PositionedSchedule[] 
   return groups.flatMap((group) => {
     const laneEnds: number[] = [];
     const positioned = group.map((item) => {
-      const start = timeToMinutes(item.start_time);
-      const end = timeToMinutes(item.end_time);
+      const start = startOf(item);
+      const end = endOf(item);
       let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
       if (lane === -1) {
         lane = laneEnds.length;
@@ -165,6 +180,24 @@ export function EmbeddedTimetable({
   }, [router]);
 
   const projectHref = `/plans/${slug}`;
+  // Timed events per column; one past midnight appears in each column it
+  // touches, placed by its part on that date.
+  const timedByDay = useMemo(() => {
+    const order = sortedDays.map((day) => day.id);
+    const byDay = new Map<string, { items: EmbeddedSchedule[]; segments: Record<string, DaySegment> }>();
+    for (const day of sortedDays) byDay.set(day.id, { items: [], segments: {} });
+    for (const item of schedules) {
+      if (item.all_day) continue;
+      const segments = timedSegments(item, order);
+      for (const segment of segments) {
+        const column = byDay.get(segment.dayId);
+        if (!column) continue;
+        column.items.push(item);
+        if (segments.length > 1) column.segments[item.id] = segment;
+      }
+    }
+    return byDay;
+  }, [schedules, sortedDays]);
   const minWidth = 48 + sortedDays.length * MIN_DAY_WIDTH; // 48: TimeColumn w-12
 
   const frameClass = "flex h-dvh flex-col overflow-hidden bg-background text-foreground";
@@ -271,7 +304,8 @@ export function EmbeddedTimetable({
                 {sortedDays.map((day) => (
                   <StaticDayColumn
                     key={day.id}
-                    schedules={schedules.filter((item) => item.day_id === day.id && !item.all_day)}
+                    schedules={timedByDay.get(day.id)?.items ?? []}
+                    segments={timedByDay.get(day.id)?.segments ?? {}}
                   />
                 ))}
               </div>
@@ -299,8 +333,14 @@ export function EmbeddedTimetable({
   );
 }
 
-function StaticDayColumn({ schedules }: { schedules: EmbeddedSchedule[] }) {
-  const positioned = positionSchedules(schedules);
+function StaticDayColumn({
+  schedules,
+  segments
+}: {
+  schedules: EmbeddedSchedule[];
+  segments: Record<string, DaySegment>;
+}) {
+  const positioned = positionSchedules(schedules, segments);
 
   return (
     <div className="min-w-28 flex-1 border-r border-border last:border-r-0">
@@ -316,14 +356,23 @@ function StaticDayColumn({ schedules }: { schedules: EmbeddedSchedule[] }) {
               title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
               className="absolute z-10 overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-1.5 text-left shadow-sm"
               style={{
-                top: minutesToTop(timeToMinutes(item.start_time), HOUR_HEIGHT),
-                height: Math.max(28, durationToHeight(item.start_time, item.end_time, HOUR_HEIGHT)),
+                top: minutesToTop(segments[item.id]?.startMinutes ?? timeToMinutes(item.start_time), HOUR_HEIGHT),
+                height: Math.max(
+                  28,
+                  minutesToTop(
+                    (segments[item.id]?.endMinutes ?? timeToMinutes(item.end_time)) -
+                      (segments[item.id]?.startMinutes ?? timeToMinutes(item.start_time)),
+                    HOUR_HEIGHT
+                  )
+                ),
                 left: `calc(${(lane / laneCount) * 100}% + ${lane === 0 ? 3 : 1}px)`,
                 right: `calc(${((laneCount - lane - 1) / laneCount) * 100}% + ${lane === laneCount - 1 ? 3 : 1}px)`,
                 backgroundColor: item.color ?? "#1972F7",
-                color: getScheduleTextColor(item.color ?? "#1972F7")
+                color: item.image_url ? PHOTO_TEXT_COLOR : getScheduleTextColor(item.color ?? "#1972F7")
               }}
             >
+              {item.image_url ? <SchedulePhotoBackdrop url={item.image_url} /> : null}
+              <div className={item.image_url ? `relative ${PHOTO_TEXT_SHADOW}` : "relative"}>
               <p className={split ? "truncate text-[9px] font-semibold leading-tight text-current" : "text-[10px] font-semibold leading-tight text-current [overflow-wrap:anywhere]"}>
                 {item.title}
               </p>
@@ -333,6 +382,7 @@ function StaticDayColumn({ schedules }: { schedules: EmbeddedSchedule[] }) {
               {item.location ? (
                 <p className="mt-0.5 truncate text-[8px] leading-tight text-current opacity-70">{item.location}</p>
               ) : null}
+              </div>
             </div>
           );
         })}

@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EmbeddedTimetable } from "@/components/embed/EmbeddedTimetable";
+import { signEmbeddedPhotos } from "@/lib/embed/photos";
 import { EMBED_TOKEN_PATTERN, parseTimetable } from "@/lib/embed/timetable";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -23,7 +24,8 @@ const loadTimetable = cache(async (token: string) => {
     console.error(error);
     return null;
   }
-  return parseTimetable(data);
+  const timetable = parseTimetable(data);
+  return timetable ? signEmbeddedPhotos(timetable) : null;
 });
 
 export async function generateMetadata({
