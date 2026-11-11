@@ -528,34 +528,6 @@ export function ScheduleDetailPanel({
           />
         </label>
 
-        <div className="flex flex-col gap-1.5 text-muted">
-          {t("detail.color")}
-          <div className="flex flex-col gap-2">
-            {SCHEDULE_COLOR_GROUPS.map((colors) => (
-              <div key={colors[0]} className="grid grid-cols-7 gap-2">
-                {colors.map((color) => {
-                  const selected = item.color?.toLowerCase() === color.toLowerCase();
-                  return (
-                    <button
-                      key={color}
-                      type="button"
-                      disabled={!canEdit}
-                      onClick={() => save({ color })}
-                      className={cn(
-                        "size-8 rounded-full border border-black/20 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60",
-                        selected && "ring-2 ring-foreground ring-offset-2 ring-offset-surface"
-                      )}
-                      style={{ backgroundColor: color }}
-                      aria-label={t("detail.colorLabel", { color })}
-                      aria-pressed={selected}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {canEdit || item.image_path ? (
           <div className="flex flex-col gap-1.5 text-muted">
             {t("photo.label")}
@@ -644,6 +616,34 @@ export function ScheduleDetailPanel({
             ) : null}
           </div>
         ) : null}
+
+        <div className="flex flex-col gap-1.5 text-muted">
+          {t("detail.color")}
+          <div className="flex flex-col gap-2">
+            {SCHEDULE_COLOR_GROUPS.map((colors) => (
+              <div key={colors[0]} className="grid grid-cols-7 gap-2">
+                {colors.map((color) => {
+                  const selected = item.color?.toLowerCase() === color.toLowerCase();
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      disabled={!canEdit}
+                      onClick={() => save({ color })}
+                      className={cn(
+                        "size-8 rounded-full border border-black/20 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60",
+                        selected && "ring-2 ring-foreground ring-offset-2 ring-offset-surface"
+                      )}
+                      style={{ backgroundColor: color }}
+                      aria-label={t("detail.colorLabel", { color })}
+                      aria-pressed={selected}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="mt-6">
