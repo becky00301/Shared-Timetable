@@ -78,6 +78,9 @@ export type Item = {
   /** The item's photo inlined as a base64 data URL, so the file stays
       self-contained. */
   photo?: string | null;
+  /** The photo's focal point, in percent. */
+  photoFocusX?: number | null;
+  photoFocusY?: number | null;
   /** The full time range when this is one date's part of an event running
       past midnight. */
   timeLabel?: string;
@@ -140,6 +143,18 @@ function packLanes(items: Item[]) {
   return { placed, laneCount: Math.max(1, laneEnds.length) };
 }
 
+/** The photo's focal point as a CSS position; centred without one. Built
+    only from finite numbers, so nothing else reaches the style attribute. */
+function focusPosition(item: Item) {
+  const x = item.photoFocusX;
+  const y = item.photoFocusY;
+  if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(x) || !Number.isFinite(y)) {
+    return "center";
+  }
+  const clamp = (value: number) => Math.max(0, Math.min(100, value));
+  return `${clamp(x)}% ${clamp(y)}%`;
+}
+
 function renderBlock(item: Item, lane: number, laneCount: number, windowStart: number) {
   const start = toMinutes(item.start_time);
   const end = toMinutes(item.end_time);
@@ -152,7 +167,7 @@ function renderBlock(item: Item, lane: number, laneCount: number, windowStart: n
   // Same treatment as the app: the photo fills the box, darkened most at the
   // top where the title sits.
   const background = photo
-    ? `linear-gradient(to bottom,rgba(0,0,0,.65),rgba(0,0,0,.4) 50%,rgba(0,0,0,.25)),url(${photo}) center/cover no-repeat,${fill}`
+    ? `linear-gradient(to bottom,rgba(0,0,0,.65),rgba(0,0,0,.4) 50%,rgba(0,0,0,.25)),url(${photo}) ${focusPosition(item)}/cover no-repeat,${fill}`
     : fill;
   const time = item.timeLabel
     ? esc(item.timeLabel)

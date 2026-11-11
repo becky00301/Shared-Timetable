@@ -433,7 +433,9 @@ begin
           'end_time', s.end_time,
           'color', s.color,
           'all_day', s.all_day,
-          'image_path', s.image_path
+          'image_path', s.image_path,
+          'image_focus_x', s.image_focus_x,
+          'image_focus_y', s.image_focus_y
         )
         order by s.day_id, s.start_time, s.id
       )

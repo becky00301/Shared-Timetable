@@ -62,6 +62,12 @@ function isEmbeddedSchedule(value: Json): value is EmbeddedSchedule {
     typeof value.end_time === "string" &&
     (value.color === null || typeof value.color === "string") &&
     typeof value.all_day === "boolean" &&
-    (value.image_path === undefined || value.image_path === null || typeof value.image_path === "string")
+    (value.image_path === undefined || value.image_path === null || typeof value.image_path === "string") &&
+    isOptionalNumber(value.image_focus_x) &&
+    isOptionalNumber(value.image_focus_y)
   );
+}
+
+function isOptionalNumber(value: Json | undefined) {
+  return value === undefined || value === null || typeof value === "number";
 }

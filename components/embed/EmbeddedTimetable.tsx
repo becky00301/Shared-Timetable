@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useT } from "@/lib/i18n/locale";
+import { photoFocusPosition } from "@/lib/schedule-photos";
 import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
 import {
   PHOTO_TEXT_COLOR,
@@ -38,6 +39,9 @@ export type EmbeddedSchedule = {
   image_path?: string | null;
   /** A signed URL for that photo, filled in on the server. */
   image_url?: string | null;
+  /** The photo's focal point, in percent. */
+  image_focus_x?: number | null;
+  image_focus_y?: number | null;
 };
 
 type PositionedSchedule = {
@@ -371,7 +375,12 @@ function StaticDayColumn({
                 color: item.image_url ? PHOTO_TEXT_COLOR : getScheduleTextColor(item.color ?? "#1972F7")
               }}
             >
-              {item.image_url ? <SchedulePhotoBackdrop url={item.image_url} /> : null}
+              {item.image_url ? (
+                <SchedulePhotoBackdrop
+                  url={item.image_url}
+                  position={photoFocusPosition(item.image_focus_x, item.image_focus_y)}
+                />
+              ) : null}
               <div className={item.image_url ? `relative ${PHOTO_TEXT_SHADOW}` : "relative"}>
               <p className={split ? "truncate text-[9px] font-semibold leading-tight text-current" : "text-[10px] font-semibold leading-tight text-current [overflow-wrap:anywhere]"}>
                 {item.title}

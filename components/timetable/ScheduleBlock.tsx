@@ -17,6 +17,7 @@ import {
   snapMinutes,
   timeToMinutes
 } from "@/lib/utils/time";
+import { photoFocusPosition } from "@/lib/schedule-photos";
 import { useSchedulePhotoUrl } from "@/stores/photo-store";
 import type { DaySegment } from "@/lib/utils/schedule-span";
 import type { ScheduleItem } from "@/types/schedule";
@@ -233,7 +234,12 @@ export function ScheduleBlock({
       {...listeners}
     >
       {menu}
-      {photoUrl ? <SchedulePhotoBackdrop url={photoUrl} /> : null}
+      {photoUrl ? (
+        <SchedulePhotoBackdrop
+          url={photoUrl}
+          position={photoFocusPosition(item.image_focus_x, item.image_focus_y)}
+        />
+      ) : null}
       {hasTop ? (
       <button
         type="button"

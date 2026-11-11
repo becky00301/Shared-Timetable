@@ -964,6 +964,13 @@ export const messages = {
   "detail.colorLabel": { ko: "색상 {color}", en: "Color {color}" },
   "sidebar.resize": { ko: "사이드바 너비 조절", en: "Resize sidebar" },
   "photo.label": { ko: "사진", en: "Photo" },
+  "photo.focusHint": { ko: "사진에서 보여줄 곳을 눌러 주세요", en: "Tap the part of the photo to keep in view" },
+  "photo.focusReset": { ko: "가운데로", en: "Centre" },
+  "photo.focusFailed": { ko: "초점을 저장하지 못했어요.", en: "Couldn't save the focal point." },
+  "photo.focusNotMigrated": {
+    ko: "초점을 저장하려면 데이터베이스 업데이트가 필요해요.",
+    en: "The focal point needs a database update before it can be saved."
+  },
   "photo.add": { ko: "사진 넣기", en: "Add photo" },
   "photo.replace": { ko: "바꾸기", en: "Replace" },
   "photo.remove": { ko: "사진 빼기", en: "Remove photo" },

@@ -38,6 +38,7 @@ export function ScheduleDetailPanel({
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const setSchedulePhoto = useProjectStore((state) => state.setSchedulePhoto);
   const removeSchedulePhoto = useProjectStore((state) => state.removeSchedulePhoto);
+  const setSchedulePhotoFocus = useProjectStore((state) => state.setSchedulePhotoFocus);
   const schedules = useProjectStore((state) => state.schedules);
   const projects = useProjectStore((state) => state.projects);
   const budgetSchemaMissing = useProjectStore((state) => state.budgetSchemaMissing);
@@ -205,6 +206,19 @@ export function ScheduleDetailPanel({
         );
       })
       .finally(() => setPhotoBusy(false));
+  }
+
+  function saveFocus(focus: { x: number; y: number } | null) {
+    if (!item || !canEdit) return;
+    setSchedulePhotoFocus(item.id, focus).catch((error) => {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "";
+      toast.error(message === t("photo.focusNotMigrated") ? message : t("photo.focusFailed"));
+    });
+  }
+
+  function pickFocus(x: number, y: number) {
+    saveFocus({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
   }
 
   function clearPhoto() {
@@ -546,10 +560,48 @@ export function ScheduleDetailPanel({
           <div className="flex flex-col gap-1.5 text-muted">
             {t("photo.label")}
             {item.image_path ? (
-              <div className="relative h-24 overflow-hidden rounded-md border border-border bg-black/5">
+              // The whole photo, uncropped, so a tap lands on the spot it means.
+              // That spot is what every cropped box keeps in view.
+              <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border border-border bg-black/5">
                 {photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL
-                  <img src={photoUrl} alt="" className="size-full object-cover" />
+                  <button
+                    type="button"
+                    disabled={!canEdit}
+                    aria-label={t("photo.focusHint")}
+                    className="relative max-h-full max-w-full cursor-crosshair disabled:cursor-default"
+                    onClick={(event) => {
+                      // A keyboard "click" has no position to use.
+                      if (event.detail === 0) return;
+                      const box = event.currentTarget.getBoundingClientRect();
+                      pickFocus(
+                        ((event.clientX - box.left) / box.width) * 100,
+                        ((event.clientY - box.top) / box.height) * 100
+                      );
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL */}
+                    <img src={photoUrl} alt="" draggable={false} className="block max-h-40 max-w-full" />
+                    <span
+                      aria-hidden
+                      data-photo-focus-marker
+                      className="pointer-events-none absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.45)]"
+                      style={{ left: `${item.image_focus_x ?? 50}%`, top: `${item.image_focus_y ?? 50}%` }}
+                    />
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {canEdit && item.image_path && photoUrl ? (
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span>{t("photo.focusHint")}</span>
+                {item.image_focus_x != null ? (
+                  <button
+                    type="button"
+                    className="shrink-0 text-muted underline-offset-2 hover:text-foreground hover:underline"
+                    onClick={() => saveFocus(null)}
+                  >
+                    {t("photo.focusReset")}
+                  </button>
                 ) : null}
               </div>
             ) : null}

@@ -98,6 +98,9 @@ type ProjectStore = {
       item's previous photo, if any, is removed. */
   setSchedulePhoto: (itemId: string, file: File) => Promise<void>;
   removeSchedulePhoto: (itemId: string) => Promise<void>;
+  /** Where the photo's focal point is, in percent; null puts it back in the
+      centre. */
+  setSchedulePhotoFocus: (itemId: string, focus: { x: number; y: number } | null) => Promise<void>;
   addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
   reset: () => void;
   joinByInviteToken: (token: string) => Promise<string>;
@@ -185,6 +188,17 @@ async function saveImagePath(itemId: string, path: string | null) {
       schedule.id === saved.id ? { ...schedule, image_path: saved.image_path ?? null } : schedule
     )
   }));
+  // A new or removed photo starts centred again. Best effort: before the
+  // focal-point migration the columns do not exist, and nothing needs them.
+  if (saved.image_focus_x != null || saved.image_focus_y != null) {
+    const reset = { image_focus_x: null, image_focus_y: null };
+    const { error: resetError } = await supabase.from("schedule_items").update(reset).eq("id", itemId);
+    if (!resetError) {
+      useProjectStore.setState((state) => ({
+        schedules: state.schedules.map((schedule) => (schedule.id === itemId ? { ...schedule, ...reset } : schedule))
+      }));
+    }
+  }
 }
 
 function isMissingColumn(error: { code?: string; message?: string } | null, column: string) {
@@ -1004,6 +1018,32 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }
     if (item.image_path) {
       await supabase.storage.from(SCHEDULE_PHOTO_BUCKET).remove([item.image_path]);
+    }
+  },
+
+  setSchedulePhotoFocus: async (itemId, focus) => {
+    const supabase = requireClient();
+    const previous = get().schedules.find((schedule) => schedule.id === itemId);
+    if (!previous) return;
+    const patch = {
+      image_focus_x: focus ? Math.round(focus.x * 10) / 10 : null,
+      image_focus_y: focus ? Math.round(focus.y * 10) / 10 : null
+    };
+    // Shown at once; put back if the save fails.
+    set((state) => ({
+      schedules: state.schedules.map((schedule) => (schedule.id === itemId ? { ...schedule, ...patch } : schedule))
+    }));
+    const { error } = await supabase.from("schedule_items").update(patch).eq("id", itemId);
+    if (error) {
+      set((state) => ({
+        schedules: state.schedules.map((schedule) =>
+          schedule.id === itemId
+            ? { ...schedule, image_focus_x: previous.image_focus_x, image_focus_y: previous.image_focus_y }
+            : schedule
+        )
+      }));
+      if (isMissingColumn(error, "image_focus")) throw new Error(translate("photo.focusNotMigrated"));
+      throw error;
     }
   },
 

@@ -16,6 +16,10 @@ export type ScheduleItem = {
   amount?: number | null;
   /** Path of the item's photo in the schedule-photos Storage bucket. */
   image_path?: string | null;
+  /** Focal point of the photo, in percent from its left and top edges. Null
+      means centred. */
+  image_focus_x?: number | null;
+  image_focus_y?: number | null;
   created_at: string;
   updated_at: string;
 };

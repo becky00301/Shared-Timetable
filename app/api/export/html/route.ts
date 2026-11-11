@@ -11,27 +11,36 @@ import { noteForExport } from "@/lib/notes/todo";
 import { SCHEDULE_PHOTO_BUCKET } from "@/lib/schedule-photos";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const ITEM_COLUMNS = "day_id, end_day_id, title, description, location, start_time, end_time, all_day, color";
 const PHOTO_TYPES = new Set(["image/webp", "image/jpeg", "image/png"]);
 
 type ServerClient = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
 
-/** The project's items, each with its photo inlined. Falls back to items
-    without photos on a database that has no image_path column yet. */
+/** The project's items, each with its photo inlined and its focal point.
+    Selecting every column keeps this working on a database that has not yet
+    added the photo or focal-point columns: they are just absent. */
 async function loadItems(supabase: ServerClient, projectId: string): Promise<Item[]> {
-  const withPhotos = await supabase
-    .from("schedule_items")
-    .select(`${ITEM_COLUMNS}, image_path`)
-    .eq("project_id", projectId);
-  if (withPhotos.error) {
-    const { data } = await supabase.from("schedule_items").select(ITEM_COLUMNS).eq("project_id", projectId);
-    return (data ?? []) as Item[];
-  }
+  const { data } = await supabase.from("schedule_items").select("*").eq("project_id", projectId);
   return Promise.all(
-    (withPhotos.data ?? []).map(async ({ image_path, ...item }) => ({
-      ...item,
-      photo: image_path ? await inlinePhoto(supabase, image_path) : null
-    }))
+    (data ?? []).map(async (row) => {
+      const record = row as Record<string, unknown>;
+      const imagePath = typeof record.image_path === "string" ? record.image_path : null;
+      const focusX = typeof record.image_focus_x === "number" ? record.image_focus_x : null;
+      const focusY = typeof record.image_focus_y === "number" ? record.image_focus_y : null;
+      return {
+        day_id: row.day_id,
+        end_day_id: row.end_day_id,
+        title: row.title,
+        description: row.description,
+        location: row.location,
+        start_time: row.start_time,
+        end_time: row.end_time,
+        all_day: row.all_day,
+        color: row.color,
+        photo: imagePath ? await inlinePhoto(supabase, imagePath) : null,
+        photoFocusX: focusX,
+        photoFocusY: focusY
+      };
+    })
   );
 }
 

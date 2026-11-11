@@ -2,12 +2,20 @@
  * A schedule's photo filling its box, darkened most at the top where the title
  * sits so white text reads on any picture, even in a narrow split lane on a
  * phone. The box keeps its colour underneath until the photo has loaded.
+ * `position` is the photo's focal point (see photoFocusPosition).
  */
-export function SchedulePhotoBackdrop({ url }: { url: string }) {
+export function SchedulePhotoBackdrop({ url, position = "50% 50%" }: { url: string; position?: string }) {
   return (
     <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
       {/* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL, sized by its box */}
-      <img src={url} alt="" draggable={false} className="size-full object-cover" />
+      <img
+        src={url}
+        alt=""
+        draggable={false}
+        className="size-full object-cover"
+        // The photo's focal point stays in view however the box crops it.
+        style={{ objectPosition: position }}
+      />
       <span className="absolute inset-0 bg-linear-to-b from-black/65 via-black/40 to-black/25" />
     </span>
   );

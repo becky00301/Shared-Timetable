@@ -165,6 +165,8 @@ export type Database = {
           end_day_id: string | null;
           amount: number | null;
           image_path: string | null;
+          image_focus_x: number | null;
+          image_focus_y: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -183,6 +185,8 @@ export type Database = {
           end_day_id?: string | null;
           amount?: number | null;
           image_path?: string | null;
+          image_focus_x?: number | null;
+          image_focus_y?: number | null;
           created_at?: string;
           updated_at?: string;
         };

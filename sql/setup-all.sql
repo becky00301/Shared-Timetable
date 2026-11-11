@@ -239,6 +239,24 @@ alter table public.schedule_items
     )
   );
 
+-- Focal point of that photo, in percent from its left and top.
+alter table public.schedule_items
+  add column if not exists image_focus_x real,
+  add column if not exists image_focus_y real;
+
+alter table public.schedule_items
+  drop constraint if exists schedule_items_image_focus_check;
+
+alter table public.schedule_items
+  add constraint schedule_items_image_focus_check
+  check (
+    (image_focus_x is null and image_focus_y is null)
+    or (
+      image_focus_x between 0 and 100
+      and image_focus_y between 0 and 100
+    )
+  );
+
 create table if not exists public.availability (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -885,7 +903,9 @@ begin
           'end_time', s.end_time,
           'color', s.color,
           'all_day', s.all_day,
-          'image_path', s.image_path
+          'image_path', s.image_path,
+          'image_focus_x', s.image_focus_x,
+          'image_focus_y', s.image_focus_y
         )
         order by s.day_id, s.start_time, s.id
       )

@@ -2,6 +2,14 @@
     20261110120000_schedule_photos.sql). */
 export const SCHEDULE_PHOTO_BUCKET = "schedule-photos";
 
+/** CSS position for a photo's focal point (object-position or
+    background-position). No point means centred. */
+export function photoFocusPosition(x?: number | null, y?: number | null) {
+  if (x == null || y == null) return "50% 50%";
+  const clamp = (value: number) => Math.max(0, Math.min(100, value));
+  return `${clamp(x)}% ${clamp(y)}%`;
+}
+
 /** The bucket refuses anything larger. */
 export const SCHEDULE_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 
