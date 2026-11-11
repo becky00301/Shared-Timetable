@@ -3,6 +3,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSafeNextPath } from "@/lib/utils/navigation";
 import { naverProfilePermissions, syncNaverDisplayName } from "@/lib/auth/naver-profile";
+import { AUTH_EVENT_COOKIE, authMethodFromProvider } from "@/lib/analytics";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -38,7 +39,18 @@ export async function GET(request: Request) {
           console.info("[naver-profile-permissions]", await naverProfilePermissions(data.session.provider_token));
         }
       }
-      return NextResponse.redirect(`${origin}${next}`);
+      const response = NextResponse.redirect(`${origin}${next}`);
+      if (data.user) {
+        // A first sign-in lands within moments of the account's creation.
+        const created = Date.parse(data.user.created_at);
+        const signedIn = Date.parse(data.user.last_sign_in_at ?? data.user.created_at);
+        const kind = Math.abs(signedIn - created) < 60_000 ? "sign_up" : "login";
+        const method = authMethodFromProvider(data.user.app_metadata?.provider);
+        // Read once by AuthEventTracker on the next page; it holds no
+        // personal data.
+        response.cookies.set(AUTH_EVENT_COOKIE, `${kind}:${method}`, { path: "/", maxAge: 120, sameSite: "lax" });
+      }
+      return response;
     }
     return fail(error.message);
   }

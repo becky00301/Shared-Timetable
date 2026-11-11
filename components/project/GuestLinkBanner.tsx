@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Copy, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export function GuestLinkBanner({ slug }: { slug: string }) {
   async function copyLink() {
     await navigator.clipboard.writeText(window.location.href);
     toast.success(t("share.copied"));
+    track({ event: "share_project", share_type: "guest_link" });
   }
 
   return (

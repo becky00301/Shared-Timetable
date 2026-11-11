@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
+import { track } from "@/lib/analytics";
 import { parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
@@ -910,7 +911,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }
     if (error) throw error;
     const created = normalizeSchedule(data as ScheduleItem);
+    // Only a timetable's first event is counted: it marks a timetable put to
+    // use, where every event would just measure how busy the trip is.
+    const firstInProject = !get().schedules.some((schedule) => schedule.project_id === created.project_id);
     set((state) => ({ schedules: [...state.schedules, created] }));
+    if (firstInProject && !replayingScheduleIds.has(created.id)) track({ event: "add_schedule" });
     if (!replayingScheduleIds.has(created.id)) {
       addScheduleHistory({ kind: "create", projectId: created.project_id, after: created });
     }
@@ -1051,6 +1056,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const supabase = requireClient();
     const { data: projectId, error } = await supabase.rpc("join_project_by_invite", { token });
     if (error) throw error;
+    // The same link also sends existing members back in, so only a
+    // membership made just now counts as joining.
+    const userId = get().currentUserId ?? (await get().loadCurrentUser());
+    if (userId) {
+      const { data: membership } = await supabase
+        .from("project_members")
+        .select("role, created_at")
+        .eq("project_id", projectId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (membership && Date.now() - Date.parse(membership.created_at) < 120_000) {
+        track({ event: "join_project", role: membership.role });
+      }
+    }
     const { data: project, error: projectError } = await supabase
       .from("projects")
       .select("*")

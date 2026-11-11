@@ -4,6 +4,7 @@ import { ThemeProvider } from "@appica/ui-react/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { AccentEffect } from "@/components/layout/AccentEffect";
+import { AuthEventTracker } from "@/components/layout/AuthEventTracker";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { LocaleProvider } from "@/lib/i18n/locale";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_DISPLAY_NAME, SITE_NAME_KO, SITE_SHARE_IMAGE, SITE_URL } from "@/lib/seo";
@@ -106,6 +107,7 @@ export default function RootLayout({
           </noscript>
         ) : null}
         <AccentEffect />
+        <AuthEventTracker />
         <ThemeProvider defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <LocaleProvider>
             {children}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 import { useRouter } from "next/navigation";
 import { addDays as addDaysToDate, format, startOfWeek } from "date-fns";
 import { CalendarDays, CalendarRange } from "lucide-react";
@@ -65,8 +66,10 @@ export function CreateProjectModal() {
     }
     setSaving(true);
     try {
+      const dates = buildDates();
       const project = await createProject(title.trim(), description.trim(), mode === "weekly" ? "weekly" : "daterange");
-      await addDays(project.id, buildDates());
+      await addDays(project.id, dates);
+      track({ event: "create_project", project_kind: project.kind === "weekly" ? "weekly" : "daterange", day_count: dates.length });
       setOpen(false);
       toast.success(t("setup.created"));
       router.push(`/plans/${project.slug}`);

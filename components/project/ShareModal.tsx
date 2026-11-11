@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,6 +28,7 @@ export function ShareModal({ project }: { project: Project }) {
   async function copy(value: string) {
     await navigator.clipboard.writeText(value);
     toast.success(t("share.copied"));
+    track({ event: "share_project", share_type: "invite_link" });
   }
 
   return (

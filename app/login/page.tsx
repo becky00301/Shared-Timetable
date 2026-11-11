@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AuthShell } from "@/components/layout/AuthShell";
+import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { GoogleMark } from "@/components/ui/google-mark";
 import { NaverMark } from "@/components/ui/naver-mark";
@@ -112,6 +113,7 @@ function LoginForm() {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
+        track({ event: "sign_up", method: "email" });
         if (!data.session) {
           toast.info(t("auth.signupComplete"));
           setMode("signin");
@@ -120,6 +122,7 @@ function LoginForm() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        track({ event: "login", method: "email" });
       }
       // A failed claim must not strand someone who has just signed in, so it
       // only redirects the landing spot — it never blocks the login itself.
