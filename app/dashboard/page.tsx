@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { CalendarDays, LayoutGrid, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar";
+import { UpdatesNotice } from "@/components/dashboard/UpdatesNotice";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { AccentPicker } from "@/components/layout/AccentPicker";
@@ -201,6 +202,7 @@ function Dashboard() {
             </Button>
           )}
         </div>
+        <UpdatesNotice />
         {/* Same segmented control as the timetable header, so switching views
             looks like the same gesture in both places. Nothing to switch
             between until there is an account behind it. */}
@@ -240,7 +242,14 @@ function Dashboard() {
 
         {/* Beside the view switch rather than in the header: both are about
             how this page looks, not about the timetables on it. */}
-        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 sm:mt-0 sm:justify-end">
+        <div
+          className={cn(
+            "mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 sm:justify-end",
+            // Tucks under the view switch; with no switch (signed out) it
+            // would sit flush against the news line above.
+            signedIn === false ? "sm:mt-4" : "sm:mt-0"
+          )}
+        >
           <AccentPicker />
         </div>
         {/* Wait for the full list. Opening a single timetable leaves just that

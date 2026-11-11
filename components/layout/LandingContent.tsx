@@ -357,6 +357,9 @@ export function LandingContent() {
             <a href="#faq" className="whitespace-nowrap transition hover:text-white">
               {t("landing.nav.faq")}
             </a>
+            <Link href="/updates" className="whitespace-nowrap transition hover:text-white">
+              {t("landing.nav.updates")}
+            </Link>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <LocaleToggle className="border-white/20 bg-white/10" invert />
@@ -632,6 +635,9 @@ export function LandingContent() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-muted sm:flex-row">
           <span>© Planner Together</span>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+            <Link href="/updates" className="transition hover:text-foreground">
+              {t("landing.nav.updates")}
+            </Link>
             <Link href="/terms" className="transition hover:text-foreground">
               {t("common.terms")}
             </Link>

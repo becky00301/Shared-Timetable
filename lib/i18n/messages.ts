@@ -135,6 +135,7 @@ export const messages = {
   "landing.nav.features": { ko: "기능", en: "Features" },
   "landing.nav.cases": { ko: "쓰임새", en: "Use cases" },
   "landing.nav.faq": { ko: "자주 묻는 질문", en: "FAQ" },
+  "landing.nav.updates": { ko: "업데이트", en: "What's new" },
 
   // --------------------------------------------------- landing: the problem
   // Grey up to the turn, black after it — the sentence carries the section's
@@ -492,6 +493,9 @@ export const messages = {
   "dashboard.previousMonth": { ko: "이전 달", en: "Previous month" },
   "dashboard.nextMonth": { ko: "다음 달", en: "Next month" },
   "dashboard.noSchedulesForDay": { ko: "이날은 일정이 없어요.", en: "No events on this day." },
+  "dashboard.updates.badge": { ko: "새 소식", en: "New" },
+  "dashboard.updates.more": { ko: "외 {count}개", en: "and {count} more" },
+  "dashboard.updates.link": { ko: "업데이트 보기", en: "See what's new" },
   "dashboard.ongoingProjects": { ko: "진행 중인 프로젝트", en: "Ongoing projects" },
   "dashboard.upcomingProjects": { ko: "다가올 프로젝트", en: "Upcoming projects" },
   "dashboard.pastProjects": { ko: "지난 프로젝트", en: "Past projects" },
