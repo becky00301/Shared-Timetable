@@ -25,3 +25,9 @@ export function parseProjectSlug(input: string): string | null {
 
   return SLUG_PATTERN.test(candidate) ? candidate : null;
 }
+
+/** A guest-claim ticket from issue_guest_claim_ticket: 24 random bytes in
+    hex. Slugs always carry a dash, so the two never collide. */
+export function isClaimTicket(value: string): boolean {
+  return /^[0-9a-f]{48}$/.test(value);
+}

@@ -12,6 +12,10 @@ export const RELEASES: Release[] = [
     date: "2026-11-13",
     changes: [
       {
+        ko: { title: "공유 링크 새로 만들기", body: "시간표 공유 창에서 소유자가 링크를 새로 만들 수 있어요. 내보낸 사람이 예전 링크로 다시 들어오지 못해요. 이미 참여한 사람은 그대로예요." },
+        en: { title: "Make a new share link", body: "In the share window, a timetable's owner can now make a new link, so someone you removed can't come back through the old one. People already in the timetable stay." }
+      },
+      {
         ko: { title: "장소 검색으로 정확한 핀", body: "일정의 장소 칸에 이름을 입력하면 비슷한 장소가 주소와 함께 목록으로 떠요. 고르면 동선 지도에 그 위치 그대로 핀이 찍혀요. 지도의 핀이나 장소 카드에서 구글 지도로 바로 열 수도 있어요." },
         en: { title: "Search for a place to pin it exactly", body: "Type in an event's place field and matching places appear with their addresses. Pick one and the route map pins it right there. Pins and place cards also open in Google Maps." }
       }

@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
 import { track } from "@/lib/analytics";
-import { parseProjectSlug } from "@/lib/utils/claim-link";
+import { isClaimTicket, parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
 import { DEFAULT_CURRENCY, toAmount } from "@/lib/utils/money";
 import { defaultScheduleColor } from "@/lib/utils/schedule-colors";
@@ -53,6 +53,9 @@ type ProjectStore = {
   /** Takes over a timetable left behind by the retired guest mode, given the
       link its guest was told to save. Returns the slug to navigate to. */
   claimGuestProject: (link: string) => Promise<string>;
+  /** Asks the server for a claim ticket while still signed in as the guest.
+      Null when the database predates tickets. */
+  issueGuestClaimTicket: () => Promise<string | null>;
   /** Slug of the timetable a leftover guest session owns, for pointing it at
       the claim flow instead of pages that assume an account. */
   findGuestProjectSlug: () => Promise<string | null>;
@@ -60,6 +63,9 @@ type ProjectStore = {
   loadProject: (slug: string) => Promise<Project | null>;
   createProject: (title: string, description?: string, kind?: ProjectKind) => Promise<Project>;
   updateProject: (projectId: string, patch: { title?: string; description?: string }) => Promise<void>;
+  /** Owner only: replaces the invite and read-only links, so links handed out
+      before (including to removed members) stop working. */
+  resetShareLinks: (projectId: string) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   addDay: (projectId: string, date: string) => Promise<void>;
   addDays: (projectId: string, dates: string[]) => Promise<void>;
@@ -291,21 +297,38 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     return id;
   },
 
-  // Guest mode is gone, but the timetables it created are not. The link the
-  // guest saved is the only handle on one, so claiming reads the slug out of
-  // it and asks the server to move the timetable across. The server refuses
-  // anything that already belongs to an account, so a shared link cannot be
-  // turned into a takeover.
+  // Guest mode is gone, but the timetables it created are not. The guest's
+  // session issues a ticket before signing in, and the account redeems it
+  // here. A slug alone is not proof — slugs travel in shared links — so the
+  // slug path below only runs against a database that has no tickets yet.
   claimGuestProject: async (link) => {
     const slug = parseProjectSlug(link);
     if (!slug) throw new ClaimProjectError("invalid-link");
     const supabase = requireClient();
-    const { data, error } = await supabase.rpc("claim_guest_project", { project_slug: slug });
-    if (error) throw new ClaimProjectError(claimFailureFor(error.code));
-    const claimed = typeof data === "string" ? data : slug;
+    let claimed: string;
+    if (isClaimTicket(slug)) {
+      const { data, error } = await supabase.rpc("redeem_guest_claim_ticket", { claim_ticket: slug });
+      if (error) throw new ClaimProjectError(error.code === "28000" ? "needs-account" : "unknown");
+      if (typeof data !== "string") throw new ClaimProjectError("unknown");
+      claimed = data;
+    } else {
+      // A database without tickets yet still claims by slug.
+      const { data, error } = await supabase.rpc("claim_guest_project", { project_slug: slug });
+      if (error) throw new ClaimProjectError(claimFailureFor(error.code));
+      claimed = typeof data === "string" ? data : slug;
+    }
     // The dashboard list is now stale by exactly one timetable.
     await get().loadDashboard();
     return claimed;
+  },
+
+  issueGuestClaimTicket: async () => {
+    const supabase = requireClient();
+    const { data, error } = await supabase.rpc("issue_guest_claim_ticket");
+    // PGRST202: the function isn't there yet, so fall back to the slug.
+    if (error?.code === "PGRST202") return null;
+    if (error) throw error;
+    return typeof data === "string" ? data : null;
   },
 
   findGuestProjectSlug: async () => {
@@ -482,6 +505,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const { data, error } = await supabase
       .from("projects")
       .update(payload)
+      .eq("id", projectId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    const updated = normalizeProject(data as Project);
+    set((state) => ({
+      projects: state.projects.map((project) => (project.id === projectId ? updated : project))
+    }));
+  },
+
+  resetShareLinks: async (projectId) => {
+    const supabase = requireClient();
+    // Same shape as the column defaults: 16 random bytes in hex. RLS lets
+    // only the owner update the project row.
+    const token = () =>
+      Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    const { data, error } = await supabase
+      .from("projects")
+      .update({ invite_token: token(), embed_token: token() })
       .eq("id", projectId)
       .select("*")
       .single();

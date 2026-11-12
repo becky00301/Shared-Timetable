@@ -248,7 +248,7 @@ export default function ProjectPage() {
         )}
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
-      <ShareModal project={project} />
+      <ShareModal project={project} canManage={currentRole === "owner" || project.owner_id === currentUserId} />
       <RemovedFromProjectNotice removedBy={removedBy} />
     </main>
   );

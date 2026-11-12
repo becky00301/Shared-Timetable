@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { track } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Copy, TriangleAlert } from "lucide-react";
@@ -17,7 +17,9 @@ const collapseKey = (slug: string) => `plantogether.guestBannerDismissed.${slug}
 
 export function GuestLinkBanner({ slug }: { slug: string }) {
   const isGuest = useProjectStore((state) => state.isGuest);
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState<boolean | null>(null);
+  const [starting, setStarting] = useState(false);
   const t = useT();
   const bodyId = `guest-link-banner-${slug}`;
 
@@ -31,6 +33,21 @@ export function GuestLinkBanner({ slug }: { slug: string }) {
     const next = !collapsed;
     window.localStorage.setItem(collapseKey(slug), next ? "1" : "0");
     setCollapsed(next);
+  }
+
+  // Only this guest session can issue the ticket that moves the timetable,
+  // so it is taken now, before signing in replaces the session.
+  async function startClaim() {
+    if (starting) return;
+    setStarting(true);
+    try {
+      const ticket = await useProjectStore.getState().issueGuestClaimTicket();
+      router.push(`/login?claim=${encodeURIComponent(ticket ?? slug)}`);
+    } catch (error) {
+      console.error(error);
+      toast.error(t("claim.error.generic"));
+      setStarting(false);
+    }
   }
 
   async function copyLink() {
@@ -55,10 +72,8 @@ export function GuestLinkBanner({ slug }: { slug: string }) {
           <>
             {/* Converting a guest to an account is worth more than them
                 bookmarking the link, so signup carries the primary weight. */}
-            <Button size="sm" asChild>
-              <Link href={`/login?claim=${encodeURIComponent(slug)}`}>
-                {t("guest.banner.signup")}
-              </Link>
+            <Button size="sm" onClick={startClaim} disabled={starting}>
+              {t("guest.banner.signup")}
             </Button>
             <Button size="sm" variant="outline" onClick={copyLink}>
               <Copy size={14} />

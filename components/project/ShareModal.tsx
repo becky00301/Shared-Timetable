@@ -1,6 +1,7 @@
 "use client";
 
-import { Copy } from "lucide-react";
+import { useState } from "react";
+import { Copy, RefreshCw } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
 import { SITE_URL } from "@/lib/seo";
 import type { Project } from "@/types/project";
+import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
 
-export function ShareModal({ project }: { project: Project }) {
+export function ShareModal({ project, canManage = false }: { project: Project; canManage?: boolean }) {
   const open = useUiStore((state) => state.isShareOpen);
+  const [resetting, setResetting] = useState(false);
   const setOpen = useUiStore((state) => state.setShareOpen);
   const t = useT();
   const origin = typeof window === "undefined" ? SITE_URL : window.location.origin;
@@ -29,6 +32,22 @@ export function ShareModal({ project }: { project: Project }) {
     await navigator.clipboard.writeText(value);
     toast.success(t("share.copied"));
     track({ event: "share_project", share_type: "invite_link" });
+  }
+
+  // Removing a member doesn't take back a link they still hold, so the owner
+  // can replace it.
+  async function resetLinks() {
+    if (resetting || !window.confirm(t("share.reset.confirm"))) return;
+    setResetting(true);
+    try {
+      await useProjectStore.getState().resetShareLinks(project.id);
+      toast.success(t("share.reset.done"));
+    } catch (error) {
+      console.error(error);
+      toast.error(t("share.reset.failed"));
+    } finally {
+      setResetting(false);
+    }
   }
 
   return (
@@ -54,6 +73,19 @@ export function ShareModal({ project }: { project: Project }) {
           <div className="rounded-lg border border-border bg-black/[0.03] p-3 text-sm leading-6 text-muted">
             {t("share.linkExplainer")}
           </div>
+
+          {canManage ? (
+            <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center">
+              <div className="min-w-0 flex-1 text-sm">
+                <p className="font-medium text-foreground">{t("share.reset.title")}</p>
+                <p className="mt-1 leading-6 text-muted">{t("share.reset.body")}</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={resetLinks} disabled={resetting}>
+                <RefreshCw size={14} />
+                {t("share.reset.button")}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

@@ -262,8 +262,18 @@ export type Database = {
         Args: { project_uuid: string; new_owner_id: string };
         Returns: undefined;
       };
+      /** Removed by 20261113120000_guest_claim_tickets; kept until that
+          migration is live so the old claim still works. */
       claim_guest_project: {
         Args: { project_slug: string };
+        Returns: string;
+      };
+      issue_guest_claim_ticket: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      redeem_guest_claim_ticket: {
+        Args: { claim_ticket: string };
         Returns: string;
       };
       get_embedded_timetable: {

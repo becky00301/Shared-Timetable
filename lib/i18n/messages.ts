@@ -411,8 +411,8 @@ export const messages = {
     en: "Trial mode has ended"
   },
   "guest.banner.body": {
-    ko: "이제 계정으로만 시간표를 쓸 수 있어요. 지금 보고 있는 이 링크를 복사해두고 계정을 만든 뒤, 대시보드에서 붙여넣으면 이 시간표가 그대로 넘어와요. 링크를 잃어버리면 되찾을 수 없으니 먼저 복사해주세요.",
-    en: "Timetables now need an account. Copy this link, create an account, then paste the link on your dashboard and this timetable comes with you. It can't be recovered without the link, so copy it first."
+    ko: "이제 계정으로만 시간표를 쓸 수 있어요. 이 브라우저에서 '계정 만들기'를 눌러 가입하거나 로그인하면 이 시간표가 그 계정으로 그대로 넘어와요. 다른 브라우저나 기기에서는 옮길 수 없으니, 나중에 하려면 이 링크를 복사해두고 이 브라우저에서 다시 열어주세요.",
+    en: "Timetables now need an account. Tap Create an account in this browser and sign up or log in, and this timetable moves into that account as it is. It can't be moved from another browser or device, so if you'd rather do it later, copy this link and reopen it here."
   },
   "guest.banner.copy": { ko: "링크 복사", en: "Copy link" },
   "guest.banner.collapse": { ko: "안내 접기", en: "Collapse notice" },
@@ -426,30 +426,10 @@ export const messages = {
   // ------------------------------------------------------------------- claim
   "claim.title": { ko: "체험으로 만든 시간표 가져오기", en: "Import a timetable from trial mode" },
   "claim.body": {
-    ko: "로그인 없이 만들었던 시간표가 있다면, 저장해둔 링크를 붙여넣어 주세요. 이 계정으로 그대로 옮겨드려요.",
-    en: "Made a timetable without logging in? Paste the link you saved and we'll move it into this account, just as it is."
+    ko: "로그인 없이 만들었던 시간표는 그 시간표를 만든 브라우저에서만 가져올 수 있어요. 그 브라우저에서 저장해둔 링크를 열고, 위쪽 노란 안내의 '계정 만들기'를 눌러주세요.",
+    en: "A timetable made without logging in can only be brought over from the browser it was made in. Open the link you saved in that browser and tap Create an account in the yellow notice at the top."
   },
-  "claim.inputLabel": { ko: "시간표 링크", en: "Timetable link" },
-  "claim.placeholder": { ko: "https://… /plans/…", en: "https://… /plans/…" },
-  "claim.submit": { ko: "가져오기", en: "Import" },
-  "claim.submitting": { ko: "가져오는 중...", en: "Importing…" },
   "claim.success": { ko: "시간표를 가져왔어요.", en: "Timetable imported." },
-  "claim.error.invalidLink": {
-    ko: "시간표 링크가 아니에요. 주소에 /plans/ 가 들어간 링크를 붙여넣어 주세요.",
-    en: "That isn't a timetable link. Paste one with /plans/ in the address."
-  },
-  "claim.error.notFound": {
-    ko: "그 링크로 시간표를 찾지 못했어요. 주소를 다시 확인해주세요.",
-    en: "No timetable matches that link. Please check the address."
-  },
-  "claim.error.owned": {
-    ko: "이미 다른 계정의 시간표예요. 가져오는 대신 소유자에게 초대를 받아주세요.",
-    en: "That timetable already belongs to an account. Ask its owner for an invite instead."
-  },
-  "claim.error.needsAccount": {
-    ko: "계정으로 로그인한 뒤에 가져올 수 있어요.",
-    en: "Log in with an account first."
-  },
   "claim.error.generic": {
     ko: "가져오지 못했어요. 잠시 후 다시 시도해주세요.",
     en: "Couldn't import it. Please try again in a moment."
@@ -785,6 +765,18 @@ export const messages = {
     en: "Anyone who opens this link joins as an editor after logging in or signing up, and can edit the timetable with you. People already in the timetable go straight to it. For view-only access, the owner can change someone's role to viewer in the member list."
   },
   "share.copied": { ko: "링크를 복사했어요.", en: "Link copied." },
+  "share.reset.title": { ko: "링크 새로 만들기", en: "Make a new link" },
+  "share.reset.body": {
+    ko: "내보낸 사람이 예전 링크로 다시 들어오지 못하게 하려면 링크를 새로 만드세요. 예전 링크와 노션에 넣은 임베드는 더 이상 열리지 않아요. 이미 참여한 사람은 그대로예요.",
+    en: "To keep someone you removed from coming back through the old link, make a new one. The old link and any Notion embeds stop working. People already in the timetable stay."
+  },
+  "share.reset.button": { ko: "새 링크 만들기", en: "Make new link" },
+  "share.reset.confirm": {
+    ko: "링크를 새로 만들까요? 예전 링크와 노션 임베드는 더 이상 열리지 않아요.",
+    en: "Make a new link? The old link and Notion embeds will stop working."
+  },
+  "share.reset.done": { ko: "새 링크를 만들었어요. 함께할 사람에게 새 링크를 보내주세요.", en: "New link ready. Send it to the people you're planning with." },
+  "share.reset.failed": { ko: "링크를 새로 만들지 못했어요. 잠시 후 다시 시도해주세요.", en: "Couldn't make a new link. Please try again in a moment." },
   "share.button": { ko: "공유", en: "Share" },
   "share.openCta": { ko: "프로젝트 공유하기", en: "Share project" },
   // ------------------------------------------------------------ accent colour
