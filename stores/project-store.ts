@@ -23,7 +23,7 @@ import type {
   ProjectMember,
   ProjectNote
 } from "@/types/project";
-import type { Attachment, AvailabilitySlot, ScheduleItem } from "@/types/schedule";
+import type { Attachment, AvailabilitySlot, LocationPoint, ScheduleItem } from "@/types/schedule";
 
 type ProjectStore = {
   currentUserId: string | null;
@@ -101,6 +101,10 @@ type ProjectStore = {
   /** Where the photo's focal point is, in percent; null puts it back in the
       centre. */
   setSchedulePhotoFocus: (itemId: string, focus: { x: number; y: number } | null) => Promise<void>;
+  /** Pins the item's place where it was picked from the place search; null
+      clears it so the route map guesses from the typed label. Resolves false,
+      without throwing, on a database that predates the location columns. */
+  setScheduleLocationPoint: (itemId: string, point: LocationPoint | null) => Promise<boolean>;
   addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
   reset: () => void;
   joinByInviteToken: (token: string) => Promise<string>;
@@ -1045,6 +1049,34 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (isMissingColumn(error, "image_focus")) throw new Error(translate("photo.focusNotMigrated"));
       throw error;
     }
+  },
+
+  setScheduleLocationPoint: async (itemId, point) => {
+    const supabase = requireClient();
+    const previous = get().schedules.find((schedule) => schedule.id === itemId);
+    if (!previous) return false;
+    const patch = {
+      location_lat: point?.lat ?? null,
+      location_lng: point?.lng ?? null,
+      location_place_id: point?.placeId ?? null
+    };
+    const restore = {
+      location_lat: previous.location_lat ?? null,
+      location_lng: previous.location_lng ?? null,
+      location_place_id: previous.location_place_id ?? null
+    };
+    set((state) => ({
+      schedules: state.schedules.map((schedule) => (schedule.id === itemId ? { ...schedule, ...patch } : schedule))
+    }));
+    const { error } = await supabase.from("schedule_items").update(patch).eq("id", itemId);
+    if (!error) return true;
+    set((state) => ({
+      schedules: state.schedules.map((schedule) => (schedule.id === itemId ? { ...schedule, ...restore } : schedule))
+    }));
+    // Before the location migration the label alone is saved, and the route
+    // map keeps guessing from it as it always has.
+    if (isMissingColumn(error, "location_")) return false;
+    throw error;
   },
 
   removeSchedulePhoto: async (itemId) => {

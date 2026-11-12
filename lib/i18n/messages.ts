@@ -837,6 +837,31 @@ export const messages = {
     en: "Couldn't place {count} event(s) on the map. A more specific address will fix it."
   },
 
+  "map.guessed": { ko: "위치 추정", en: "approximate" },
+  "map.openInGoogle": { ko: "구글 지도에서 보기", en: "Open in Google Maps" },
+  "map.missingOnMap": {
+    ko: "{count}곳은 위치를 찾지 못해 지도에 없어요",
+    en: "{count} place(s) couldn't be found and aren't on the map"
+  },
+  "place.placeholder": { ko: "장소 이름 검색 (선택 입력)", en: "Search for a place (optional)" },
+  "place.searching": { ko: "장소 찾는 중…", en: "Searching…" },
+  "place.searchFailed": {
+    ko: "검색하지 못했어요. 엔터를 누르면 입력한 이름 그대로 저장돼요.",
+    en: "Search failed. Press Enter to save the name as typed."
+  },
+  "place.noResults": {
+    ko: "찾는 장소가 없어요. 엔터를 누르면 입력한 이름 그대로 저장돼요.",
+    en: "No matching places. Press Enter to save the name as typed."
+  },
+  "place.pinned": { ko: "고른 위치로 지도에 표시돼요", en: "Shown on the map where you picked it" },
+  "place.notPinned": {
+    ko: "검색 결과에서 고르면 지도에 정확히 표시돼요",
+    en: "Pick a search result to pin it exactly on the map"
+  },
+  "place.notMigrated": {
+    ko: "장소 이름은 저장됐어요. 지도 위치는 데이터베이스 업데이트 후에 저장돼요.",
+    en: "The place name was saved. Its map position will save after a database update."
+  },
   "map.allDays": { ko: "전체", en: "All days" },
   "map.listView": { ko: "목록", en: "List" },
   "map.mapView": { ko: "지도", en: "Map" },

@@ -3,11 +3,12 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, MapPin, Route } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin, Route } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useLocale } from "@/lib/i18n/locale";
 import { geocodeAddresses, type LatLng } from "@/lib/maps/geocode";
+import { googleMapsPlaceUrl } from "@/lib/maps/place-search";
 import { fetchLeg, transitDirectionsUrl, WALK_LIMIT_SECONDS, type Leg, type TravelMode } from "@/lib/maps/routing";
 import { cn } from "@/lib/utils/cn";
 import { timeToMinutes } from "@/lib/utils/time";
@@ -24,6 +25,8 @@ type Stop = {
   location: string;
   /** undefined while geocoding, null when the address couldn't be placed. */
   position: LatLng | null | undefined;
+  /** The position was picked in the place search, not guessed from the label. */
+  picked: boolean;
   order: number;
 };
 type DayGroup = { day: ProjectDay; color: string; stops: Stop[] };
@@ -39,6 +42,12 @@ function pickMode(state: LegState | undefined, chosen: TravelMode | undefined): 
   if (chosen && state?.[chosen]) return chosen;
   if (state?.foot && (state.foot.duration <= WALK_LIMIT_SECONDS || !state.car)) return "foot";
   return "car";
+}
+
+function storedPoint(item: ScheduleItem): LatLng | null {
+  return item.location_lat != null && item.location_lng != null
+    ? { lat: item.location_lat, lng: item.location_lng }
+    : null;
 }
 
 export function DayRouteMapDialog({
@@ -95,8 +104,15 @@ export function DayRouteMapDialog({
     }));
   }, [day, days, schedules, showAll]);
 
+  // Only events without a picked position need their label geocoded.
   const addresses = useMemo(
-    () => [...new Set(located.flatMap((group) => group.items.map((item) => item.location!.trim())))],
+    () => [
+      ...new Set(
+        located.flatMap((group) =>
+          group.items.filter((item) => storedPoint(item) === null).map((item) => item.location!.trim())
+        )
+      )
+    ],
     [located]
   );
   const addressKey = addresses.join("\n");
@@ -132,10 +148,12 @@ export function DayRouteMapDialog({
         color: group.color,
         stops: group.items.map((item, index) => {
           const location = item.location!.trim();
+          const stored = storedPoint(item);
           return {
             item,
             location,
-            position: positions.has(location) ? positions.get(location) : undefined,
+            position: stored ?? (positions.has(location) ? positions.get(location) : undefined),
+            picked: stored !== null,
             order: index + 1
           };
         })
@@ -344,6 +362,7 @@ export function DayRouteMapDialog({
                                   formatDuration={formatDuration}
                                 />
                               ) : null}
+                              <div className="relative">
                               <button
                                 type="button"
                                 data-stop-id={stop.item.id}
@@ -353,6 +372,7 @@ export function DayRouteMapDialog({
                                 }}
                                 className={cn(
                                   "flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition",
+                                  stop.position && "pr-11",
                                   selected
                                     ? "border-primary ring-2 ring-primary/25"
                                     : "border-border hover:bg-black/[0.02]"
@@ -378,9 +398,24 @@ export function DayRouteMapDialog({
                                   </span>
                                   {stop.position === null ? (
                                     <span className="mt-0.5 block text-[11px] text-muted">({t("map.notFound")})</span>
+                                  ) : stop.position && !stop.picked ? (
+                                    <span className="mt-0.5 block text-[11px] text-muted">({t("map.guessed")})</span>
                                   ) : null}
                                 </span>
                               </button>
+                              {stop.position ? (
+                                <a
+                                  href={googleMapsPlaceUrl(stop.position)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={t("map.openInGoogle")}
+                                  aria-label={`${stop.item.title} · ${t("map.openInGoogle")}`}
+                                  className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted transition hover:bg-black/[0.05] hover:text-foreground"
+                                >
+                                  <ExternalLink size={14} aria-hidden="true" />
+                                </a>
+                              ) : null}
+                              </div>
                             </li>
                           );
                         })}
@@ -398,7 +433,7 @@ export function DayRouteMapDialog({
           <div className={cn("relative min-h-0 flex-1 p-4 md:block md:p-0", view === "list" && "hidden")}>
             {!hasStops ? (
               <Notice>{t("map.noLocations")}</Notice>
-            ) : status === "error" ? (
+            ) : status === "error" && !placed.length ? (
               <Notice>{t("map.failed")}</Notice>
             ) : status === "ready" && !placed.length ? (
               <Notice>{t("map.noneFound")}</Notice>
@@ -411,11 +446,18 @@ export function DayRouteMapDialog({
                   onSelect={selectFromMap}
                   visible={view === "map"}
                   language={locale}
+                  openInGoogleLabel={t("map.openInGoogle")}
                 />
                 {status === "loading" ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-card/60 text-sm text-muted">
                     {t("common.loading")}
                   </div>
+                ) : unresolved ? (
+                  // On a phone the list is a tab away, so the map says itself
+                  // that some places are missing from it.
+                  <p className="pointer-events-none absolute left-3 top-3 max-w-[calc(100%-64px)] rounded-full bg-card/95 px-3 py-1 text-xs text-foreground/80 shadow-sm">
+                    {t("map.missingOnMap", { count: unresolved })}
+                  </p>
                 ) : null}
               </div>
             )}
@@ -494,7 +536,8 @@ function RouteMap({
   selectedId,
   onSelect,
   visible,
-  language
+  language,
+  openInGoogleLabel
 }: {
   groups: DayGroup[];
   lines: Line[];
@@ -502,6 +545,7 @@ function RouteMap({
   onSelect: (id: string) => void;
   visible: boolean;
   language: string;
+  openInGoogleLabel: string;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -643,7 +687,12 @@ function RouteMap({
         });
         element.append(pin);
         const popup = new lib.Popup({ offset: 16, closeButton: false }).setDOMContent(
-          popupContent(stop.item.title, `${stop.item.start_time.slice(0, 5)} – ${stop.item.end_time.slice(0, 5)}`)
+          popupContent(
+            stop.item.title,
+            `${stop.item.start_time.slice(0, 5)} – ${stop.item.end_time.slice(0, 5)}`,
+            googleMapsPlaceUrl(stop.position),
+            openInGoogleLabel
+          )
         );
         const marker = new lib.Marker({ element })
           .setLngLat([stop.position.lng, stop.position.lat])
@@ -663,7 +712,7 @@ function RouteMap({
       boundsRef.current = bounds;
       map.fitBounds(bounds, { padding: 56, maxZoom: 15, duration: 0 });
     }
-  }, [loaded, groups]);
+  }, [loaded, groups, openInGoogleLabel]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -695,7 +744,7 @@ function localizeLabels(map: MapLibreMap, language: string) {
   }
 }
 
-function popupContent(title: string, time: string) {
+function popupContent(title: string, time: string, href: string, linkLabel: string) {
   const root = document.createElement("div");
   root.style.fontSize = "13px";
   root.style.lineHeight = "1.5";
@@ -704,7 +753,13 @@ function popupContent(title: string, time: string) {
   const small = document.createElement("div");
   small.textContent = time;
   small.style.color = "#6b7280";
-  root.append(strong, small);
+  const link = document.createElement("a");
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = `${linkLabel} ↗`;
+  Object.assign(link.style, { display: "inline-block", marginTop: "4px", color: "#3b5bdb", fontWeight: "600" });
+  root.append(strong, small, link);
   return root;
 }
 

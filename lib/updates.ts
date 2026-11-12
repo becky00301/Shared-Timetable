@@ -9,6 +9,15 @@ export type Release = { date: string; changes: { ko: Change; en: Change; image?:
 
 export const RELEASES: Release[] = [
   {
+    date: "2026-11-13",
+    changes: [
+      {
+        ko: { title: "장소 검색으로 정확한 핀", body: "일정의 장소 칸에 이름을 입력하면 비슷한 장소가 주소와 함께 목록으로 떠요. 고르면 동선 지도에 그 위치 그대로 핀이 찍혀요. 지도의 핀이나 장소 카드에서 구글 지도로 바로 열 수도 있어요." },
+        en: { title: "Search for a place to pin it exactly", body: "Type in an event's place field and matching places appear with their addresses. Pick one and the route map pins it right there. Pins and place cards also open in Google Maps." }
+      }
+    ]
+  },
+  {
     date: "2026-11-11",
     changes: [
       {

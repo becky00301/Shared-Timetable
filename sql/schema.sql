@@ -257,6 +257,28 @@ alter table public.schedule_items
     )
   );
 
+-- Where the item's place is, as picked from the place search.
+alter table public.schedule_items
+  add column if not exists location_lat double precision,
+  add column if not exists location_lng double precision,
+  add column if not exists location_place_id text;
+
+alter table public.schedule_items
+  drop constraint if exists schedule_items_location_point_check;
+
+alter table public.schedule_items
+  add constraint schedule_items_location_point_check
+  check (
+    (
+      (location_lat is null and location_lng is null)
+      or (
+        location_lat between -90 and 90
+        and location_lng between -180 and 180
+      )
+    )
+    and (location_place_id is null or length(location_place_id) <= 100)
+  );
+
 create table if not exists public.availability (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,

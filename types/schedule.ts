@@ -20,9 +20,18 @@ export type ScheduleItem = {
       means centred. */
   image_focus_x?: number | null;
   image_focus_y?: number | null;
+  /** Where the place is, when it was picked from the place search. Null on
+      both means the route map has to guess from `location`. */
+  location_lat?: number | null;
+  location_lng?: number | null;
+  /** Source of that point, e.g. "osm:W123" or "wikidata:Q123". */
+  location_place_id?: string | null;
   created_at: string;
   updated_at: string;
 };
+
+/** A picked place's position and where it came from. */
+export type LocationPoint = { lat: number; lng: number; placeId: string | null };
 
 export type AvailabilitySlot = {
   id: string;

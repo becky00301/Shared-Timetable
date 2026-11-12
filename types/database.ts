@@ -167,6 +167,9 @@ export type Database = {
           image_path: string | null;
           image_focus_x: number | null;
           image_focus_y: number | null;
+          location_lat: number | null;
+          location_lng: number | null;
+          location_place_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -187,6 +190,9 @@ export type Database = {
           image_path?: string | null;
           image_focus_x?: number | null;
           image_focus_y?: number | null;
+          location_lat?: number | null;
+          location_lng?: number | null;
+          location_place_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

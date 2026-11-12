@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@appica/ui-react/switch";
+import { LocationSearchInput } from "@/components/project/LocationSearchInput";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
+import type { PlaceSuggestion } from "@/lib/maps/place-search";
 import { cn } from "@/lib/utils/cn";
 import {
   amountToInput,
@@ -42,7 +44,25 @@ export function ScheduleDetailPanel({
   const schedules = useProjectStore((state) => state.schedules);
   const projects = useProjectStore((state) => state.projects);
   const budgetSchemaMissing = useProjectStore((state) => state.budgetSchemaMissing);
+  const setScheduleLocationPoint = useProjectStore((state) => state.setScheduleLocationPoint);
   const item = schedules.find((schedule) => schedule.id === selectedScheduleId);
+  // The middle of this timetable's other pinned places, so a search for
+  // "스타벅스" on an Osaka trip offers Osaka first.
+  const locationBias = useMemo(() => {
+    if (!item) return null;
+    const pinned = schedules.filter(
+      (schedule) =>
+        schedule.project_id === item.project_id &&
+        schedule.id !== item.id &&
+        schedule.location_lat != null &&
+        schedule.location_lng != null
+    );
+    if (!pinned.length) return null;
+    return {
+      lat: pinned.reduce((sum, schedule) => sum + schedule.location_lat!, 0) / pinned.length,
+      lng: pinned.reduce((sum, schedule) => sum + schedule.location_lng!, 0) / pinned.length
+    };
+  }, [schedules, item]);
   const currency =
     projects.find((project) => project.id === item?.project_id)?.budget_currency || DEFAULT_CURRENCY;
   const t = useT();
@@ -184,6 +204,36 @@ export function ScheduleDetailPanel({
           : t("detail.saveFailed")
       );
     });
+  }
+
+  // Typed text that wasn't picked from the list: the label changes, and a
+  // position picked for the old label no longer applies.
+  function commitLocationText() {
+    if (!item || !canEdit) return;
+    const next = location.trim();
+    if (next === (item.location ?? "")) return;
+    const hadPoint = item.location_lat != null;
+    upsertSchedule({ ...item, location: next })
+      .then(() => (hadPoint ? setScheduleLocationPoint(item.id, null) : true))
+      .catch((error) => {
+        console.error(error);
+        toast.error(t("detail.saveFailed"));
+      });
+  }
+
+  function pickLocation(place: PlaceSuggestion) {
+    if (!item || !canEdit) return;
+    setLocation(place.name);
+    // The label is saved first so its response can't overwrite the position.
+    upsertSchedule({ ...item, location: place.name })
+      .then(() => setScheduleLocationPoint(item.id, { lat: place.lat, lng: place.lng, placeId: place.id }))
+      .then((stored) => {
+        if (!stored) toast.message(t("place.notMigrated"));
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(t("detail.saveFailed"));
+      });
   }
 
   function pickPhoto(file: File | undefined) {
@@ -465,20 +515,16 @@ export function ScheduleDetailPanel({
           </>
         )}
 
-        <label className="flex min-w-0 flex-col gap-1.5 text-muted">
-          {t("detail.location")}
-          <Input
-            value={location}
-            disabled={!canEdit}
-            placeholder={t("common.optional")}
-            onChange={(event) => setLocation(event.target.value)}
-            onBlur={() => save({ location: location.trim() })}
-            onKeyDown={(event) => {
-              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-              if (event.key === "Enter") event.currentTarget.blur();
-            }}
-          />
-        </label>
+        <LocationSearchInput
+          value={location}
+          disabled={!canEdit}
+          placeholder={t("place.placeholder")}
+          bias={locationBias}
+          pinned={item.location_lat != null && item.location_lng != null}
+          onChange={setLocation}
+          onCommitText={commitLocationText}
+          onPick={pickLocation}
+        />
 
         <label className="flex min-w-0 flex-col gap-1.5 text-muted">
           {t("detail.amount")}
