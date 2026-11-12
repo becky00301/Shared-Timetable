@@ -269,9 +269,12 @@ export function TimetableGrid({
   const availableWidth = Math.max(0, viewportWidth - TIME_COL_WIDTH);
   // What a column gets when a week of them shares the viewport at 100%.
   const fittedColWidth = viewportWidth && visibleDayCount ? Math.floor(availableWidth / visibleDayCount) : 0;
+  // Zooming in only stretches the hour rows: the columns keep their 100%
+  // width, so the same days stay on screen. Zooming out still narrows them,
+  // which is how more days fit side by side.
   const scaledColWidth = Math.max(
     MIN_ZOOMED_COL_WIDTH,
-    Math.round(Math.max(MIN_DAY_COL_WIDTH, fittedColWidth) * gridZoom)
+    Math.round(Math.max(MIN_DAY_COL_WIDTH, fittedColWidth) * Math.min(1, gridZoom))
   );
   // Fixed widths are only for days that genuinely overflow. The moment they
   // all fit — which zooming out is what makes happen — the columns go back to

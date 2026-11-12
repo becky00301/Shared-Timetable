@@ -28,6 +28,14 @@ import { PHOTO_TEXT_COLOR, PHOTO_TEXT_SHADOW, SchedulePhotoBackdrop } from "./Sc
 export const EDGE_GAP = 2;
 export const VERTICAL_INSET = 1;
 
+/** Boxes are drawn at their true length, so 5 and 20 minutes look different,
+    down to this floor that keeps a 5-minute event visible and clickable. */
+const MIN_BLOCK_HEIGHT = 10;
+/** Below these box heights the text drops to one line (title and start
+    time), then to the title alone. */
+const FULL_LAYOUT_HEIGHT = 44;
+const ONE_LINE_HEIGHT = 16;
+
 /** How close to the edge of the visible hours a resize starts scrolling (wide
     enough for a fingertip), and the fastest it goes per frame. */
 const AUTO_SCROLL_EDGE = 72;
@@ -88,10 +96,10 @@ export function ScheduleBlock({
   const baseStart = segment ? segment.startMinutes : timeToMinutes(item.start_time);
   const baseEnd = segment ? segment.endMinutes : timeToMinutes(item.end_time);
   const baseTop = minutesToTop(baseStart, hourHeight);
-  const baseHeight = Math.max(34, minutesToTop(baseEnd - baseStart, hourHeight));
+  const baseHeight = Math.max(MIN_BLOCK_HEIGHT, minutesToTop(baseEnd - baseStart, hourHeight));
   const top = resize ? minutesToTop(resize.startMinutes, hourHeight) : baseTop;
   const height = resize
-    ? Math.max(34, minutesToTop(resize.endMinutes - resize.startMinutes, hourHeight))
+    ? Math.max(MIN_BLOCK_HEIGHT, minutesToTop(resize.endMinutes - resize.startMinutes, hourHeight))
     : baseHeight;
   // Hairline gaps, as in a native calendar: the block fills its column but
   // for EDGE_GAP at each side, and sits a pixel inside its hour lines so two
@@ -104,6 +112,10 @@ export function ScheduleBlock({
         }
       : undefined;
   const isSplit = laneCount > 1;
+  const boxHeight = height - VERTICAL_INSET * 2;
+  const density = boxHeight >= FULL_LAYOUT_HEIGHT ? "full" : boxHeight >= ONE_LINE_HEIGHT ? "line" : "title";
+  // Edge handles shrink with a short box so its middle still drags it.
+  const handleHeight = Math.min(8, Math.max(2, Math.floor(boxHeight / 4)));
   const photoUrl = useSchedulePhotoUrl(item.image_path);
   const textColor = photoUrl ? PHOTO_TEXT_COLOR : getScheduleTextColor(item.color);
 
@@ -211,6 +223,7 @@ export function ScheduleBlock({
         // edges. The text clips itself instead.
         "absolute left-0.5 right-0.5 z-10 flex touch-manipulation cursor-pointer flex-col rounded-[4px] border border-black/[0.06] px-1.5 py-2 text-left shadow-lg transition-colors sm:p-2",
         isSplit && "px-1 py-2 sm:px-1.5",
+        density !== "full" && "justify-center py-0 sm:py-0",
         // Faded while another mode (wake time) owns the grid's clicks.
         !isInteractive && "pointer-events-none opacity-40",
         isSelected && (textColor === "#111827" ? "ring-2 ring-black/40" : "ring-2 ring-white/70"),
@@ -245,11 +258,12 @@ export function ScheduleBlock({
         type="button"
         data-resize-handle
         className={cn(
-          "absolute inset-x-0 top-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]",
+          "absolute inset-x-0 top-0 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]",
           // A finger only gets the edges of the armed event; elsewhere a
           // touch on the edge is just a touch on the event.
           !resizeArmed && "pointer-coarse:pointer-events-none"
         )}
+        style={{ height: handleHeight }}
         onPointerDown={(event) => startResize("top", event)}
         aria-label="Resize event start"
       >
@@ -257,57 +271,75 @@ export function ScheduleBlock({
         {resizeArmed ? <HandleDot edge="top" color={item.color} /> : null}
       </button>
       ) : null}
-      <div className={cn("relative mt-1 min-h-0 min-w-0 flex-1 overflow-hidden", photoUrl && PHOTO_TEXT_SHADOW)}>
-        <p
-          className={cn(
-            "font-semibold leading-tight text-current",
-            isSplit
-              ? "truncate text-[9px] sm:text-xs"
-              : "text-[11px] [overflow-wrap:anywhere] sm:text-sm"
-          )}
-        >
-          {item.title}
-        </p>
-        <p
-          className={cn(
-            "mt-1 leading-tight text-current opacity-[0.82]",
-            isSplit
-              ? cn("overflow-hidden whitespace-nowrap", laneCount > 2 ? "text-[8px]" : "text-[9px]")
-              : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
-          )}
-        >
-          {isSplit ? (
-            <>
-              <span className="block">{item.start_time.slice(0, 5)}</span>
-              <span className="block">- {item.end_time.slice(0, 5)}</span>
-            </>
-          ) : (
-            formatTimeRange(item.start_time, item.end_time)
-          )}
-        </p>
-        {item.location ? (
+      {density === "full" ? (
+        <div className={cn("relative mt-1 min-h-0 min-w-0 flex-1 overflow-hidden", photoUrl && PHOTO_TEXT_SHADOW)}>
           <p
             className={cn(
-              "mt-1 leading-tight text-current opacity-70",
+              "font-semibold leading-tight text-current",
               isSplit
-                ? "truncate text-[9px] sm:text-[10px]"
+                ? "truncate text-[9px] sm:text-xs"
+                : "text-[11px] [overflow-wrap:anywhere] sm:text-sm"
+            )}
+          >
+            {item.title}
+          </p>
+          <p
+            className={cn(
+              "mt-1 leading-tight text-current opacity-[0.82]",
+              isSplit
+                ? cn("overflow-hidden whitespace-nowrap", laneCount > 2 ? "text-[8px]" : "text-[9px]")
                 : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
             )}
           >
-            {item.location}
+            {isSplit ? (
+              <>
+                <span className="block">{item.start_time.slice(0, 5)}</span>
+                <span className="block">- {item.end_time.slice(0, 5)}</span>
+              </>
+            ) : (
+              formatTimeRange(item.start_time, item.end_time)
+            )}
           </p>
-        ) : null}
-      </div>
+          {item.location ? (
+            <p
+              className={cn(
+                "mt-1 leading-tight text-current opacity-70",
+                isSplit
+                  ? "truncate text-[9px] sm:text-[10px]"
+                  : "text-[9px] [overflow-wrap:anywhere] sm:text-xs"
+              )}
+            >
+              {item.location}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        // A short event: one line, title first, then its start time if
+        // there is room for a line at all.
+        <p
+          className={cn(
+            "relative min-w-0 truncate font-semibold text-current",
+            density === "line" ? "text-[10px] leading-tight sm:text-xs" : "text-[9px] leading-none",
+            photoUrl && PHOTO_TEXT_SHADOW
+          )}
+        >
+          {item.title}
+          {density === "line" ? (
+            <span className="ml-1 font-normal opacity-[0.82]">{item.start_time.slice(0, 5)}</span>
+          ) : null}
+        </p>
+      )}
       {hasBottom ? (
       <button
         type="button"
         data-resize-handle
         className={cn(
-          "absolute inset-x-0 bottom-0 h-2 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]",
+          "absolute inset-x-0 bottom-0 cursor-row-resize touch-none select-none [-webkit-touch-callout:none]",
           // A finger only gets the edges of the armed event; elsewhere a
           // touch on the edge is just a touch on the event.
           !resizeArmed && "pointer-coarse:pointer-events-none"
         )}
+        style={{ height: handleHeight }}
         onPointerDown={(event) => startResize("bottom", event)}
         aria-label="Resize event end"
       >
