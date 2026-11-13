@@ -858,14 +858,6 @@ export const messages = {
   "map.allDays": { ko: "전체", en: "All days" },
   "map.listView": { ko: "목록", en: "List" },
   "map.mapView": { ko: "지도", en: "Map" },
-  "map.walk": { ko: "도보", en: "Walk" },
-  "map.drive": { ko: "차량", en: "Drive" },
-  "map.minutes": { ko: "{m}분", en: "{m} min" },
-  "map.hours": { ko: "{h}시간 {m}분", en: "{h} h {m} min" },
-  "map.routing": { ko: "이동시간 계산 중…", en: "Working out travel time…" },
-  "map.routeFailed": { ko: "이동시간을 계산하지 못했어요", en: "Couldn't work out travel time" },
-  "map.transit": { ko: "구글 지도에서 대중교통 길찾기", en: "Transit directions in Google Maps" },
-  "map.travelMode": { ko: "이동 수단", en: "Travel mode" },
 
   // ---------------------------------------------------------------- invite
   "invite.eyebrow": { ko: "플래너 투게더 초대", en: "You're invited to Planner Together" },

@@ -60,8 +60,8 @@ export const RELEASES: Release[] = [
     date: "2026-11-05",
     changes: [
       {
-        ko: { title: "날짜별 동선 지도", body: "날짜 칸의 지도 버튼을 누르면 그날 장소가 순서대로 번호 핀과 경로로 지도에 나오고, 장소 사이 이동 시간도 보여요." },
-        en: { title: "Route map for each day", body: "The map button on a date shows that day's places as numbered pins joined by a route, with travel time between them." },
+        ko: { title: "날짜별 동선 지도", body: "날짜 칸의 지도 버튼을 누르면 그날 장소가 순서대로 번호 핀으로 지도에 나오고, 핀 사이가 선으로 이어져요." },
+        en: { title: "Route map for each day", body: "The map button on a date shows that day's places as numbered pins, joined by lines in visiting order." },
         image: { src: "/updates/2026-11-05-route-map.webp", width: 1200, height: 865 }
       },
       {

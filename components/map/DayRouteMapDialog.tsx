@@ -3,13 +3,12 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin, Route } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useDateFormat } from "@/lib/i18n/dates";
 import { useLocale } from "@/lib/i18n/locale";
 import { geocodeAddresses, type LatLng } from "@/lib/maps/geocode";
 import { googleMapsPlaceUrl } from "@/lib/maps/place-search";
-import { fetchLeg, transitDirectionsUrl, WALK_LIMIT_SECONDS, type Leg, type TravelMode } from "@/lib/maps/routing";
 import { cn } from "@/lib/utils/cn";
 import { timeToMinutes } from "@/lib/utils/time";
 import type { ProjectDay } from "@/types/project";
@@ -30,19 +29,6 @@ type Stop = {
   order: number;
 };
 type DayGroup = { day: ProjectDay; color: string; stops: Stop[] };
-type Pair = { key: string; from: LatLng; to: LatLng; toId: string; color: string };
-type LegState = { status: "loading" | "ready" | "error"; foot: Leg | null; car: Leg | null };
-
-function pairKey(from: LatLng, to: LatLng) {
-  return `${from.lat.toFixed(5)},${from.lng.toFixed(5)}>${to.lat.toFixed(5)},${to.lng.toFixed(5)}`;
-}
-
-/** The traveller's pick if that route exists; otherwise walk short hops and drive the rest. */
-function pickMode(state: LegState | undefined, chosen: TravelMode | undefined): TravelMode {
-  if (chosen && state?.[chosen]) return chosen;
-  if (state?.foot && (state.foot.duration <= WALK_LIMIT_SECONDS || !state.car)) return "foot";
-  return "car";
-}
 
 function storedPoint(item: ScheduleItem): LatLng | null {
   return item.location_lat != null && item.location_lng != null
@@ -70,9 +56,6 @@ export function DayRouteMapDialog({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [positions, setPositions] = useState<Map<string, LatLng | null>>(() => new Map());
-  const [legs, setLegs] = useState<Record<string, LegState>>({});
-  const [modes, setModes] = useState<Record<string, TravelMode>>({});
-  const requestedLegs = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement | null>(null);
 
   const open = Boolean(day);
@@ -161,84 +144,34 @@ export function DayRouteMapDialog({
     [located, positions]
   );
 
-  // Consecutive placed stops within a day; an unplaced stop is stepped over.
-  const pairs = useMemo(() => {
-    const result: Pair[] = [];
+  // Consecutive placed stops within a day joined by straight lines; an
+  // unplaced stop is stepped over.
+  const lines: Line[] = useMemo(() => {
+    const result: Line[] = [];
     for (const group of groups) {
-      let previous: Stop | null = null;
+      let previous: LatLng | null = null;
       for (const stop of group.stops) {
         if (!stop.position) continue;
-        if (previous?.position) {
+        if (previous) {
           result.push({
-            key: pairKey(previous.position, stop.position),
-            from: previous.position,
-            to: stop.position,
-            toId: stop.item.id,
-            color: group.color
+            color: group.color,
+            coordinates: [
+              [previous.lng, previous.lat],
+              [stop.position.lng, stop.position.lat]
+            ]
           });
         }
-        previous = stop;
+        previous = stop.position;
       }
     }
     return result;
   }, [groups]);
-
-  useEffect(() => {
-    for (const pair of pairs) {
-      if (requestedLegs.current.has(pair.key)) continue;
-      requestedLegs.current.add(pair.key);
-      setLegs((current) => ({ ...current, [pair.key]: { status: "loading", foot: null, car: null } }));
-      Promise.allSettled([fetchLeg(pair.from, pair.to, "foot"), fetchLeg(pair.from, pair.to, "car")]).then(
-        ([foot, car]) => {
-          const footLeg = foot.status === "fulfilled" ? foot.value : null;
-          const carLeg = car.status === "fulfilled" ? car.value : null;
-          if (!footLeg && !carLeg) requestedLegs.current.delete(pair.key);
-          setLegs((current) => ({
-            ...current,
-            [pair.key]: { status: footLeg || carLeg ? "ready" : "error", foot: footLeg, car: carLeg }
-          }));
-        }
-      );
-    }
-  }, [pairs]);
-
-  function modeFor(key: string): TravelMode {
-    return pickMode(legs[key], modes[key]);
-  }
-
-  const pairByDestination = useMemo(() => new Map(pairs.map((pair) => [pair.toId, pair])), [pairs]);
-
-  const lines: Line[] = useMemo(
-    () =>
-      pairs.map((pair) => {
-        const state = legs[pair.key];
-        const mode = pickMode(state, modes[pair.key]);
-        const leg = state?.status === "ready" ? state[mode] : null;
-        return leg
-          ? { color: pair.color, routed: true, coordinates: leg.geometry }
-          : {
-              color: pair.color,
-              routed: false,
-              coordinates: [
-                [pair.from.lng, pair.from.lat],
-                [pair.to.lng, pair.to.lat]
-              ]
-            };
-      }),
-    [pairs, legs, modes]
-  );
 
   function selectFromMap(id: string) {
     setSelectedId(id);
     listRef.current
       ?.querySelector(`[data-stop-id="${CSS.escape(id)}"]`)
       ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }
-
-  function formatDuration(seconds: number) {
-    const minutes = Math.max(1, Math.round(seconds / 60));
-    if (minutes < 60) return t("map.minutes", { m: minutes });
-    return t("map.hours", { h: Math.floor(minutes / 60), m: minutes % 60 });
   }
 
   const hasStops = groups.some((group) => group.stops.length);
@@ -347,21 +280,11 @@ export function DayRouteMapDialog({
                           {`${fmt.monthDay(new Date(group.day.date))} (${fmt.weekday(new Date(group.day.date).getDay())})`}
                         </h3>
                       ) : null}
-                      <ol className="flex flex-col">
+                      <ol className="flex flex-col gap-2">
                         {group.stops.map((stop) => {
-                          const pair = pairByDestination.get(stop.item.id);
                           const selected = selectedId === stop.item.id;
                           return (
                             <li key={stop.item.id} className="flex flex-col">
-                              {pair ? (
-                                <LegRow
-                                  state={legs[pair.key]}
-                                  mode={modeFor(pair.key)}
-                                  onMode={(mode) => setModes((current) => ({ ...current, [pair.key]: mode }))}
-                                  transitUrl={transitDirectionsUrl(pair.from, pair.to)}
-                                  formatDuration={formatDuration}
-                                />
-                              ) : null}
                               <div className="relative">
                               <button
                                 type="button"
@@ -468,67 +391,7 @@ export function DayRouteMapDialog({
   );
 }
 
-function LegRow({
-  state,
-  mode,
-  onMode,
-  transitUrl,
-  formatDuration
-}: {
-  state: LegState | undefined;
-  mode: TravelMode;
-  onMode: (mode: TravelMode) => void;
-  transitUrl: string;
-  formatDuration: (seconds: number) => string;
-}) {
-  const { t } = useLocale();
-  const options = (["foot", "car"] as const).filter((option) => state?.[option]);
-
-  function label(option: TravelMode) {
-    const leg = state?.[option];
-    if (!leg) return "";
-    const distance = leg.distance < 1000 ? `${Math.round(leg.distance / 10) * 10}m` : `${(leg.distance / 1000).toFixed(1)}km`;
-    return `${t(option === "foot" ? "map.walk" : "map.drive")} ${formatDuration(leg.duration)} · ${distance}`;
-  }
-
-  return (
-    <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted">
-      {!state || state.status === "loading" ? (
-        <span>{t("map.routing")}</span>
-      ) : state.status === "error" ? (
-        <span>{t("map.routeFailed")}</span>
-      ) : (
-        <label className="relative flex items-center">
-          <span className="sr-only">{t("map.travelMode")}</span>
-          <select
-            value={mode}
-            onChange={(event) => onMode(event.target.value as TravelMode)}
-            className="cursor-pointer appearance-none rounded-md bg-transparent py-1 pl-2 pr-6 text-xs font-semibold text-foreground/75 outline-none transition hover:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            {options.map((option) => (
-              <option key={option} value={option}>
-                {label(option)}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={14} className="pointer-events-none absolute right-1.5" aria-hidden="true" />
-        </label>
-      )}
-      <a
-        href={transitUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        title={t("map.transit")}
-        aria-label={t("map.transit")}
-        className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground/70 transition hover:bg-black/[0.04] hover:text-foreground"
-      >
-        <Route size={14} aria-hidden="true" />
-      </a>
-    </div>
-  );
-}
-
-type Line = { color: string; routed: boolean; coordinates: [number, number][] };
+type Line = { color: string; coordinates: [number, number][] };
 
 function RouteMap({
   groups,
@@ -584,24 +447,11 @@ function RouteMap({
         localizeLabels(map, language);
         map.addSource("route", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         map.addLayer({
-          id: "route-routed",
+          id: "route-line",
           type: "line",
           source: "route",
-          filter: ["==", ["get", "routed"], true],
           layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": ["get", "color"], "line-width": 4, "line-opacity": 0.85 }
-        });
-        map.addLayer({
-          id: "route-straight",
-          type: "line",
-          source: "route",
-          filter: ["==", ["get", "routed"], false],
-          paint: {
-            "line-color": ["get", "color"],
-            "line-width": 2.5,
-            "line-opacity": 0.7,
-            "line-dasharray": [2, 2]
-          }
+          paint: { "line-color": ["get", "color"], "line-width": 3, "line-opacity": 0.85 }
         });
         setLoaded(true);
       });
@@ -644,7 +494,7 @@ function RouteMap({
       type: "FeatureCollection",
       features: lines.map((line) => ({
         type: "Feature",
-        properties: { color: line.color, routed: line.routed },
+        properties: { color: line.color },
         geometry: { type: "LineString", coordinates: line.coordinates }
       }))
     });
