@@ -15,16 +15,9 @@ export function DisplayNameSection({ user, name, onSaved }: {
   onSaved: (user: User) => void;
 }) {
   const t = useT();
-  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  function startEditing() {
-    setDraft(name);
-    setError(null);
-    setEditing(true);
-  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -34,10 +27,6 @@ export function DisplayNameSection({ user, name, onSaved }: {
       setError(check.reason === "empty" ? t("account.name.empty")
         : check.reason === "too-long" ? t("account.name.tooLong", { max: String(DISPLAY_NAME_MAX) })
           : t("account.name.invalid"));
-      return;
-    }
-    if (check.name === name) {
-      setEditing(false);
       return;
     }
     const supabase = createSupabaseBrowserClient();
@@ -57,7 +46,7 @@ export function DisplayNameSection({ user, name, onSaved }: {
       // Same value as the trigger writes; RLS only allows a member's own row.
       await supabase.from("users").update({ name: check.name }).eq("id", user.id);
       onSaved(data.user);
-      setEditing(false);
+      setDraft(check.name);
       toast.success(t("account.name.saved"));
     } catch {
       setError(t("auth.error.generic"));
@@ -66,39 +55,35 @@ export function DisplayNameSection({ user, name, onSaved }: {
     }
   }
 
-  if (!editing) {
-    return (
-      <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-        {t("account.name.label")}
-        <span className="min-w-0 break-all font-medium text-foreground">{name}</span>
-        <button type="button" className="text-muted underline underline-offset-2 transition hover:text-foreground" onClick={startEditing}>
-          {t("account.name.edit")}
-        </button>
-      </p>
-    );
-  }
-
   return (
-    <form className="mt-5 text-sm" onSubmit={submit} noValidate>
-      <label htmlFor="display-name" className="text-muted">{t("account.name.label")}</label>
-      <div className="mt-2 flex max-w-sm gap-2">
-        <Input
-          id="display-name"
-          value={draft}
-          onChange={(event) => { setDraft(event.target.value); setError(null); }}
-          maxLength={DISPLAY_NAME_MAX * 2}
-          autoComplete="nickname"
-          autoFocus
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? "display-name-error" : undefined}
-          onKeyDown={(event) => { if (event.key === "Escape") setEditing(false); }}
-        />
-        <Button type="submit" disabled={saving}>{saving ? t("auth.submitting") : t("account.name.save")}</Button>
-        <Button type="button" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-          {t("account.name.cancel")}
+    <section aria-labelledby="change-name-title">
+      <h2 id="change-name-title" className="text-xl font-semibold text-foreground">
+        {t("account.name.title")}
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-muted">{t("account.name.body")}</p>
+
+      <form className="mt-6 flex max-w-lg flex-col gap-4" onSubmit={submit} noValidate>
+        <label className="flex flex-col gap-1.5 text-sm text-muted">
+          {t("account.name.label")}
+          <Input
+            value={draft}
+            onChange={(event) => { setDraft(event.target.value); setError(null); }}
+            maxLength={DISPLAY_NAME_MAX * 2}
+            autoComplete="nickname"
+            aria-invalid={Boolean(error)}
+            disabled={saving}
+          />
+          {error ? <span className="text-xs text-red-600" role="alert">{error}</span> : null}
+        </label>
+
+        <Button
+          type="submit"
+          className="mt-1 self-start"
+          disabled={saving || !draft.trim() || draft.trim() === name}
+        >
+          {saving ? t("auth.submitting") : t("account.name.save")}
         </Button>
-      </div>
-      {error ? <p id="display-name-error" className="mt-2 text-red-600" role="alert">{error}</p> : null}
-    </form>
+      </form>
+    </section>
   );
 }

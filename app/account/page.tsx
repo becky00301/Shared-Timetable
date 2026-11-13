@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Trash2 } from "lucide-react";
+import { KeyRound, Trash2, UserRound } from "lucide-react";
 import { ChangePasswordSection } from "@/components/account/ChangePasswordSection";
 import { DisplayNameSection } from "@/components/account/DisplayNameSection";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
@@ -15,7 +15,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { getSocialOnlyProvider, isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
 import type { User } from "@supabase/supabase-js";
 
-type AccountMenu = "password" | "delete";
+type AccountMenu = "name" | "password" | "delete";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -61,12 +61,14 @@ export default function AccountPage() {
         <header className="border-b border-border pb-7">
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("account.page.title")}</h1>
           <p className="mt-2 text-muted">{t("account.page.subtitle")}</p>
-          {user ? <DisplayNameSection user={user} name={displayName} onSaved={setUser} /> : null}
           {email ? (
-            <p className="mt-2 text-sm text-muted">
+            <p className="mt-5 text-sm text-muted">
               {t("account.page.email")}
               <span className="ml-3 font-medium text-foreground">{email}</span>
             </p>
+          ) : null}
+          {isNaver && user ? (
+            <p className="mt-5 text-sm text-muted">{naverName || naverAccountLabel(user.id)}</p>
           ) : null}
           {isNaver && user && (!naverName || naverName === naverAccountLabel(user.id))
             ? <NaverProfileNotice /> : null}
@@ -93,6 +95,22 @@ export default function AccountPage() {
             <button
               type="button"
               role="tab"
+              aria-selected={activeMenu === "name"}
+              aria-controls="account-panel"
+              className={cn(
+                "-mb-px flex h-12 items-center gap-2 border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                activeMenu === "name"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted hover:text-foreground"
+              )}
+              onClick={() => setActiveMenu("name")}
+            >
+              <UserRound size={16} />
+              {t("account.menu.name")}
+            </button>
+            <button
+              type="button"
+              role="tab"
               aria-selected={activeMenu === "delete"}
               aria-controls="account-panel"
               className={cn(
@@ -112,6 +130,8 @@ export default function AccountPage() {
         <div id="account-panel" role="tabpanel" className="py-8">
           {!user ? (
             <p className="text-sm text-muted">{t("common.loading")}</p>
+          ) : activeMenu === "name" ? (
+            <DisplayNameSection key={displayName} user={user} name={displayName} onSaved={setUser} />
           ) : activeMenu === "password" ? (
             socialProvider ? <p className="text-sm leading-6 text-muted">{t(socialProvider === "google" ? "account.google.security" : "account.naver.security")}</p>
               : email ? <ChangePasswordSection email={email} />

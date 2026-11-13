@@ -305,9 +305,12 @@ export const messages = {
   },
   "account.page.email": { ko: "로그인 이메일", en: "Sign-in email" },
   "account.name.label": { ko: "이름", en: "Name" },
-  "account.name.edit": { ko: "변경", en: "Edit" },
+  "account.name.title": { ko: "이름 변경", en: "Change name" },
+  "account.name.body": {
+    ko: "참여자 목록, 채팅, 커서 이름표에서 다른 사람에게 보이는 이름이에요.",
+    en: "This is the name others see in the participant list, chat and cursor name tags."
+  },
   "account.name.save": { ko: "저장", en: "Save" },
-  "account.name.cancel": { ko: "취소", en: "Cancel" },
   "account.name.saved": { ko: "이름을 변경했어요.", en: "Your name has been updated." },
   "account.name.empty": { ko: "이름을 입력해 주세요.", en: "Enter a name." },
   "account.name.tooLong": { ko: "이름은 {max}자까지 쓸 수 있어요.", en: "Names can be up to {max} characters." },
@@ -330,6 +333,7 @@ export const messages = {
     ko: "안전한 회원 탈퇴를 위해 {provider}로 다시 인증한 후 진행해 주세요.",
     en: "Verify with {provider} again before closing your account."
   },
+  "account.menu.name": { ko: "이름 변경", en: "Change name" },
   "account.menu.password": { ko: "비밀번호 변경", en: "Change password" },
   "account.menu.security": { ko: "로그인 정보", en: "Sign-in information" },
   "account.menu.delete": { ko: "회원 탈퇴", en: "Close account" },
