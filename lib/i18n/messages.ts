@@ -837,6 +837,7 @@ export const messages = {
   },
   "place.placeholder": { ko: "장소 이름 검색 (선택 입력)", en: "Search for a place (optional)" },
   "place.searching": { ko: "장소 찾는 중…", en: "Searching…" },
+  "place.searchingMore": { ko: "더 찾는 중…", en: "Looking for more…" },
   "place.searchFailed": {
     ko: "검색하지 못했어요. 엔터를 누르면 입력한 이름 그대로 저장돼요.",
     en: "Search failed. Press Enter to save the name as typed."

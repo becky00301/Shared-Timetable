@@ -22,46 +22,98 @@ export type PlaceSuggestion = {
 
 const LIMIT = 6;
 const REQUEST_TIMEOUT_MS = 8_000;
+// Photon sometimes takes tens of seconds. Past this it counts as "nothing from
+// OpenStreetMap" so Wikipedia's answer isn't held up behind it.
+const PHOTON_TIMEOUT_MS = 2_800;
+const WIKIDATA_TIMEOUT_MS = 4_000;
 const cache = new Map<string, PlaceSuggestion[]>();
 
-const HANGUL = /[가-힣]/;
+const HANGUL = /[\uac00-\ud7a3]/;
 
+/**
+ * Searches both sources at once and reports as each one answers, so a slow
+ * source never holds back a fast one. `onUpdate` gets the merged list so far
+ * and whether a source is still pending. Finished searches are remembered for
+ * the session, so retyping or backspacing to an earlier query is instant.
+ */
 export async function searchPlaces(
   query: string,
   bias: LatLng | null,
+  onUpdate: (places: PlaceSuggestion[], pending: boolean) => void,
   signal?: AbortSignal
-): Promise<PlaceSuggestion[]> {
+): Promise<void> {
   const trimmed = query.trim();
-  const key = `${trimmed.toLowerCase()}|${bias ? `${bias.lat.toFixed(1)},${bias.lng.toFixed(1)}` : ""}`;
+  const key = cacheKey(trimmed, bias);
   const cached = cache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    onUpdate(cached, false);
+    return;
+  }
 
   const korean = HANGUL.test(trimmed);
-  const [osm, wiki] = await Promise.all([
-    photon(trimmed, bias, signal).catch(rethrowAbort),
-    korean ? koreanWikipedia(trimmed, bias, signal).catch(rethrowAbort) : Promise.resolve([])
-  ]);
+  let osm: PlaceSuggestion[] = [];
+  let wiki: PlaceSuggestion[] = [];
+  let pending = korean ? 2 : 1;
 
   // A Korean query is usually the Korean name of a landmark, which Wikipedia
   // knows and OpenStreetMap often doesn't, so its hits lead.
+  const emit = () => {
+    if (signal?.aborted) return;
+    onUpdate(merge(korean ? [...wiki, ...osm] : [...osm, ...wiki]), pending > 0);
+  };
+
+  const fromOsm = photon(trimmed, bias, signal)
+    .catch(rethrowAbort)
+    .then((found) => {
+      osm = found;
+      pending -= 1;
+      emit();
+    });
+  const fromWiki = korean
+    ? koreanWikipedia(trimmed, bias, signal, (found) => {
+        wiki = found;
+        emit();
+      })
+        .catch(rethrowAbort)
+        .then((found) => {
+          wiki = found;
+          pending -= 1;
+          emit();
+        })
+    : Promise.resolve();
+
+  await Promise.all([fromOsm, fromWiki]);
+  if (!signal?.aborted) cache.set(key, merge(korean ? [...wiki, ...osm] : [...osm, ...wiki]));
+}
+
+function cacheKey(query: string, bias: LatLng | null) {
+  return `${query.trim().toLowerCase()}|${bias ? `${bias.lat.toFixed(1)},${bias.lng.toFixed(1)}` : ""}`;
+}
+
+/** A finished search for this query from earlier in the session, if any. */
+export function cachedPlaces(query: string, bias: LatLng | null): PlaceSuggestion[] | undefined {
+  return cache.get(cacheKey(query, bias));
+}
+
+function merge(candidates: PlaceSuggestion[]) {
   const merged: PlaceSuggestion[] = [];
-  for (const place of korean ? [...wiki, ...osm] : [...osm, ...wiki]) {
+  for (const place of candidates) {
     if (merged.some((kept) => distanceKm(kept, place) < 0.2)) continue;
     merged.push(place);
     if (merged.length >= LIMIT) break;
   }
-  cache.set(key, merged);
   return merged;
 }
 
 function rethrowAbort(error: unknown): PlaceSuggestion[] {
   if (error instanceof DOMException && error.name === "AbortError") throw error;
-  console.warn(error);
+  // A timeout or a failed request is simply no results from that source.
+  if (!(error instanceof DOMException && error.name === "TimeoutError")) console.warn(error);
   return [];
 }
 
-async function getJson(url: string, signal?: AbortSignal): Promise<unknown> {
-  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+async function getJson(url: string, signal?: AbortSignal, timeoutMs = REQUEST_TIMEOUT_MS): Promise<unknown> {
+  const timeout = AbortSignal.timeout(timeoutMs);
   const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
   if (!response.ok) throw new Error(`${response.status} ${url}`);
   return response.json();
@@ -81,7 +133,7 @@ async function photon(query: string, bias: LatLng | null, signal?: AbortSignal):
     params.set("zoom", "10");
     params.set("location_bias_scale", "0.5");
   }
-  const data = (await getJson(`https://photon.komoot.io/api/?${params}`, signal)) as {
+  const data = (await getJson(`https://photon.komoot.io/api/?${params}`, signal, PHOTON_TIMEOUT_MS)) as {
     features?: PhotonFeature[];
   };
   const results: PlaceSuggestion[] = [];
@@ -107,7 +159,12 @@ type WikiPage = {
   pageprops?: { wikibase_item?: string };
 };
 
-async function koreanWikipedia(query: string, bias: LatLng | null, signal?: AbortSignal): Promise<PlaceSuggestion[]> {
+async function koreanWikipedia(
+  query: string,
+  bias: LatLng | null,
+  signal: AbortSignal | undefined,
+  onEarly: (places: PlaceSuggestion[]) => void
+): Promise<PlaceSuggestion[]> {
   const params = new URLSearchParams({
     action: "query",
     format: "json",
@@ -124,32 +181,38 @@ async function koreanWikipedia(query: string, bias: LatLng | null, signal?: Abor
   };
   const pages = [...(data.query?.pages ?? [])].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 
-  // Many place articles carry their coordinates only on Wikidata. Pages with
-  // neither (people, events) simply drop out, which is what we want.
+  const toPlaces = (fromWikidata: Map<string, LatLng>) => {
+    const results: PlaceSuggestion[] = [];
+    for (const page of pages) {
+      const own = page.coordinates?.[0];
+      const point = own
+        ? { lat: own.lat, lng: own.lon }
+        : page.pageprops?.wikibase_item
+          ? fromWikidata.get(page.pageprops.wikibase_item)
+          : undefined;
+      if (!point) continue;
+      results.push({
+        id: page.pageprops?.wikibase_item ? `wikidata:${page.pageprops.wikibase_item}` : `kowiki:${page.title}`,
+        name: page.title,
+        address: page.description ?? "",
+        ...point
+      });
+    }
+    // Same-named landmarks on other continents sink below nearby ones.
+    if (bias) results.sort((a, b) => Number(distanceKm(a, bias) > 3000) - Number(distanceKm(b, bias) > 3000));
+    return results;
+  };
+
+  // Many place articles carry their coordinates only on Wikidata, whose query
+  // service can be slow, so the pages that have their own are shown first.
+  // Pages with neither (people, events) simply drop out.
   const missing = pages
     .filter((page) => !page.coordinates?.length && page.pageprops?.wikibase_item)
     .map((page) => page.pageprops!.wikibase_item!);
-  const fromWikidata = missing.length ? await wikidataCoordinates(missing, signal).catch(rethrowAbortMap) : new Map();
-
-  const results: PlaceSuggestion[] = [];
-  for (const page of pages) {
-    const own = page.coordinates?.[0];
-    const point = own
-      ? { lat: own.lat, lng: own.lon }
-      : page.pageprops?.wikibase_item
-        ? fromWikidata.get(page.pageprops.wikibase_item)
-        : undefined;
-    if (!point) continue;
-    results.push({
-      id: page.pageprops?.wikibase_item ? `wikidata:${page.pageprops.wikibase_item}` : `kowiki:${page.title}`,
-      name: page.title,
-      address: page.description ?? "",
-      ...point
-    });
-  }
-  // Same-named landmarks on other continents sink below nearby ones.
-  if (bias) results.sort((a, b) => Number(distanceKm(a, bias) > 3000) - Number(distanceKm(b, bias) > 3000));
-  return results;
+  if (!missing.length) return toPlaces(new Map());
+  onEarly(toPlaces(new Map()));
+  const fromWikidata = await wikidataCoordinates(missing, signal).catch(rethrowAbortMap);
+  return toPlaces(fromWikidata);
 }
 
 function rethrowAbortMap(error: unknown): Map<string, LatLng> {
@@ -161,7 +224,7 @@ async function wikidataCoordinates(ids: string[], signal?: AbortSignal): Promise
   const values = ids.filter((id) => /^Q\d+$/.test(id)).map((id) => `wd:${id}`).join(" ");
   const sparql = `SELECT ?item ?coord WHERE { VALUES ?item { ${values} } ?item wdt:P625 ?coord }`;
   const params = new URLSearchParams({ format: "json", query: sparql });
-  const data = (await getJson(`https://query.wikidata.org/sparql?${params}`, signal)) as {
+  const data = (await getJson(`https://query.wikidata.org/sparql?${params}`, signal, WIKIDATA_TIMEOUT_MS)) as {
     results?: { bindings?: Array<{ item?: { value: string }; coord?: { value: string } }> };
   };
   const found = new Map<string, LatLng>();

@@ -5,7 +5,7 @@ import { MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale";
 import type { LatLng } from "@/lib/maps/geocode";
-import { searchPlaces, type PlaceSuggestion } from "@/lib/maps/place-search";
+import { cachedPlaces, searchPlaces, type PlaceSuggestion } from "@/lib/maps/place-search";
 import { cn } from "@/lib/utils/cn";
 
 const DEBOUNCE_MS = 300;
@@ -57,21 +57,32 @@ export function LocationSearchInput({
       setStatus("idle");
       return;
     }
+    const known = cachedPlaces(trimmed, bias);
+    if (known) {
+      setResults(known);
+      setActive(-1);
+      setStatus("done");
+      return;
+    }
     const controller = new AbortController();
+    // The previous list stays up until this query's first answer replaces it.
     setStatus("loading");
     const timer = window.setTimeout(() => {
-      searchPlaces(trimmed, bias, controller.signal)
-        .then((found) => {
+      // Each source shows up as it answers; "loading" stays while one is out.
+      searchPlaces(
+        trimmed,
+        bias,
+        (found, pending) => {
           setResults(found);
-          setActive(-1);
-          setStatus("done");
-        })
-        .catch((error) => {
-          if (controller.signal.aborted) return;
-          console.warn(error);
-          setResults([]);
-          setStatus("error");
-        });
+          setActive((current) => (current < found.length ? current : -1));
+          setStatus(pending ? "loading" : "done");
+        },
+        controller.signal
+      ).catch((error) => {
+        if (controller.signal.aborted) return;
+        console.warn(error);
+        setStatus("error");
+      });
     }, DEBOUNCE_MS);
     return () => {
       window.clearTimeout(timer);
@@ -175,6 +186,11 @@ export function LocationSearchInput({
                   </span>
                 </li>
               ))}
+              {status === "loading" ? (
+                <li className="px-3 py-1.5 text-xs text-muted" aria-live="polite">
+                  {t("place.searchingMore")}
+                </li>
+              ) : null}
             </ul>
           )}
           <p className="border-t border-border px-3 py-1 text-[10px] text-muted/80">
