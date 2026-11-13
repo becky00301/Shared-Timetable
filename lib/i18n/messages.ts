@@ -304,6 +304,14 @@ export const messages = {
     en: "Manage your account information and security settings."
   },
   "account.page.email": { ko: "로그인 이메일", en: "Sign-in email" },
+  "account.name.label": { ko: "이름", en: "Name" },
+  "account.name.edit": { ko: "변경", en: "Edit" },
+  "account.name.save": { ko: "저장", en: "Save" },
+  "account.name.cancel": { ko: "취소", en: "Cancel" },
+  "account.name.saved": { ko: "이름을 변경했어요.", en: "Your name has been updated." },
+  "account.name.empty": { ko: "이름을 입력해 주세요.", en: "Enter a name." },
+  "account.name.tooLong": { ko: "이름은 {max}자까지 쓸 수 있어요.", en: "Names can be up to {max} characters." },
+  "account.name.invalid": { ko: "이름에 쓸 수 없는 문자가 있어요.", en: "Your name contains characters that can't be used." },
   "account.naver.profileMissing": {
     ko: "네이버에서 이름과 별명을 받지 못했어요. 표시 이름을 불러오려면 네이버 동의 화면에서 이름 또는 별명 제공을 허용해 주세요. 동의한 별명을 우선 사용하고, 별명이 없으면 이름을 사용해요.",
     en: "NAVER hasn't shared your name or nickname. To import a display name, allow your name or nickname on NAVER's consent screen. We use your nickname first, then your name."

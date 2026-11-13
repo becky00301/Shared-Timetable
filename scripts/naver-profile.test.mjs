@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fetchNaverDisplayName, naverProfileDisplayName, naverProfilePermissions, syncNaverDisplayName } from "../lib/auth/naver-profile.ts";
+import { fetchNaverDisplayName, naverProfileDisplayName, naverProfilePermissions, restoreChosenDisplayName, syncNaverDisplayName } from "../lib/auth/naver-profile.ts";
+import { CHOSEN_NAME_KEY, DISPLAY_NAME_MAX, checkDisplayName } from "../lib/auth/display-name.ts";
 
 const subject = "naver-verified-subject";
 const profile = (fields = {}) => ({ resultcode: "00", response: { id: subject, ...fields } });
@@ -97,4 +98,39 @@ test("reports safe failure codes so absent consent, mismatched identity and pers
   assert.equal(await syncNaverDisplayName(supabase, user, "test-token", async () => new Response(null, { status: 403 })), "request-failed");
   assert.equal(await syncNaverDisplayName(supabase, user, "test-token", async () => Response.json({ resultcode: "024" })), "invalid-response");
   assert.equal(await syncNaverDisplayName({ auth: { updateUser: async () => ({ error: { message: "private diagnostic details" } }) } }, user, "test-token", fetcher), "save-failed");
+});
+
+test("a name the member chose survives later NAVER and Google sign-ins", async () => {
+  assert.equal(CHOSEN_NAME_KEY, "chosen_name");
+  const updates = [];
+  const supabase = { auth: { updateUser: async (attributes) => { updates.push(attributes); return { error: null }; } } };
+  const noProfileRequest = async () => { assert.fail("chosen names must not be replaced by NAVER's"); };
+  // GoTrue rewrote `name` with NAVER's nickname at sign-in; the chosen one goes back.
+  const naverUser = { ...user, user_metadata: { name: "네이버별명", chosen_name: "내가 정한 이름" } };
+  assert.equal(await syncNaverDisplayName(supabase, naverUser, "test-token", noProfileRequest), "chosen-name");
+  assert.deepEqual(updates, [{ data: { name: "내가 정한 이름" } }]);
+  updates.length = 0;
+  assert.equal(await syncNaverDisplayName(supabase, { ...naverUser, user_metadata: { name: "내가 정한 이름", chosen_name: "내가 정한 이름" } }, "test-token", noProfileRequest), "chosen-name");
+  assert.deepEqual(updates, []);
+  const google = { id: "g", is_anonymous: false, app_metadata: { provider: "google" }, user_metadata: { name: "Google Name", chosen_name: "지호" } };
+  assert.equal(await restoreChosenDisplayName(supabase, google), "restored");
+  assert.deepEqual(updates, [{ data: { name: "지호" } }]);
+  updates.length = 0;
+  for (const other of [{ ...google, user_metadata: { name: "Google Name" } }, { ...google, is_anonymous: true },
+    { ...google, user_metadata: { name: "x", chosen_name: "bad\nname" } }]) {
+    assert.equal(await restoreChosenDisplayName(supabase, other), "skipped");
+  }
+  assert.deepEqual(updates, []);
+  assert.equal(await syncNaverDisplayName({ auth: { updateUser: async () => ({ error: { message: "x" } }) } }, naverUser, "t", noProfileRequest), "save-failed");
+});
+
+test("display names are trimmed, length-limited and free of control or bidi characters", () => {
+  assert.deepEqual(checkDisplayName("  권지호  "), { ok: true, name: "권지호" });
+  assert.deepEqual(checkDisplayName("   "), { ok: false, reason: "empty" });
+  assert.deepEqual(checkDisplayName("가".repeat(DISPLAY_NAME_MAX)), { ok: true, name: "가".repeat(DISPLAY_NAME_MAX) });
+  assert.deepEqual(checkDisplayName("가".repeat(DISPLAY_NAME_MAX + 1)), { ok: false, reason: "too-long" });
+  assert.equal(checkDisplayName("😀".repeat(DISPLAY_NAME_MAX)).ok, true);
+  for (const bad of ["줄\n바꿈", "탭\t이름", "널\u0000", "\u202Eevil", "a\u2066b"]) {
+    assert.deepEqual(checkDisplayName(bad), { ok: false, reason: "invalid" });
+  }
 });

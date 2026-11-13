@@ -79,6 +79,22 @@ async function fetchProfileResult(
   }
 }
 
+/** The name the member chose on the account page (user_metadata.chosen_name,
+ * see lib/auth/display-name.ts). Once set it always wins over provider names. */
+function chosenName(user: User): string | null {
+  return displayName(user.user_metadata?.chosen_name);
+}
+
+/** OAuth sign-ins can overwrite user_metadata.name with the provider's name.
+ * Put a member's chosen name back so the trigger copies it to public.users. */
+export async function restoreChosenDisplayName(supabase: Pick<SupabaseClient, "auth">, user: User) {
+  if (user.is_anonymous) return "skipped";
+  const name = chosenName(user);
+  if (!name || name === user.user_metadata.name) return "skipped";
+  const { error } = await supabase.auth.updateUser({ data: { name } });
+  return error ? "save-failed" : "restored";
+}
+
 export async function syncNaverDisplayName(
   supabase: Pick<SupabaseClient, "auth">,
   user: User,
@@ -86,6 +102,9 @@ export async function syncNaverDisplayName(
   fetchProfile: typeof fetch = fetch
 ) {
   if (user.is_anonymous || user.app_metadata.provider !== "custom:naver") return "skipped";
+  // A name the member chose themselves is never replaced by NAVER's.
+  if (chosenName(user)) return restoreChosenDisplayName(supabase, user).then((status) =>
+    status === "save-failed" ? status : "chosen-name");
   const identity = user.identities?.find((item) => item.provider === "custom:naver");
   if (!identity) return "missing-identity";
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Trash2 } from "lucide-react";
 import { ChangePasswordSection } from "@/components/account/ChangePasswordSection";
+import { DisplayNameSection } from "@/components/account/DisplayNameSection";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { NaverProfileNotice } from "@/components/account/NaverProfileNotice";
 import { AppShell } from "@/components/layout/AppShell";
@@ -24,6 +25,8 @@ export default function AccountPage() {
   const naverName = typeof user?.user_metadata.name === "string" ? user.user_metadata.name.trim() : "";
   const isNaver = isEmailLessNaverAccount(user);
   const socialProvider = getSocialOnlyProvider(user);
+  // Same fallbacks as public.users.name (handle_new_user) and the header.
+  const displayName = naverName || (user ? isNaver ? naverAccountLabel(user.id) : email?.split("@")[0] ?? "" : "");
   const [activeMenu, setActiveMenu] = useState<AccountMenu>("password");
 
   useEffect(() => {
@@ -58,14 +61,12 @@ export default function AccountPage() {
         <header className="border-b border-border pb-7">
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("account.page.title")}</h1>
           <p className="mt-2 text-muted">{t("account.page.subtitle")}</p>
+          {user ? <DisplayNameSection user={user} name={displayName} onSaved={setUser} /> : null}
           {email ? (
-            <p className="mt-5 text-sm text-muted">
+            <p className="mt-2 text-sm text-muted">
               {t("account.page.email")}
               <span className="ml-3 font-medium text-foreground">{email}</span>
             </p>
-          ) : null}
-          {isNaver && user ? (
-            <p className="mt-5 text-sm text-muted">{naverName || naverAccountLabel(user.id)}</p>
           ) : null}
           {isNaver && user && (!naverName || naverName === naverAccountLabel(user.id))
             ? <NaverProfileNotice /> : null}

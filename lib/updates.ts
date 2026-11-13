@@ -12,6 +12,10 @@ export const RELEASES: Release[] = [
     date: "2026-11-13",
     changes: [
       {
+        ko: { title: "마이페이지에서 이름 바꾸기", body: "마이페이지에서 내 이름 옆 '변경'을 눌러 다른 사람에게 보이는 이름을 바꿀 수 있어요. 참여자 목록과 채팅, 커서 이름표에 바뀐 이름이 보여요. 네이버·구글로 다시 로그인해도 직접 정한 이름이 유지돼요." },
+        en: { title: "Change your name in My account", body: "Tap Edit next to your name in My account to change the name others see. The new name shows in the participant list, chat and cursor name tags, and stays even after you sign in with NAVER or Google again." }
+      },
+      {
         ko: { title: "공유 링크 새로 만들기", body: "시간표 공유 창에서 소유자가 링크를 새로 만들 수 있어요. 내보낸 사람이 예전 링크로 다시 들어오지 못해요. 이미 참여한 사람은 그대로예요." },
         en: { title: "Make a new share link", body: "In the share window, a timetable's owner can now make a new link, so someone you removed can't come back through the old one. People already in the timetable stay." }
       },

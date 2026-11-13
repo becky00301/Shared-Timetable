@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSafeNextPath } from "@/lib/utils/navigation";
-import { naverProfilePermissions, syncNaverDisplayName } from "@/lib/auth/naver-profile";
+import { naverProfilePermissions, restoreChosenDisplayName, syncNaverDisplayName } from "@/lib/auth/naver-profile";
 import { AUTH_EVENT_COOKIE, authMethodFromProvider } from "@/lib/analytics";
 
 export async function GET(request: Request) {
@@ -35,6 +35,8 @@ export async function GET(request: Request) {
           .catch(() => "unexpected-error");
         // Fixed status codes only: never log names, subjects or OAuth tokens.
         if (status !== "skipped") console.info("[naver-profile]", status);
+        // Other providers (Google) can also rewrite the name at sign-in.
+        else await restoreChosenDisplayName(supabase, data.user).catch(() => null);
         if (status === "name-not-provided" && data.session?.provider_token) {
           console.info("[naver-profile-permissions]", await naverProfilePermissions(data.session.provider_token));
         }
