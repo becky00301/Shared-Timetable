@@ -9,15 +9,17 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale";
 import { useProjectStore } from "@/stores/project-store";
 import { isEmailLessNaverAccount, naverAccountLabel } from "@/lib/auth/social-account";
+import { CHOSEN_NAME_KEY } from "@/lib/auth/display-name";
 import type { User } from "@supabase/supabase-js";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const t = useT();
-  const [user, setUser] = useState<{ email: string | null; name: string | null; isGuest: boolean; isNaver: boolean; id: string } | null>(null);
+  const [user, setUser] = useState<{ email: string | null; name: string | null; chosenName: string | null; isGuest: boolean; isNaver: boolean; id: string } | null>(null);
   const supabase = createSupabaseBrowserClient();
   const signedIn = Boolean(user);
-  const label = user?.isGuest ? t("guest.badge") : user?.email ||
+  // A name chosen on the account page comes first, then the sign-in email.
+  const label = user?.isGuest ? t("guest.badge") : user?.chosenName || user?.email ||
     (user?.isNaver ? user.name || naverAccountLabel(user.id) : t("account.page.title"));
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const read = (u: User | null) => u ? {
       email: u.email ?? null,
       name: typeof u.user_metadata.name === "string" ? u.user_metadata.name.trim() : null,
+      chosenName: typeof u.user_metadata[CHOSEN_NAME_KEY] === "string" ? u.user_metadata[CHOSEN_NAME_KEY].trim() || null : null,
       isGuest: Boolean(u.is_anonymous),
       isNaver: isEmailLessNaverAccount(u), id: u.id
     } : null;

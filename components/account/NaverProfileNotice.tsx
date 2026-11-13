@@ -28,7 +28,7 @@ export function NaverProfileNotice() {
 
   return (
     <div className="mt-4 rounded-xl border border-border bg-card p-4 text-sm">
-      <p className="leading-6 text-muted">{t("account.naver.profileMissing")}</p>
+      <p className="leading-6 text-muted [:lang(en)_&]:leading-[1.4]">{t("account.naver.profileMissing")}</p>
       <Button className="mt-3" size="sm" variant="outline" onClick={importName} disabled={loading}>
         {loading ? t("auth.submitting") : t("account.naver.importName")}
       </Button>

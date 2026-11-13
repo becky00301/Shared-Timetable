@@ -105,7 +105,7 @@ export function DeleteAccountSection({ socialProvider = null }: { socialProvider
   return (
     <section className="rounded-lg border border-red-500/25 bg-red-500/[0.03] p-5">
       <h2 className="text-base font-semibold text-foreground">{t("account.danger.title")}</h2>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{t("account.danger.body")}</p>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted [:lang(en)_&]:leading-[1.4]">{t("account.danger.body")}</p>
       <Button
         variant="danger"
         size="sm"

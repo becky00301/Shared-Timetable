@@ -60,7 +60,7 @@ export default function AccountPage() {
       <main className="mx-auto max-w-5xl px-5 py-10">
         <header className="border-b border-border pb-7">
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-foreground">{t("account.page.title")}</h1>
-          <p className="mt-2 text-muted">{t("account.page.subtitle")}</p>
+          <p className="mt-2 text-muted [:lang(en)_&]:leading-[1.4]">{t("account.page.subtitle")}</p>
           {email ? (
             <p className="mt-5 text-sm text-muted">
               {t("account.page.email")}
@@ -74,15 +74,16 @@ export default function AccountPage() {
             ? <NaverProfileNotice /> : null}
         </header>
 
-        <div className="mt-7 border-b border-border">
-          <div className="flex gap-6" role="tablist" aria-label={t("account.page.title")}>
+        {/* On phones the tabs scroll sideways instead of wrapping their labels. */}
+        <div className="mt-7 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max min-w-full gap-6 border-b border-border" role="tablist" aria-label={t("account.page.title")}>
             <button
               type="button"
               role="tab"
               aria-selected={activeMenu === "password"}
               aria-controls="account-panel"
               className={cn(
-                "-mb-px flex h-12 items-center gap-2 border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                "-mb-px flex h-12 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                 activeMenu === "password"
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted hover:text-foreground"
@@ -98,7 +99,7 @@ export default function AccountPage() {
               aria-selected={activeMenu === "name"}
               aria-controls="account-panel"
               className={cn(
-                "-mb-px flex h-12 items-center gap-2 border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                "-mb-px flex h-12 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                 activeMenu === "name"
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted hover:text-foreground"
@@ -114,7 +115,7 @@ export default function AccountPage() {
               aria-selected={activeMenu === "delete"}
               aria-controls="account-panel"
               className={cn(
-                "-mb-px flex h-12 items-center gap-2 border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                "-mb-px flex h-12 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                 activeMenu === "delete"
                   ? "border-red-500 text-foreground"
                   : "border-transparent text-muted hover:text-foreground"
@@ -133,7 +134,7 @@ export default function AccountPage() {
           ) : activeMenu === "name" ? (
             <DisplayNameSection key={displayName} user={user} name={displayName} onSaved={setUser} />
           ) : activeMenu === "password" ? (
-            socialProvider ? <p className="text-sm leading-6 text-muted">{t(socialProvider === "google" ? "account.google.security" : "account.naver.security")}</p>
+            socialProvider ? <p className="text-sm leading-6 text-muted [:lang(en)_&]:leading-[1.4]">{t(socialProvider === "google" ? "account.google.security" : "account.naver.security")}</p>
               : email ? <ChangePasswordSection email={email} />
                 : <p className="text-sm text-muted">{t("auth.error.generic")}</p>
           ) : (

@@ -64,7 +64,7 @@ export function ChangePasswordSection({ email }: { email: string }) {
       <h2 id="change-password-title" className="text-xl font-semibold text-foreground">
         {t("account.change.title")}
       </h2>
-      <p className="mt-2 text-sm leading-6 text-muted">{t("account.change.body")}</p>
+      <p className="mt-2 text-sm leading-6 text-muted [:lang(en)_&]:leading-[1.4]">{t("account.change.body")}</p>
 
       <form className="mt-6 flex max-w-lg flex-col gap-4" onSubmit={submit}>
         <label className="flex flex-col gap-1.5 text-sm text-muted">
