@@ -33,26 +33,6 @@ export type ScheduleItem = {
 /** A picked place's position and where it came from. */
 export type LocationPoint = { lat: number; lng: number; placeId: string | null };
 
-export type AvailabilitySlot = {
-  id: string;
-  project_id: string;
-  user_id: string;
-  day_id: string;
-  start_time: string;
-  end_time: string;
-  created_at: string;
-};
-
-export type Attachment = {
-  id: string;
-  project_id: string;
-  schedule_item_id: string;
-  type: "link" | "image" | "pdf" | "map";
-  url: string;
-  title?: string | null;
-  created_at: string;
-};
-
 export type DraftSelection = {
   day_id: string;
   start_time: string;

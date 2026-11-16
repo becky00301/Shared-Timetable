@@ -199,50 +199,6 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["schedule_items"]["Insert"]>;
         Relationships: [];
       };
-      availability: {
-        Row: {
-          id: string;
-          project_id: string;
-          user_id: string;
-          day_id: string;
-          start_time: string;
-          end_time: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          project_id: string;
-          user_id: string;
-          day_id: string;
-          start_time: string;
-          end_time: string;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["availability"]["Insert"]>;
-        Relationships: [];
-      };
-      attachments: {
-        Row: {
-          id: string;
-          project_id: string;
-          schedule_item_id: string;
-          type: "link" | "image" | "pdf" | "map";
-          url: string;
-          title: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          project_id: string;
-          schedule_item_id: string;
-          type: "link" | "image" | "pdf" | "map";
-          url: string;
-          title?: string | null;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["attachments"]["Insert"]>;
-        Relationships: [];
-      };
     };
     Views: Record<string, never>;
     Functions: {

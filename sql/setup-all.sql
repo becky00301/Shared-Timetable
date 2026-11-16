@@ -279,27 +279,6 @@ alter table public.schedule_items
     and (location_place_id is null or length(location_place_id) <= 100)
   );
 
-create table if not exists public.availability (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  user_id uuid not null references public.users(id) on delete cascade,
-  day_id uuid not null references public.project_days(id) on delete cascade,
-  start_time time not null,
-  end_time time not null,
-  created_at timestamptz not null default now(),
-  check (end_time > start_time)
-);
-
-create table if not exists public.attachments (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  schedule_item_id uuid not null references public.schedule_items(id) on delete cascade,
-  type text not null check (type in ('link', 'image', 'pdf', 'map')),
-  url text not null,
-  title text,
-  created_at timestamptz not null default now()
-);
-
 create index if not exists projects_owner_idx on public.projects(owner_id);
 create index if not exists projects_slug_idx on public.projects(slug);
 create index if not exists projects_invite_token_idx on public.projects(invite_token);
@@ -307,8 +286,6 @@ create unique index if not exists projects_embed_token_idx on public.projects(em
 create index if not exists project_members_project_idx on public.project_members(project_id);
 create index if not exists project_days_project_idx on public.project_days(project_id, sort_order);
 create index if not exists schedule_items_project_day_idx on public.schedule_items(project_id, day_id);
-create index if not exists availability_project_day_idx on public.availability(project_id, day_id);
-create index if not exists attachments_schedule_idx on public.attachments(schedule_item_id);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -387,12 +364,6 @@ begin
   end if;
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'availability'
-  ) then
-    alter publication supabase_realtime add table public.availability;
-  end if;
-  if not exists (
-    select 1 from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_members'
   ) then
     alter publication supabase_realtime add table public.project_members;
@@ -415,7 +386,6 @@ end $$;
 -- subscription filtered on project_id would never match a DELETE event.
 alter table public.schedule_items replica identity full;
 alter table public.project_days replica identity full;
-alter table public.availability replica identity full;
 alter table public.project_members replica identity full;
 alter table public.project_expenses replica identity full;
 
@@ -495,8 +465,6 @@ alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
 alter table public.project_days enable row level security;
 alter table public.schedule_items enable row level security;
-alter table public.availability enable row level security;
-alter table public.attachments enable row level security;
 
 create or replace function public.project_role(project_uuid uuid)
 returns text
@@ -659,19 +627,6 @@ to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
 
-drop policy if exists "members read availability" on public.availability;
-create policy "members read availability"
-on public.availability for select
-to authenticated
-using (public.is_project_member(project_id));
-
-drop policy if exists "editors manage own availability" on public.availability;
-create policy "editors manage own availability"
-on public.availability for all
-to authenticated
-using (public.can_edit_project(project_id) and user_id = auth.uid())
-with check (public.can_edit_project(project_id) and user_id = auth.uid());
-
 alter table public.project_notes enable row level security;
 
 drop policy if exists "members read project notes" on public.project_notes;
@@ -698,19 +653,6 @@ using (public.is_project_member(project_id));
 drop policy if exists "editors manage project expenses" on public.project_expenses;
 create policy "editors manage project expenses"
 on public.project_expenses for all
-to authenticated
-using (public.can_edit_project(project_id))
-with check (public.can_edit_project(project_id));
-
-drop policy if exists "members read attachments" on public.attachments;
-create policy "members read attachments"
-on public.attachments for select
-to authenticated
-using (public.is_project_member(project_id));
-
-drop policy if exists "editors manage attachments" on public.attachments;
-create policy "editors manage attachments"
-on public.attachments for all
 to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
@@ -814,9 +756,7 @@ grant select, insert, update, delete on table
   public.project_days,
   public.project_notes,
   public.project_expenses,
-  public.schedule_items,
-  public.availability,
-  public.attachments
+  public.schedule_items
 to authenticated;
 
 revoke execute on function public.project_role(uuid) from public, anon;
@@ -1047,13 +987,6 @@ begin
     insert into public.project_members (project_id, user_id, role)
     values (target.id, claimer, 'owner')
     on conflict (project_id, user_id) do update set role = 'owner';
-
-    -- The guest's own availability belongs to the person, not to the
-    -- discarded account, so it follows them across.
-    update public.availability
-    set user_id = claimer
-    where project_id = target.id
-      and user_id = guest;
   end loop;
 
   if first_slug is null then

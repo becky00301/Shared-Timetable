@@ -105,10 +105,8 @@ export function TimetableGrid({
   weekdayOnly?: boolean;
 }) {
   const schedules = useProjectStore((state) => state.schedules).filter((item) => item.project_id === projectId);
-  const availability = useProjectStore((state) => state.availability).filter((slot) => slot.project_id === projectId);
   const upsertSchedule = useProjectStore((state) => state.upsertSchedule);
   const deleteSchedule = useProjectStore((state) => state.deleteSchedule);
-  const addAvailability = useProjectStore((state) => state.addAvailability);
   const updateDayWakeTime = useProjectStore((state) => state.updateDayWakeTime);
   const selectedScheduleId = useUiStore((state) => state.selectedScheduleId);
   const setSelectedSchedule = useUiStore((state) => state.setSelectedSchedule);
@@ -335,26 +333,6 @@ export function TimetableGrid({
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", cleanup);
-      return;
-    }
-
-    if (activeMode === "availability") {
-      const onUp = (upEvent: PointerEvent) => {
-        const end = timeToMinutes(pointerYToTime(upEvent.clientY - rect.top, hourHeight));
-        addAvailability({
-          project_id: projectId,
-          day_id: dayId,
-          start_time: minutesToTime(Math.min(anchor, end)),
-          end_time: minutesToTime(Math.max(anchor + MIN_DURATION_MINUTES, end))
-        })
-          .then(() => toast.success("Availability added."))
-          .catch((error) => {
-            console.error(error);
-            toast.error("Could not save availability.");
-          });
-        window.removeEventListener("pointerup", onUp);
-      };
-      window.addEventListener("pointerup", onUp);
       return;
     }
 
@@ -798,14 +776,12 @@ export function TimetableGrid({
                   nextDay={days[dayIndex + 1] ?? null}
                   canEdit={canEdit}
                   activeMode={activeMode}
-                  memberCount={members.length}
                   width={colWidth}
                   hourHeight={hourHeight}
                   selectedScheduleId={selectedScheduleId}
                   armedScheduleId={armedId}
                   schedules={timedByDay.get(day.id)?.items ?? []}
                   segments={timedByDay.get(day.id)?.segments}
-                  availability={availability.filter((slot) => slot.day_id === day.id)}
                   draft={draftPieceFor(dayIndex)}
                   peerDrafts={peerDrafts.filter((peer) => peer.dayId === day.id)}
                   onDraftCommit={commitDraft}

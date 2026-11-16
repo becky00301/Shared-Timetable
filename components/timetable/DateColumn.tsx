@@ -1,7 +1,6 @@
 "use client";
 
 import { Moon } from "lucide-react";
-import { AvailabilityHeatmap } from "@/components/availability/AvailabilityHeatmap";
 import { DraftScheduleBlock } from "@/components/timetable/DraftScheduleBlock";
 import { PeerDraftBlock } from "@/components/timetable/PeerDraftBlock";
 import { ScheduleBlock } from "@/components/timetable/ScheduleBlock";
@@ -11,7 +10,7 @@ import { useT } from "@/lib/i18n/locale";
 import type { PeerDraft } from "@/lib/supabase/cursors";
 import type { ProjectDay } from "@/types/project";
 import type { DaySegment } from "@/lib/utils/schedule-span";
-import type { AvailabilitySlot, ScheduleItem } from "@/types/schedule";
+import type { ScheduleItem } from "@/types/schedule";
 
 type PositionedSchedule = {
   item: ScheduleItem;
@@ -77,8 +76,6 @@ export function DateColumn({
   nextDay,
   schedules,
   segments = {},
-  availability,
-  memberCount,
   activeMode,
   selectedScheduleId,
   armedScheduleId,
@@ -99,9 +96,7 @@ export function DateColumn({
   schedules: ScheduleItem[];
   /** For events that run past midnight: the part of each on this date. */
   segments?: Record<string, DaySegment>;
-  availability: AvailabilitySlot[];
-  memberCount: number;
-  activeMode: "schedule" | "availability" | "wake";
+  activeMode: "schedule" | "wake";
   selectedScheduleId: string | null;
   armedScheduleId: string | null;
   canEdit: boolean;
@@ -192,12 +187,6 @@ export function DateColumn({
             </div>
           </div>
         ) : null}
-        <AvailabilityHeatmap
-          active={activeMode === "availability"}
-          slots={availability}
-          memberCount={memberCount}
-          hourHeight={hourHeight}
-        />
         {positionedSchedules.map(({ item, lane, laneCount }) => (
           <ScheduleBlock
             key={item.id}

@@ -279,27 +279,6 @@ alter table public.schedule_items
     and (location_place_id is null or length(location_place_id) <= 100)
   );
 
-create table if not exists public.availability (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  user_id uuid not null references public.users(id) on delete cascade,
-  day_id uuid not null references public.project_days(id) on delete cascade,
-  start_time time not null,
-  end_time time not null,
-  created_at timestamptz not null default now(),
-  check (end_time > start_time)
-);
-
-create table if not exists public.attachments (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  schedule_item_id uuid not null references public.schedule_items(id) on delete cascade,
-  type text not null check (type in ('link', 'image', 'pdf', 'map')),
-  url text not null,
-  title text,
-  created_at timestamptz not null default now()
-);
-
 create index if not exists projects_owner_idx on public.projects(owner_id);
 create index if not exists projects_slug_idx on public.projects(slug);
 create index if not exists projects_invite_token_idx on public.projects(invite_token);
@@ -307,8 +286,6 @@ create unique index if not exists projects_embed_token_idx on public.projects(em
 create index if not exists project_members_project_idx on public.project_members(project_id);
 create index if not exists project_days_project_idx on public.project_days(project_id, sort_order);
 create index if not exists schedule_items_project_day_idx on public.schedule_items(project_id, day_id);
-create index if not exists availability_project_day_idx on public.availability(project_id, day_id);
-create index if not exists attachments_schedule_idx on public.attachments(schedule_item_id);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -387,12 +364,6 @@ begin
   end if;
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'availability'
-  ) then
-    alter publication supabase_realtime add table public.availability;
-  end if;
-  if not exists (
-    select 1 from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_members'
   ) then
     alter publication supabase_realtime add table public.project_members;
@@ -415,7 +386,6 @@ end $$;
 -- subscription filtered on project_id would never match a DELETE event.
 alter table public.schedule_items replica identity full;
 alter table public.project_days replica identity full;
-alter table public.availability replica identity full;
 alter table public.project_members replica identity full;
 alter table public.project_expenses replica identity full;
 

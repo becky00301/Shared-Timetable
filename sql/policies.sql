@@ -3,8 +3,6 @@ alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
 alter table public.project_days enable row level security;
 alter table public.schedule_items enable row level security;
-alter table public.availability enable row level security;
-alter table public.attachments enable row level security;
 
 create or replace function public.project_role(project_uuid uuid)
 returns text
@@ -167,19 +165,6 @@ to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
 
-drop policy if exists "members read availability" on public.availability;
-create policy "members read availability"
-on public.availability for select
-to authenticated
-using (public.is_project_member(project_id));
-
-drop policy if exists "editors manage own availability" on public.availability;
-create policy "editors manage own availability"
-on public.availability for all
-to authenticated
-using (public.can_edit_project(project_id) and user_id = auth.uid())
-with check (public.can_edit_project(project_id) and user_id = auth.uid());
-
 alter table public.project_notes enable row level security;
 
 drop policy if exists "members read project notes" on public.project_notes;
@@ -206,19 +191,6 @@ using (public.is_project_member(project_id));
 drop policy if exists "editors manage project expenses" on public.project_expenses;
 create policy "editors manage project expenses"
 on public.project_expenses for all
-to authenticated
-using (public.can_edit_project(project_id))
-with check (public.can_edit_project(project_id));
-
-drop policy if exists "members read attachments" on public.attachments;
-create policy "members read attachments"
-on public.attachments for select
-to authenticated
-using (public.is_project_member(project_id));
-
-drop policy if exists "editors manage attachments" on public.attachments;
-create policy "editors manage attachments"
-on public.attachments for all
 to authenticated
 using (public.can_edit_project(project_id))
 with check (public.can_edit_project(project_id));
@@ -322,9 +294,7 @@ grant select, insert, update, delete on table
   public.project_days,
   public.project_notes,
   public.project_expenses,
-  public.schedule_items,
-  public.availability,
-  public.attachments
+  public.schedule_items
 to authenticated;
 
 revoke execute on function public.project_role(uuid) from public, anon;
@@ -555,13 +525,6 @@ begin
     insert into public.project_members (project_id, user_id, role)
     values (target.id, claimer, 'owner')
     on conflict (project_id, user_id) do update set role = 'owner';
-
-    -- The guest's own availability belongs to the person, not to the
-    -- discarded account, so it follows them across.
-    update public.availability
-    set user_id = claimer
-    where project_id = target.id
-      and user_id = guest;
   end loop;
 
   if first_slug is null then

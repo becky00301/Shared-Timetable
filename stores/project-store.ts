@@ -23,7 +23,7 @@ import type {
   ProjectMember,
   ProjectNote
 } from "@/types/project";
-import type { Attachment, AvailabilitySlot, LocationPoint, ScheduleItem } from "@/types/schedule";
+import type { LocationPoint, ScheduleItem } from "@/types/schedule";
 
 type ProjectStore = {
   currentUserId: string | null;
@@ -39,8 +39,6 @@ type ProjectStore = {
   days: ProjectDay[];
   members: ProjectMember[];
   schedules: ScheduleItem[];
-  availability: AvailabilitySlot[];
-  attachments: Attachment[];
   notes: ProjectNote[];
   /** Spending recorded outside the timetable. Summed with schedule amounts to
       give what the project has actually spent. */
@@ -111,7 +109,6 @@ type ProjectStore = {
       clears it so the route map guesses from the typed label. Resolves false,
       without throwing, on a database that predates the location columns. */
   setScheduleLocationPoint: (itemId: string, point: LocationPoint | null) => Promise<boolean>;
-  addAvailability: (slot: Omit<AvailabilitySlot, "id" | "created_at" | "user_id">) => Promise<void>;
   reset: () => void;
   joinByInviteToken: (token: string) => Promise<string>;
   updateMemberRole: (memberId: string, role: "editor" | "viewer") => Promise<void>;
@@ -282,8 +279,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   days: [],
   members: [],
   schedules: [],
-  availability: [],
-  attachments: [],
   notes: [],
   expenses: [],
   budgetSchemaMissing: false,
@@ -392,16 +387,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         daysRes,
         membersRes,
         schedulesRes,
-        availabilityRes,
-        attachmentsRes,
         notesRes,
         expensesRes
       ] = await Promise.all([
           supabase.from("project_days").select("*").eq("project_id", project.id),
           supabase.from("project_members").select("*, user:users(*)").eq("project_id", project.id),
           supabase.from("schedule_items").select("*").eq("project_id", project.id),
-          supabase.from("availability").select("*").eq("project_id", project.id),
-          supabase.from("attachments").select("*").eq("project_id", project.id),
           supabase
             .from("project_notes")
             .select("*")
@@ -417,8 +408,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (daysRes.error) throw daysRes.error;
       if (membersRes.error) throw membersRes.error;
       if (schedulesRes.error) throw schedulesRes.error;
-      if (availabilityRes.error) throw availabilityRes.error;
-      if (attachmentsRes.error) throw attachmentsRes.error;
       if (notesRes.error) throw notesRes.error;
       // Only a database that predates migration 015 is allowed to come back
       // empty here; any other failure is a real one.
@@ -448,14 +437,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         schedules: [
           ...state.schedules.filter((s) => s.project_id !== project.id),
           ...loadedSchedules
-        ],
-        availability: [
-          ...state.availability.filter((a) => a.project_id !== project.id),
-          ...((availabilityRes.data ?? []) as AvailabilitySlot[])
-        ],
-        attachments: [
-          ...state.attachments.filter((a) => a.project_id !== project.id),
-          ...((attachmentsRes.data ?? []) as Attachment[])
         ],
         notes: [
           ...state.notes.filter((n) => n.project_id !== project.id),
@@ -817,8 +798,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!data?.length) throw new Error(translate("error.deleteDenied"));
     set((state) => ({
       days: state.days.filter((day) => day.id !== dayId),
-      schedules: state.schedules.filter((item) => item.day_id !== dayId),
-      availability: state.availability.filter((slot) => slot.day_id !== dayId)
+      schedules: state.schedules.filter((item) => item.day_id !== dayId)
     }));
   },
 
@@ -856,8 +836,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
     set((state) => ({
       days: [...state.days.filter((day) => day.project_id !== projectId), ...survivors],
-      schedules: state.schedules.filter((item) => !droppedIds.has(item.day_id)),
-      availability: state.availability.filter((slot) => !droppedIds.has(slot.day_id))
+      schedules: state.schedules.filter((item) => !droppedIds.has(item.day_id))
     }));
 
     if (survivors.length) {
@@ -1039,8 +1018,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (scheduleHistory[index].after.id === itemId) scheduleHistory.splice(index, 1);
     }
     set((state) => ({
-      schedules: state.schedules.filter((item) => item.id !== itemId),
-      attachments: state.attachments.filter((item) => item.schedule_item_id !== itemId)
+      schedules: state.schedules.filter((item) => item.id !== itemId)
     }));
   },
 
@@ -1129,19 +1107,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     await supabase.storage.from(SCHEDULE_PHOTO_BUCKET).remove([item.image_path]);
   },
 
-  addAvailability: async (slot) => {
-    const supabase = requireClient();
-    const userId = get().currentUserId ?? (await get().loadCurrentUser());
-    if (!userId) throw new Error("Not authenticated.");
-    const { data, error } = await supabase
-      .from("availability")
-      .insert({ ...slot, user_id: userId })
-      .select("*")
-      .single();
-    if (error) throw error;
-    set((state) => ({ availability: [...state.availability, data as AvailabilitySlot] }));
-  },
-
   // Wipe cached project data so a signed-out user never sees the previous
   // account's timetables lingering in memory.
   reset: () => {
@@ -1158,8 +1123,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       days: [],
       members: [],
       schedules: [],
-      availability: [],
-      attachments: [],
       notes: [],
       expenses: [],
       budgetSchemaMissing: false
