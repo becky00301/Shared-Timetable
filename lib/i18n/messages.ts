@@ -992,6 +992,7 @@ export const messages = {
   "photo.label": { ko: "사진", en: "Photo" },
   "photo.focusHint": { ko: "사진에서 보여줄 곳을 눌러 주세요", en: "Tap the part of the photo to keep in view" },
   "photo.focusReset": { ko: "가운데로", en: "Centre" },
+  "photo.viewFull": { ko: "사진 크게 보기", en: "View photo full screen" },
   "photo.focusFailed": { ko: "초점을 저장하지 못했어요.", en: "Couldn't save the focal point." },
   "photo.focusNotMigrated": {
     ko: "초점을 저장하려면 데이터베이스 업데이트가 필요해요.",

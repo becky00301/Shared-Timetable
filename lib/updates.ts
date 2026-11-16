@@ -9,6 +9,15 @@ export type Release = { date: string; changes: { ko: Change; en: Change; image?:
 
 export const RELEASES: Release[] = [
   {
+    date: "2026-11-16",
+    changes: [
+      {
+        ko: { title: "일정 사진 크게 보기", body: "일정 상세의 사진 미리보기에서 확대 버튼을 누르면 사진이 전체 화면으로 열려요. 표·예약 확인 사진도 나중에 다시 읽을 수 있어요. 폰에서는 두 손가락으로 확대하고, 두 번 탭하면 확대·원래 크기로 바뀌어요. 공유 링크에서는 사진이 있는 일정 박스를 누르면 바로 열려요." },
+        en: { title: "View event photos full screen", body: "Tap the expand button on an event photo's preview to open it full screen, so a saved ticket or booking can be read again later. On a phone, pinch to zoom and double-tap to switch between zoomed and fitted. In shared links, tap an event box with a photo to open it." }
+      }
+    ]
+  },
+  {
     date: "2026-11-13",
     changes: [
       {

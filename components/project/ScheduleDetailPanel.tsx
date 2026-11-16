@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ImagePlus, X, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ImagePlus, Maximize2, X, Trash2 } from "lucide-react";
+import { PhotoViewer } from "@/components/photo/PhotoViewer";
 import { toast } from "sonner";
 import { Switch } from "@appica/ui-react/switch";
 import { LocationSearchInput } from "@/components/project/LocationSearchInput";
@@ -18,7 +19,7 @@ import {
 } from "@/lib/utils/money";
 import { SCHEDULE_COLOR_GROUPS } from "@/lib/utils/schedule-colors";
 import { absoluteSpan, fromAbsoluteSpan } from "@/lib/utils/schedule-span";
-import { nextFreeHour, timeToMinutes } from "@/lib/utils/time";
+import { formatTimeRange, nextFreeHour, timeToMinutes } from "@/lib/utils/time";
 import { useSchedulePhotoUrl } from "@/stores/photo-store";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -76,6 +77,8 @@ export function ScheduleDetailPanel({
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [viewingPhoto, setViewingPhoto] = useState(false);
+  const closePhotoViewer = useCallback(() => setViewingPhoto(false), []);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const photoUrl = useSchedulePhotoUrl(item?.image_path);
 
@@ -152,6 +155,9 @@ export function ScheduleDetailPanel({
       if (!target) return;
       if (popoverRef.current?.contains(target)) return;
       if (target.closest("[data-schedule-id]")) return;
+      // The full-screen photo is opened from this panel; using it is not
+      // clicking away.
+      if (target.closest("[data-photo-viewer]")) return;
       setSelectedSchedule(null);
     }
 
@@ -580,14 +586,19 @@ export function ScheduleDetailPanel({
             {item.image_path ? (
               // The whole photo, uncropped, so a tap lands on the spot it means.
               // That spot is what every cropped box keeps in view.
-              <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border border-border bg-black/5">
+              <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-border bg-black/5">
                 {photoUrl ? (
                   <button
                     type="button"
-                    disabled={!canEdit}
-                    aria-label={t("photo.focusHint")}
-                    className="relative max-h-full max-w-full cursor-crosshair disabled:cursor-default"
+                    aria-label={canEdit ? t("photo.focusHint") : t("photo.viewFull")}
+                    className={cn("relative max-h-full max-w-full", canEdit ? "cursor-crosshair" : "cursor-zoom-in")}
                     onClick={(event) => {
+                      // Someone who can't edit has no focal point to set: the
+                      // photo just opens full screen.
+                      if (!canEdit) {
+                        setViewingPhoto(true);
+                        return;
+                      }
                       // A keyboard "click" has no position to use.
                       if (event.detail === 0) return;
                       const box = event.currentTarget.getBoundingClientRect();
@@ -607,7 +618,31 @@ export function ScheduleDetailPanel({
                     />
                   </button>
                 ) : null}
+                {photoUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewingPhoto(true)}
+                    aria-label={t("photo.viewFull")}
+                    title={t("photo.viewFull")}
+                    className="absolute right-1.5 top-1.5 inline-flex size-8 items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/70"
+                  >
+                    <Maximize2 size={15} />
+                  </button>
+                ) : null}
               </div>
+            ) : null}
+            {viewingPhoto && photoUrl ? (
+              <PhotoViewer
+                url={photoUrl}
+                title={item.title}
+                subtitle={[
+                  days.find((day) => day.id === item.day_id)?.date,
+                  item.all_day ? t("grid.allDay") : formatTimeRange(item.start_time, item.end_time)
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+                onClose={closePhotoViewer}
+              />
             ) : null}
             {canEdit && item.image_path && photoUrl ? (
               <div className="flex items-center justify-between gap-2 text-xs">

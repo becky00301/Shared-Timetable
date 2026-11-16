@@ -13,9 +13,10 @@ export function photoFocusPosition(x?: number | null, y?: number | null) {
 /** The bucket refuses anything larger. */
 export const SCHEDULE_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 
-/** Longest side after resizing. Enough for a wide box on a desktop and for a
-    PNG/PDF export, small enough that a photo is a few hundred KB. */
-const MAX_SIDE = 1280;
+/** Longest side after resizing. Large enough that small print on a saved
+    ticket still reads when the photo is zoomed full screen; quality steps
+    down below if needed to stay under the bucket's 2 MB limit. */
+const MAX_SIDE = 2048;
 
 /** Where a new photo for an item goes. The random name means a replaced photo
     never reuses a URL the browser has cached. */

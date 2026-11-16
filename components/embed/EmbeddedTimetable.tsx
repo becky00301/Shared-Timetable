@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { PhotoViewer } from "@/components/photo/PhotoViewer";
 import { Button } from "@/components/ui/button";
 import { TimeColumn } from "@/components/timetable/TimeColumn";
 import { useDateFormat } from "@/lib/i18n/dates";
+import { cn } from "@/lib/utils/cn";
 import { useT } from "@/lib/i18n/locale";
 import { photoFocusPosition } from "@/lib/schedule-photos";
 import { getScheduleTextColor } from "@/lib/utils/schedule-colors";
@@ -157,6 +159,10 @@ export function EmbeddedTimetable({
   const fmt = useDateFormat();
   const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
+  // The event whose photo is open full screen. In a read-only view a tap on
+  // a box with a photo opens it, so a saved ticket can be read again.
+  const [viewing, setViewing] = useState<EmbeddedSchedule | null>(null);
+  const closeViewer = useCallback(() => setViewing(null), []);
   const sortedDays = useMemo(
     () => [...days].sort((a, b) => a.sort_order - b.sort_order || a.date.localeCompare(b.date)),
     [days]
@@ -310,6 +316,8 @@ export function EmbeddedTimetable({
                     key={day.id}
                     schedules={timedByDay.get(day.id)?.items ?? []}
                     segments={timedByDay.get(day.id)?.segments ?? {}}
+                    onOpenPhoto={setViewing}
+                    openPhotoLabel={t("photo.viewFull")}
                   />
                 ))}
               </div>
@@ -322,27 +330,52 @@ export function EmbeddedTimetable({
 
   // In an iframe the whole surface stays a link into the project, which is how
   // a Notion reader gets from the preview to the real thing.
+  const viewer =
+    viewing?.image_url ? (
+      <PhotoViewer
+        url={viewing.image_url}
+        title={viewing.title}
+        subtitle={[
+          sortedDays.find((day) => day.id === viewing.day_id)?.date,
+          formatTimeRange(viewing.start_time.slice(0, 5), viewing.end_time.slice(0, 5))
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        onClose={closeViewer}
+      />
+    ) : null;
+
   return standalone ? (
-    <div className={frameClass}>{body}</div>
-  ) : (
-    <a
-      href={projectHref}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={t("embed.openProject")}
-      className={`${frameClass} cursor-pointer no-underline`}
-    >
+    <div className={frameClass}>
       {body}
-    </a>
+      {viewer}
+    </div>
+  ) : (
+    <>
+      <a
+        href={projectHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t("embed.openProject")}
+        className={`${frameClass} cursor-pointer no-underline`}
+      >
+        {body}
+      </a>
+      {viewer}
+    </>
   );
 }
 
 function StaticDayColumn({
   schedules,
-  segments
+  segments,
+  onOpenPhoto,
+  openPhotoLabel
 }: {
   schedules: EmbeddedSchedule[];
   segments: Record<string, DaySegment>;
+  onOpenPhoto: (item: EmbeddedSchedule) => void;
+  openPhotoLabel: string;
 }) {
   const positioned = positionSchedules(schedules, segments);
 
@@ -358,7 +391,30 @@ function StaticDayColumn({
             <div
               key={item.id}
               title={`${item.title} (${formatTimeRange(item.start_time, item.end_time)})`}
-              className="absolute z-10 overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-1.5 text-left shadow-sm"
+              className={cn(
+                "absolute z-10 overflow-hidden rounded-[4px] border border-black/20 px-1.5 py-1.5 text-left shadow-sm",
+                item.image_url && "cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-foreground"
+              )}
+              // A box with a photo opens it full screen. Inside an embed the
+              // whole timetable is a link, so the tap must not also follow it.
+              {...(item.image_url
+                ? {
+                    role: "button",
+                    tabIndex: 0,
+                    "aria-label": `${openPhotoLabel}: ${item.title}`,
+                    onClick: (event: React.MouseEvent) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onOpenPhoto(item);
+                    },
+                    onKeyDown: (event: React.KeyboardEvent) => {
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onOpenPhoto(item);
+                    }
+                  }
+                : {})}
               style={{
                 top: minutesToTop(segments[item.id]?.startMinutes ?? timeToMinutes(item.start_time), HOUR_HEIGHT),
                 height: Math.max(
