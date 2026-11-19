@@ -9,7 +9,10 @@ export type AnalyticsEvent =
   | { event: "create_project"; project_kind: "weekly" | "daterange"; day_count: number }
   | { event: "add_schedule" }
   | { event: "share_project"; share_type: "invite_link" | "guest_link" }
-  | { event: "join_project"; role: string };
+  | { event: "join_project"; role: string }
+  | { event: "export"; format: ExportFormat; member_count: number };
+
+export type ExportFormat = "png" | "pdf" | "excel" | "html";
 
 export type AuthMethod = "email" | "google" | "naver";
 
@@ -21,7 +24,7 @@ export function track(payload: AnalyticsEvent) {
   w.dataLayer = w.dataLayer || [];
   // GTM keeps every key it has seen, so the other events' parameters are
   // cleared here; otherwise a later event would inherit an earlier `method`.
-  w.dataLayer.push({ method: undefined, project_kind: undefined, day_count: undefined, share_type: undefined, role: undefined, ...payload });
+  w.dataLayer.push({ method: undefined, project_kind: undefined, day_count: undefined, share_type: undefined, role: undefined, format: undefined, member_count: undefined, ...payload });
 }
 
 /** Set by the OAuth callback for one page load, then read and cleared by

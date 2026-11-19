@@ -5,15 +5,20 @@ import { Code2, FileDown, ImageDown, Sheet, Upload, type LucideIcon } from "luci
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { track, type ExportFormat } from "@/lib/analytics";
 import { exportFilename } from "@/lib/export/filename";
 import { exportTimetablePdf, exportTimetablePng } from "@/lib/export/timetable-export";
 import { useLocale } from "@/lib/i18n/locale";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { useProjectStore } from "@/stores/project-store";
 import type { Project } from "@/types/project";
 
 export function ExportToolbar({ project, targetId }: { project: Project; targetId: string }) {
   const { t, locale } = useLocale();
   const [open, setOpen] = useState(false);
+  // Sent with each export: a file made from a one-person timetable is how
+  // people share plans without inviting anyone.
+  const memberCount = useProjectStore((state) => state.members.filter((m) => m.project_id === project.id).length);
 
   function getTarget() {
     const element = document.getElementById(targetId);
@@ -21,9 +26,10 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
     return element;
   }
 
-  const tiles: { key: MessageKey; icon: LucideIcon; run: () => void }[] = [
+  const tiles: { key: MessageKey; format: ExportFormat; icon: LucideIcon; run: () => void }[] = [
     {
       key: "export.tile.png",
+      format: "png",
       icon: ImageDown,
       run: () => {
         const target = getTarget();
@@ -32,6 +38,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
     },
     {
       key: "export.tile.pdf",
+      format: "pdf",
       icon: FileDown,
       run: () => {
         const target = getTarget();
@@ -40,6 +47,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
     },
     {
       key: "export.tile.excel",
+      format: "excel",
       icon: Sheet,
       run: () => {
         // Built server-side, so the xlsx writer never ships to the browser.
@@ -48,6 +56,7 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
     },
     {
       key: "export.tile.html",
+      format: "html",
       icon: Code2,
       run: () => {
         // Written from the data rather than captured from the screen, so the
@@ -72,12 +81,13 @@ export function ExportToolbar({ project, targetId }: { project: Project; targetI
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {tiles.map(({ key, icon: Icon, run }) => (
+            {tiles.map(({ key, format, icon: Icon, run }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => {
                   setOpen(false);
+                  track({ event: "export", format, member_count: memberCount });
                   run();
                 }}
                 className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl bg-black/[0.04] text-foreground transition hover:bg-black/[0.07]"
