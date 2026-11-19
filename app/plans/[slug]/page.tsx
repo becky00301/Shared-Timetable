@@ -10,6 +10,7 @@ import { GuestLinkBanner } from "@/components/project/GuestLinkBanner";
 import { MobileProjectBar } from "@/components/project/MobileProjectBar";
 import { ProjectSidebar } from "@/components/project/ProjectSidebar";
 import { RemovedFromProjectNotice } from "@/components/project/RemovedFromProjectNotice";
+import { SurveyNudge } from "@/components/project/SurveyNudge";
 import { ScheduleDetailPanel } from "@/components/project/ScheduleDetailPanel";
 import { ShareModal } from "@/components/project/ShareModal";
 import { MonthCalendarView } from "@/components/timetable/MonthCalendarView";
@@ -265,6 +266,7 @@ export default function ProjectPage() {
       </section>
       <ScheduleDetailPanel days={days} canEdit={canEdit} />
       <ShareModal project={project} canManage={currentRole === "owner" || project.owner_id === currentUserId} />
+      <SurveyNudge enabled={Boolean(currentUserId) && !isGuest} />
       <RemovedFromProjectNotice removedBy={removedBy} />
     </main>
   );
