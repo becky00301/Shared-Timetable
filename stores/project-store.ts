@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
+import { isTimeValue } from "@/lib/utils/time";
 import { track } from "@/lib/analytics";
 import { isClaimTicket, parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
@@ -849,6 +850,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   upsertSchedule: async (item) => {
     const supabase = requireClient();
+    // The database rejects anything else, so a bad time never leaves here.
+    if (!isTimeValue(item.start_time) || !isTimeValue(item.end_time)) {
+      throw new Error(translate("error.invalidTime"));
+    }
     // Split so the amount can be dropped on a database that has not yet run
     // migration 015, the same way wake times were handled. Schedules stay
     // saveable in that window, and amounts persist as soon as the column

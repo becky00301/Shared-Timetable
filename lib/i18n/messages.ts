@@ -1028,6 +1028,7 @@ export const messages = {
     en: "You don't have permission — only the owner can delete this."
   },
   "error.deleteDenied": { ko: "삭제 권한이 없어요.", en: "You don't have permission to delete this." },
+  "error.invalidTime": { ko: "시간을 끝까지 입력해 주세요.", en: "Enter a complete time." },
   "error.scheduleDeleteDenied": {
     ko: "이 일정을 삭제할 권한이 없거나, 이미 삭제된 일정이에요.",
     en: "You can't delete this event, or it's already been deleted."

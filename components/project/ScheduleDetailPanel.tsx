@@ -19,7 +19,7 @@ import {
 } from "@/lib/utils/money";
 import { SCHEDULE_COLOR_GROUPS } from "@/lib/utils/schedule-colors";
 import { absoluteSpan, fromAbsoluteSpan } from "@/lib/utils/schedule-span";
-import { formatTimeRange, nextFreeHour, timeToMinutes } from "@/lib/utils/time";
+import { formatTimeRange, isTimeValue, nextFreeHour, timeToMinutes } from "@/lib/utils/time";
 import { useSchedulePhotoUrl } from "@/stores/photo-store";
 import { useProjectStore } from "@/stores/project-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -331,6 +331,9 @@ export function ScheduleDetailPanel({
   const columnOf = (id: string) => Math.max(0, dayOrder.indexOf(id));
 
   function saveSpan(startDay: string, start: string, endDay: string, end: string) {
+    // A cleared or half-typed time field reads "". Saving then would write
+    // "NaN:NaN", so wait until both times are whole.
+    if (!isTimeValue(start) || !isTimeValue(end)) return;
     const startAbs = columnOf(startDay) * 24 * 60 + timeToMinutes(start);
     const endAbs = columnOf(endDay) * 24 * 60 + timeToMinutes(end);
     if (endAbs <= startAbs) {

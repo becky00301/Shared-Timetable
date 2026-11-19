@@ -20,6 +20,12 @@ export function zoomToHourHeight(zoom: number) {
   return Math.round(HOUR_HEIGHT * zoom);
 }
 
+/** A complete HH:MM (seconds allowed). A time field reads "" while someone
+    is halfway through typing or has cleared it. */
+export function isTimeValue(time: unknown): time is string {
+  return typeof time === "string" && /^([01]\d|2[0-4]):[0-5]\d(:[0-5]\d)?$/.test(time);
+}
+
 export function timeToMinutes(time: string) {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
