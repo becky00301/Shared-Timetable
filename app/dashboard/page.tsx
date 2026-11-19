@@ -8,6 +8,7 @@ import { CalendarDays, LayoutGrid, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar";
 import { UpdatesNotice } from "@/components/dashboard/UpdatesNotice";
+import { SurveyBanner } from "@/components/dashboard/SurveyBanner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { AccentPicker } from "@/components/layout/AccentPicker";
@@ -202,6 +203,7 @@ function Dashboard() {
             </Button>
           )}
         </div>
+        <SurveyBanner signedIn={signedIn} />
         <UpdatesNotice />
         {/* Same segmented control as the timetable header, so switching views
             looks like the same gesture in both places. Nothing to switch
