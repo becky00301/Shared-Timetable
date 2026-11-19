@@ -17,6 +17,7 @@ import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 import { TimetableHeader } from "@/components/timetable/TimetableHeader";
 import { useMemberRemovalNotice } from "@/lib/supabase/member-events";
 import { useProjectRealtime } from "@/lib/supabase/realtime";
+import type { SyncTable } from "@/lib/supabase/project-sync";
 import { useT } from "@/lib/i18n/locale";
 import { SITE_NAME } from "@/lib/seo";
 import { canEdit as roleCanEdit } from "@/lib/permissions/roles";
@@ -120,7 +121,22 @@ export default function ProjectPage() {
       })
       .catch((error) => console.error(error));
   }, [params.slug, loadProject]);
-  useProjectRealtime(project?.id ?? "", onSync);
+  // Someone changed only these tables: read back just those. Losing sight of
+  // the timetable itself falls back to the full reload, which notices removal.
+  const refreshProjectTables = useProjectStore((state) => state.refreshProjectTables);
+  const projectIdForSync = project?.id ?? "";
+  const onTables = useCallback(
+    (tables: SyncTable[]) => {
+      if (!projectIdForSync) return;
+      refreshProjectTables(projectIdForSync, tables)
+        .then((visible) => {
+          if (!visible) onSync();
+        })
+        .catch((error) => console.error(error));
+    },
+    [projectIdForSync, refreshProjectTables, onSync]
+  );
+  useProjectRealtime(projectIdForSync, onSync, onTables);
   useMemberRemovalNotice(project?.id ?? "", currentUserId, setRemovedBy);
 
   useEffect(() => {

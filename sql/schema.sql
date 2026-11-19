@@ -352,42 +352,15 @@ do $$
 begin
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_days'
-  ) then
-    alter publication supabase_realtime add table public.project_days;
-  end if;
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'schedule_items'
-  ) then
-    alter publication supabase_realtime add table public.schedule_items;
-  end if;
-  if not exists (
-    select 1 from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_members'
   ) then
     alter publication supabase_realtime add table public.project_members;
-  end if;
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_notes'
-  ) then
-    alter publication supabase_realtime add table public.project_notes;
-  end if;
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'project_expenses'
-  ) then
-    alter publication supabase_realtime add table public.project_expenses;
   end if;
 end $$;
 
 -- Deletes replicate only the primary key unless replica identity is FULL, so a
 -- subscription filtered on project_id would never match a DELETE event.
-alter table public.schedule_items replica identity full;
-alter table public.project_days replica identity full;
 alter table public.project_members replica identity full;
-alter table public.project_expenses replica identity full;
 
 -- Prepare public data for permanent account deletion in one transaction.
 -- Auth deletion remains a separate server-only Admin API call, so this function

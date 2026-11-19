@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { translate } from "@/lib/i18n/messages";
 import { isTimeValue } from "@/lib/utils/time";
+import { announceProjectChange, type SyncTable } from "@/lib/supabase/project-sync";
 import { track } from "@/lib/analytics";
 import { isClaimTicket, parseProjectSlug } from "@/lib/utils/claim-link";
 import { diffDays, sortOrderFor } from "@/lib/utils/days";
@@ -60,6 +61,9 @@ type ProjectStore = {
   findGuestProjectSlug: () => Promise<string | null>;
   loadDashboard: () => Promise<void>;
   loadProject: (slug: string) => Promise<Project | null>;
+  /** Reads back just these tables of one timetable, after someone else
+      changed them. False when the timetable itself can't be read any more. */
+  refreshProjectTables: (projectId: string, tables: SyncTable[]) => Promise<boolean>;
   createProject: (title: string, description?: string, kind?: ProjectKind) => Promise<Project>;
   updateProject: (projectId: string, patch: { title?: string; description?: string }) => Promise<void>;
   /** Owner only: replaces the invite and read-only links, so links handed out
@@ -454,6 +458,59 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } finally {
       set({ loading: false });
     }
+  },
+
+  refreshProjectTables: async (projectId, tables) => {
+    const supabase = requireClient();
+    const wanted = new Set(tables);
+    const [projectRes, daysRes, schedulesRes, notesRes, expensesRes] = await Promise.all([
+      wanted.has("projects") ? supabase.from("projects").select("*").eq("id", projectId).maybeSingle() : null,
+      wanted.has("project_days") ? supabase.from("project_days").select("*").eq("project_id", projectId) : null,
+      wanted.has("schedule_items") ? supabase.from("schedule_items").select("*").eq("project_id", projectId) : null,
+      wanted.has("project_notes")
+        ? supabase
+            .from("project_notes")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: true })
+        : null,
+      wanted.has("project_expenses")
+        ? supabase.from("project_expenses").select("*").eq("project_id", projectId).order("created_at", { ascending: true })
+        : null
+    ]);
+    for (const res of [projectRes, daysRes, schedulesRes, notesRes]) if (res?.error) throw res.error;
+    if (expensesRes?.error && !isMissingRelation(expensesRes.error)) throw expensesRes.error;
+    if (projectRes && !projectRes.data) return false;
+
+    set((state) => {
+      const next: Partial<ProjectStore> = {};
+      if (projectRes?.data) {
+        const loaded = normalizeProject(projectRes.data as Project);
+        next.projects = state.projects.map((p) => (p.id === projectId ? loaded : p));
+      }
+      if (daysRes) {
+        const loadedDays = ((daysRes.data ?? []) as ProjectDay[]).map((day) => pendingDayWakeTimeUpdates.get(day.id) ?? day);
+        next.days = [...state.days.filter((d) => d.project_id !== projectId), ...loadedDays];
+      }
+      if (schedulesRes) {
+        const loadedSchedules = ((schedulesRes.data ?? []) as ScheduleItem[])
+          .map(normalizeSchedule)
+          .map((schedule) => pendingScheduleUpdates.get(schedule.id) ?? schedule);
+        next.schedules = [...state.schedules.filter((s) => s.project_id !== projectId), ...loadedSchedules];
+      }
+      if (notesRes) {
+        next.notes = [...state.notes.filter((n) => n.project_id !== projectId), ...((notesRes.data ?? []) as ProjectNote[])];
+      }
+      if (expensesRes && !expensesRes.error) {
+        next.expenses = [
+          ...state.expenses.filter((e) => e.project_id !== projectId),
+          ...((expensesRes.data ?? []) as ProjectExpense[]).map(normalizeExpense)
+        ];
+      }
+      return next;
+    });
+    return true;
   },
 
   createProject: async (title, description, kind = "daterange") => {
@@ -1210,3 +1267,47 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   getProjectBySlug: (slug) => get().projects.find((project) => project.slug === slug)
 }));
+
+// After each successful save, tell the others on the timetable which tables
+// changed, so they read back only those (see lib/supabase/realtime.ts). The
+// project is worked out before the call: a delete removes the row it is in.
+type State = ProjectStore;
+type Action = (...args: never[]) => Promise<unknown>;
+const projectOf = {
+  day: (state: State, id: string) => state.days.find((d) => d.id === id)?.project_id,
+  schedule: (state: State, id: string) => state.schedules.find((s) => s.id === id)?.project_id,
+  note: (state: State, id: string) => state.notes.find((n) => n.id === id)?.project_id,
+  expense: (state: State, id: string) => state.expenses.find((e) => e.id === id)?.project_id
+};
+const SYNCED_ACTIONS: Partial<Record<keyof State, { tables: SyncTable[]; project: (state: State, args: unknown[]) => string | undefined }>> = {
+  updateProject: { tables: ["projects"], project: (_, a) => a[0] as string },
+  updateProjectBudget: { tables: ["projects"], project: (_, a) => a[0] as string },
+  addDay: { tables: ["project_days"], project: (_, a) => a[0] as string },
+  addDays: { tables: ["project_days"], project: (_, a) => a[0] as string },
+  replaceDays: { tables: ["project_days", "schedule_items"], project: (_, a) => a[0] as string },
+  removeDay: { tables: ["project_days", "schedule_items"], project: (s, a) => projectOf.day(s, a[0] as string) },
+  updateDayWakeTime: { tables: ["project_days"], project: (s, a) => projectOf.day(s, a[0] as string) },
+  addExpense: { tables: ["project_expenses"], project: (_, a) => a[0] as string },
+  updateExpense: { tables: ["project_expenses"], project: (s, a) => projectOf.expense(s, a[0] as string) },
+  deleteExpense: { tables: ["project_expenses"], project: (s, a) => projectOf.expense(s, a[0] as string) },
+  addNote: { tables: ["project_notes"], project: (_, a) => a[0] as string },
+  updateNote: { tables: ["project_notes"], project: (s, a) => projectOf.note(s, a[0] as string) },
+  deleteNote: { tables: ["project_notes"], project: (s, a) => projectOf.note(s, a[0] as string) },
+  reorderNotes: { tables: ["project_notes"], project: (_, a) => a[0] as string },
+  upsertSchedule: { tables: ["schedule_items"], project: (_, a) => (a[0] as { project_id?: string })?.project_id },
+  deleteSchedule: { tables: ["schedule_items"], project: (s, a) => projectOf.schedule(s, a[0] as string) },
+  setSchedulePhoto: { tables: ["schedule_items"], project: (s, a) => projectOf.schedule(s, a[0] as string) },
+  removeSchedulePhoto: { tables: ["schedule_items"], project: (s, a) => projectOf.schedule(s, a[0] as string) },
+  setSchedulePhotoFocus: { tables: ["schedule_items"], project: (s, a) => projectOf.schedule(s, a[0] as string) },
+  setScheduleLocationPoint: { tables: ["schedule_items"], project: (s, a) => projectOf.schedule(s, a[0] as string) }
+};
+for (const [name, spec] of Object.entries(SYNCED_ACTIONS)) {
+  const original = useProjectStore.getState()[name as keyof State] as unknown as Action;
+  const wrapped = async (...args: unknown[]) => {
+    const projectId = spec!.project(useProjectStore.getState(), args);
+    const result = await original(...(args as never[]));
+    announceProjectChange(projectId, spec!.tables);
+    return result;
+  };
+  useProjectStore.setState({ [name]: wrapped } as Partial<State>);
+}
