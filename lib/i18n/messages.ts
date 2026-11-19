@@ -1035,7 +1035,7 @@ export const messages = {
   },
 
   // ---------------------------------------------------------------- misc
-  "feedback.label": { ko: "서비스 피드백", en: "Feedback" },
+  "feedback.label": { ko: "오류 문의", en: "Report a problem" },
   "locale.switch": { ko: "언어", en: "Language" }
 } as const;
 

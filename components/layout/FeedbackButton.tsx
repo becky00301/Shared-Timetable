@@ -19,6 +19,7 @@ export function FeedbackButton() {
       target="_blank"
       rel="noopener noreferrer"
       data-feedback-button
+      aria-label={t("feedback.label")}
       className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-glow transition hover:border-primary hover:text-primary"
     >
       <MessageSquare size={16} />
