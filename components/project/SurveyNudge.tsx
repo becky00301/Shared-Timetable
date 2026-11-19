@@ -5,11 +5,11 @@ import { ArrowUpRight, X } from "lucide-react";
 import { useLocale } from "@/lib/i18n/locale";
 import { markSurveyDone, surveyDone, SURVEY_ENDS_AT, SURVEY_URL, surveyLink } from "@/lib/survey";
 
-const SHOW_AFTER_MS = 2000;
+const SHOW_AFTER_MS = 1000;
 
 /**
  * The survey offer for people who open a timetable straight from a link and
- * never pass the dashboard banner. It waits two seconds so the timetable is
+ * never pass the dashboard banner. It waits a second so the timetable is
  * seen first, slides up from the bottom without covering it, and is offered
  * once per device: opening the survey or closing it puts it away.
  */
