@@ -44,7 +44,7 @@
     "maplibre-gl": "^6.16.0",
     "motion": "^14.4.0",
     "nanoid": "^5.1.5",
-    "next": "^15.5.28",
+    "next": "^15.5.29",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",
@@ -58,7 +58,7 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "eslint": "^9.24.0",
-    "eslint-config-next": "^15.3.0",
+    "eslint-config-next": "^15.5.29",
     "postcss": "^8.5.23",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.3"
