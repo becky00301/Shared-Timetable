@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { useLocale } from "@/lib/i18n/locale";
-import { markSurveyDone, surveyDone, SURVEY_ENDS_AT, SURVEY_URL, surveyLink } from "@/lib/survey";
+import { SURVEY_ENDS_AT, SURVEY_URL, surveyLink } from "@/lib/survey";
 
 const SHOW_AFTER_MS = 1000;
 
 /**
  * The survey offer for people who open a timetable straight from a link and
  * never pass the dashboard banner. It waits a second so the timetable is
- * seen first, slides up from the bottom without covering it, and is offered
- * until the survey is opened on this device; there is no close button.
+ * seen first and slides up from the bottom without covering it. Opening the
+ * survey hides it for this visit only: someone who opened the form may not
+ * have finished it, so it comes back on the next visit. There is no close
+ * button.
  */
 export function SurveyNudge({ enabled }: { enabled: boolean }) {
   const { locale } = useLocale();
@@ -19,7 +21,7 @@ export function SurveyNudge({ enabled }: { enabled: boolean }) {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
-    if (!enabled || locale !== "ko" || !SURVEY_URL || Date.now() >= SURVEY_ENDS_AT || surveyDone()) return;
+    if (!enabled || locale !== "ko" || !SURVEY_URL || Date.now() >= SURVEY_ENDS_AT) return;
     const timer = window.setTimeout(() => {
       setMounted(true);
       // One frame at the start position, then the transition slides it in.
@@ -31,7 +33,6 @@ export function SurveyNudge({ enabled }: { enabled: boolean }) {
   if (!mounted) return null;
 
   function dismiss() {
-    markSurveyDone();
     setShown(false);
     window.setTimeout(() => setMounted(false), 300);
   }

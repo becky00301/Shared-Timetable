@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { useLocale } from "@/lib/i18n/locale";
-import { markSurveyDone, SURVEY_ENDS_AT, SURVEY_URL, surveyLink } from "@/lib/survey";
+import { SURVEY_ENDS_AT, SURVEY_URL, surveyLink } from "@/lib/survey";
 
 // A two-day user survey; everyone who answers gets a coffee voucher. It is in Korean, so the
 // banner is shown to the Korean interface only, and it takes itself down when
@@ -25,7 +25,6 @@ export function SurveyBanner({ signedIn }: { signedIn: boolean | null }) {
       href={surveyLink("dashboard")}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={markSurveyDone}
       className="mt-6 flex items-center gap-3 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/[0.07] px-4 py-3 text-sm transition hover:bg-[var(--accent)]/[0.12]"
     >
       <span aria-hidden="true" className="text-lg leading-none">☕</span>

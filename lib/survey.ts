@@ -10,22 +10,3 @@ export function surveyLink(from: "dashboard" | "timetable") {
 }
 export const SURVEY_ENDS_AT = Date.parse("2026-11-22T00:00:00+09:00");
 
-// Set on this device once someone opens the survey or closes the nudge, so
-// it is not offered again.
-const DONE_KEY = "plantogether.survey.2026-11.done";
-
-export function surveyDone() {
-  try {
-    return window.localStorage.getItem(DONE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function markSurveyDone() {
-  try {
-    window.localStorage.setItem(DONE_KEY, "1");
-  } catch {
-    // Private browsing: the nudge may come back next visit, which is fine.
-  }
-}
