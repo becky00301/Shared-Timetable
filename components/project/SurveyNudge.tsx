@@ -43,7 +43,7 @@ export function SurveyNudge({ enabled }: { enabled: boolean }) {
         shown ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
       }`}
     >
-      <span aria-hidden="true" className="text-base leading-none">🍗</span>
+      <span aria-hidden="true" className="text-base leading-none">☕</span>
       <a
         href={surveyLink("timetable")}
         target="_blank"
@@ -52,8 +52,8 @@ export function SurveyNudge({ enabled }: { enabled: boolean }) {
         className="flex min-w-0 flex-1 items-center gap-2"
       >
         <span className="min-w-0 flex-1 [word-break:keep-all]">
-          <span className="font-semibold text-foreground">설문 참여하고 허니콤보 받아가세요</span>
-          <span className="block text-xs text-muted">약 2~3분 · 추첨 2명 · 11/21(토)까지</span>
+          <span className="font-semibold text-foreground">설문 참여하면 아메리카노 한 잔 드려요</span>
+          <span className="block text-xs text-muted">약 2~3분 · 참여자 전원 · 11/21(토)까지</span>
         </span>
         <span className="flex shrink-0 items-center gap-0.5 font-medium text-[var(--accent)]">
           참여하기
