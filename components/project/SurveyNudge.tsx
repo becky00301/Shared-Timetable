@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useLocale } from "@/lib/i18n/locale";
 import { markSurveyDone, surveyDone, SURVEY_ENDS_AT, SURVEY_URL, surveyLink } from "@/lib/survey";
 
@@ -11,7 +11,7 @@ const SHOW_AFTER_MS = 1000;
  * The survey offer for people who open a timetable straight from a link and
  * never pass the dashboard banner. It waits a second so the timetable is
  * seen first, slides up from the bottom without covering it, and is offered
- * once per device: opening the survey or closing it puts it away.
+ * until the survey is opened on this device; there is no close button.
  */
 export function SurveyNudge({ enabled }: { enabled: boolean }) {
   const { locale } = useLocale();
@@ -39,7 +39,7 @@ export function SurveyNudge({ enabled }: { enabled: boolean }) {
   return (
     <div
       role="status"
-      className={`fixed inset-x-3 bottom-[76px] z-[45] mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-[var(--accent)]/25 bg-background/95 py-2 pl-3 pr-1.5 text-sm shadow-[0_10px_30px_-10px_oklch(0_0_0/30%)] backdrop-blur-md transition duration-300 ease-out motion-reduce:transition-none lg:bottom-5 ${
+      className={`fixed inset-x-3 bottom-[76px] z-[45] mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-[var(--accent)]/25 bg-background/95 py-2 pl-3 pr-3 text-sm shadow-[0_10px_30px_-10px_oklch(0_0_0/30%)] backdrop-blur-md transition duration-300 ease-out motion-reduce:transition-none lg:bottom-5 ${
         shown ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
       }`}
     >
@@ -60,14 +60,6 @@ export function SurveyNudge({ enabled }: { enabled: boolean }) {
           <ArrowUpRight size={15} aria-hidden="true" />
         </span>
       </a>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="설문 안내 닫기"
-        className="shrink-0 rounded-full p-1.5 text-muted transition hover:bg-black/6 hover:text-foreground"
-      >
-        <X size={15} />
-      </button>
     </div>
   );
 }
