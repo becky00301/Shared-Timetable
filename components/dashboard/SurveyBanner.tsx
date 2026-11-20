@@ -30,8 +30,8 @@ export function SurveyBanner({ signedIn }: { signedIn: boolean | null }) {
     >
       <span aria-hidden="true" className="text-lg leading-none">☕</span>
       <span className="min-w-0 flex-1">
-        <span className="font-semibold text-foreground [word-break:keep-all]">설문 참여하면 아메리카노 한 잔 드려요</span>
-        <span className="block text-xs text-muted [word-break:keep-all] sm:inline sm:pl-2">약 1분 · 참여자 전원 · 11/21(토)까지</span>
+        <span className="font-semibold text-foreground [word-break:keep-all]">설문 참여하시는 모든 분께 아메리카노 한 잔 드려요!</span>
+        <span className="block text-xs text-muted [word-break:keep-all] sm:inline sm:pl-2">약 1분 · 11/21(토)까지</span>
       </span>
       <span className="flex shrink-0 items-center gap-0.5 font-medium text-[var(--accent)]">
         참여하기
