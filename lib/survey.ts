@@ -8,5 +8,5 @@ export const SURVEY_URL = "https://forms.gle/fPrWSTQJFMCLVQTV9";
 export function surveyLink(from: "dashboard" | "timetable") {
   return `${SURVEY_URL}?src=${from}`;
 }
-export const SURVEY_ENDS_AT = Date.parse("2026-11-22T00:00:00+09:00");
+export const SURVEY_ENDS_AT = Date.parse("2026-11-23T00:00:00+09:00");
 
